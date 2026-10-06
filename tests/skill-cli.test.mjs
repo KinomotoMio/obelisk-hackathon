@@ -60,7 +60,7 @@ test('CLI lists the fixed scene list by dimension and refuses scenes outside it'
   const scenes = runCli(['skill', 'scenes'], { home, env });
   assert.equal(scenes.status, 0, scenes.stderr || scenes.stdout);
   const dimensions = JSON.parse(scenes.stdout);
-  assert.deepEqual(dimensions.map((d) => d.id), ['domain', 'task', 'artifact']);
+  assert.deepEqual(dimensions.map((d) => d.id), ['domain', 'task', 'artifact', 'context', 'role']);
   const ids = dimensions.flatMap((d) => d.scenes.map((scene) => scene.id));
   assert.ok(ids.includes('artifact/resume'));
   assert.ok(dimensions.every((d) => d.scenes.every((scene) => scene.id.startsWith(`${d.id}/`) && scene.label)));

@@ -33,7 +33,7 @@
 
 import { keccak256, stringToBytes, type Hex } from 'viem';
 
-export type SceneDimension = 'domain' | 'task' | 'artifact';
+export type SceneDimension = 'domain' | 'task' | 'artifact' | 'context' | 'role';
 
 export interface Scene {
   id: string;
@@ -57,52 +57,49 @@ const scene = (dimension: SceneDimension, slug: string, label: string, labelEn: 
   { id: `${dimension}/${slug}`, dimension, label, labelEn }
 );
 
+// v1 is a starter set sized for the first demo: every scene the demo shows maps
+// to one tag or a pair (工程师求职 = context/job-search + role/engineer, 设计作品集
+// = role/designer + artifact/portfolio, 电商后台 = context/ecommerce +
+// artifact/admin-dashboard, 创意 PPT = context/creative-visual + artifact/slides).
+// The domain and task labels double as the AI capability resume's dimensions.
 const V1: SceneVocabulary = {
   version: 1,
   dimensions: [
-    { id: 'domain', label: '领域', labelEn: 'Domain' },
+    { id: 'domain', label: '技术领域', labelEn: 'Domain' },
     { id: 'task', label: '任务类型', labelEn: 'Task' },
     { id: 'artifact', label: '产出物', labelEn: 'Artifact' },
+    { id: 'context', label: '行业与用途', labelEn: 'Industry and purpose' },
+    { id: 'role', label: '面向人群', labelEn: 'Audience' },
   ],
   scenes: [
-    scene('domain', 'frontend', '前端', 'Frontend'),
-    scene('domain', 'backend', '后端与服务', 'Backend and services'),
+    scene('domain', 'frontend', '前端与交互', 'Frontend and interaction'),
+    scene('domain', 'backend', '后端与数据', 'Backend and data'),
     scene('domain', 'mobile', '移动端', 'Mobile'),
-    scene('domain', 'desktop', '桌面应用', 'Desktop apps'),
-    scene('domain', 'data', '数据工程与分析', 'Data engineering and analytics'),
-    scene('domain', 'ai-ml', 'AI 与机器学习', 'AI and machine learning'),
+    scene('domain', 'automation', '自动化与脚本', 'Automation and scripting'),
     scene('domain', 'devops', '运维与基础设施', 'DevOps and infrastructure'),
+    scene('domain', 'ai-ml', 'AI 与机器学习', 'AI and machine learning'),
     scene('domain', 'security', '安全', 'Security'),
     scene('domain', 'blockchain', '区块链与智能合约', 'Blockchain and smart contracts'),
-    scene('domain', 'developer-tools', '开发者工具与 CLI', 'Developer tools and CLIs'),
-    scene('domain', 'design', '视觉与交互设计', 'Visual and interaction design'),
-    scene('domain', 'product', '产品与项目管理', 'Product and project management'),
-    scene('domain', 'career', '求职与职业发展', 'Job search and career'),
-    scene('domain', 'education', '学习与教学', 'Learning and teaching'),
-    scene('domain', 'content', '内容创作与运营', 'Content and marketing'),
-    scene('domain', 'research', '研究与学术', 'Research and academia'),
+    scene('domain', 'design', '视觉设计', 'Visual design'),
 
     scene('task', 'build-feature', '开发新功能', 'Build a feature'),
-    scene('task', 'debug', '排障与修复', 'Debug and fix'),
-    scene('task', 'refactor', '重构', 'Refactor'),
+    scene('task', 'debug', '调试与排障', 'Debugging and troubleshooting'),
+    scene('task', 'refactor', '重构与迁移', 'Refactoring and migration'),
     scene('task', 'code-review', '代码审查', 'Code review'),
     scene('task', 'testing', '测试', 'Testing'),
     scene('task', 'performance', '性能优化', 'Performance'),
-    scene('task', 'migration', '迁移与升级', 'Migration and upgrade'),
-    scene('task', 'release', '构建、发布与部署', 'Build, release, and deploy'),
-    scene('task', 'architecture', '架构与方案设计', 'Architecture and design'),
-    scene('task', 'writing', '写作与改写', 'Writing and rewriting'),
-    scene('task', 'research', '调研与资料整理', 'Research and synthesis'),
-    scene('task', 'analysis', '数据分析', 'Data analysis'),
+    scene('task', 'release', '构建与发布', 'Build and release'),
+    scene('task', 'architecture', '系统设计', 'System design'),
+    scene('task', 'writing', '文档写作与沟通', 'Writing and communication'),
+    scene('task', 'research', '调研与分析', 'Research and analysis'),
     scene('task', 'planning', '规划与拆解', 'Planning and breakdown'),
-    scene('task', 'learning', '学习与答疑', 'Learning and Q&A'),
 
     scene('artifact', 'code', '代码改动', 'Code changes'),
     scene('artifact', 'web-page', '网页与落地页', 'Web pages and landing pages'),
+    scene('artifact', 'admin-dashboard', '管理后台', 'Admin dashboards'),
     scene('artifact', 'app-ui', '应用界面', 'App UI'),
     scene('artifact', 'api', '接口与服务', 'APIs and services'),
-    scene('artifact', 'script', '脚本与自动化', 'Scripts and automation'),
-    scene('artifact', 'config', '配置', 'Configuration'),
+    scene('artifact', 'script', '脚本与检查清单', 'Scripts and checklists'),
     scene('artifact', 'tests', '测试用例', 'Tests'),
     scene('artifact', 'docs', '技术文档', 'Technical docs'),
     scene('artifact', 'report', '报告与复盘', 'Reports and retrospectives'),
@@ -111,8 +108,19 @@ const V1: SceneVocabulary = {
     scene('artifact', 'portfolio', '作品集', 'Portfolios'),
     scene('artifact', 'article', '文章与帖子', 'Articles and posts'),
     scene('artifact', 'design-mockup', '设计稿与原型', 'Mockups and prototypes'),
-    scene('artifact', 'dataset', '数据与图表', 'Data and charts'),
-    scene('artifact', 'pull-request', 'PR 与提交说明', 'Pull requests and commit messages'),
+
+    scene('context', 'job-search', '求职与实习', 'Job search and internships'),
+    scene('context', 'performance-review', '年终述职与晋升', 'Performance reviews and promotion'),
+    scene('context', 'ecommerce', '电商', 'E-commerce'),
+    scene('context', 'corporate-site', '商业官网与品牌', 'Corporate sites and branding'),
+    scene('context', 'creative-visual', '创意视觉', 'Creative visuals'),
+    scene('context', 'payments', '支付与交易', 'Payments and transactions'),
+
+    scene('role', 'engineer', '工程师', 'Engineers'),
+    scene('role', 'designer', '设计师', 'Designers'),
+    scene('role', 'illustrator', '插画师', 'Illustrators'),
+    scene('role', 'product-manager', '产品经理', 'Product managers'),
+    scene('role', 'student', '学生', 'Students'),
   ],
 };
 

@@ -69,7 +69,7 @@ function draft(overrides = {}) {
     name: 'ai-capability-resume',
     description: 'Draft an evidence-backed AI capability resume: "use when" job hunting.',
     body: '# AI capability resume\n\nCollect evidence from real sessions before writing claims.\n',
-    birthScenes: ['domain/career', 'artifact/resume'],
+    birthScenes: ['context/job-search', 'artifact/resume'],
     parent: null,
     provenance: [
       { sessionId: 'session-a', reason: 'User rejected unsupported claims', excerpts: [{ messageUuid: 'm-1', text: '不要写没有证据的能力' }] },
@@ -84,7 +84,7 @@ test('a saved draft keeps provenance, birth scenes, and parent under the data di
   const saved = await saveSkillDraft(skillsDir, draft({ parent: { name: 'resume-base', chainId: 968, skillId: '3' } }), { now: () => '2026-10-07T01:00:00.000Z' });
   assert.equal(saved.dir, join(skillsDir, 'ai-capability-resume'));
   assert.equal(saved.status, 'draft');
-  assert.deepEqual(saved.birthScenes, ['v1:domain/career', 'v1:artifact/resume']);
+  assert.deepEqual(saved.birthScenes, ['v1:context/job-search', 'v1:artifact/resume']);
   assert.deepEqual(saved.parent, { name: 'resume-base', chainId: 968, skillId: '3' });
   assert.equal(saved.provenance[0].excerpts[0].text, '不要写没有证据的能力');
   assert.equal(saved.draft.fingerprint, sha256('# AI capability resume\n\nCollect evidence from real sessions before writing claims.'));
@@ -142,7 +142,7 @@ test('出生场景写成"词表版本 + 标签": vocabulary ids are stored with 
   const skillsDir = join(makeTempDir('obelisk-skills-'), 'skills');
   const saved = await saveSkillDraft(skillsDir, draft({ birthScenes: ['task/writing', ' v1:artifact/resume ', 'v1:task/writing'] }));
   assert.deepEqual(saved.birthScenes, ['v1:task/writing', 'v1:artifact/resume']);
-  for (const birthScenes of [['writing/resume'], ['v1:domain/nope'], ['v9:artifact/resume'], 'v1:domain/career', [42]]) {
+  for (const birthScenes of [['writing/resume'], ['v1:domain/nope'], ['v9:artifact/resume'], 'v1:context/job-search', [42]]) {
     await assert.rejects(saveSkillDraft(skillsDir, draft({ birthScenes })), /birthScenes/, JSON.stringify(birthScenes));
   }
   await assert.rejects(
@@ -186,6 +186,33 @@ test('scene vocabulary versions translate old tags through synonyms; bucket keys
   assert.equal(sceneBucketKey('v1:task/learning', catalogue), key('v1:task/learning'), 'retired tags keep their own bucket');
   assert.equal(sceneBucketKey('user:task/漫画分镜', catalogue), key('user:task/漫画分镜'));
   assert.match(sceneBucketKey('v1:artifact/resume'), /^0x[0-9a-f]{64}$/);
+});
+
+test('词表 v1 覆盖演示里出现的每个场景', () => {
+  // Scenes named in docs/vision (03, 04, 06, README) and the mockups.
+  const demo = {
+    '工程师求职': ['context/job-search', 'role/engineer'],
+    '年终述职': ['context/performance-review'],
+    '设计作品集': ['role/designer', 'artifact/portfolio'],
+    '学生实习': ['context/job-search', 'role/student'],
+    '插画作品集': ['role/illustrator', 'artifact/portfolio'],
+    '求职材料 / 工程师 / 文档写作': ['context/job-search', 'role/engineer', 'task/writing'],
+    '创意 PPT': ['context/creative-visual', 'artifact/slides'],
+    '电商后台': ['context/ecommerce', 'artifact/admin-dashboard'],
+    'React / 落地页 / 商业官网': ['domain/frontend', 'artifact/web-page', 'context/corporate-site'],
+    '修复支付回调重复扣款': ['domain/backend', 'task/debug', 'context/payments'],
+    '慢查询': ['domain/backend', 'task/performance'],
+    '发布流程脚本化': ['domain/automation', 'task/release', 'artifact/script'],
+  };
+  for (const [name, ids] of Object.entries(demo)) {
+    for (const id of ids) assert.ok(findScene(id), `${name}: ${id}`);
+  }
+  // 创意 PPT and 电商后台 front-end Skills differ by more than the artifact.
+  assert.notEqual(findScene('context/creative-visual').dimension, findScene('artifact/slides').dimension);
+  // The AI capability resume dimension chart reads straight off tag labels.
+  const chart = { 调试与排障: 'task/debug', 后端与数据: 'domain/backend', 前端与交互: 'domain/frontend', 自动化与脚本: 'domain/automation', 系统设计: 'task/architecture' };
+  for (const [label, id] of Object.entries(chart)) assert.equal(findScene(id).label, label);
+  assert.match(findScene('task/writing').label, /文档.*沟通/);
 });
 
 test('the current vocabulary is chain-compatible and every id is unique', () => {
