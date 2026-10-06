@@ -157,6 +157,33 @@ test('the scene list is chain-compatible and every id is unique', () => {
   assert.equal(findScene('writing/resume'), null);
 });
 
+test('出处卡: each source session keeps its hit reason, pitfalls, and corrections', async () => {
+  const skillsDir = join(makeTempDir('obelisk-skills-'), 'skills');
+  const provenance = [
+    {
+      sessionId: 'session-a',
+      reason: '按"解决了什么问题"归纳经历',
+      excerpts: [{ messageUuid: 'm-1', text: '不要夸大个人在团队项目中的职责' }],
+      pitfalls: [' 直接罗列提交记录可读性差 '],
+      corrections: ['不要夸大个人在团队项目中的职责'],
+    },
+    { sessionId: 'session-b', reason: '面试案例用真实取舍' },
+  ];
+  const saved = await saveSkillDraft(skillsDir, draft({ provenance }));
+  assert.deepEqual(saved.provenance[0].pitfalls, ['直接罗列提交记录可读性差']);
+  assert.deepEqual(saved.provenance[0].corrections, ['不要夸大个人在团队项目中的职责']);
+  assert.equal('pitfalls' in saved.provenance[1], false);
+  const reread = await readSkill(skillsDir, 'ai-capability-resume');
+  assert.deepEqual(reread.provenance, saved.provenance);
+
+  for (const bad of [{ pitfalls: 'one' }, { corrections: [''] }, { corrections: [1] }]) {
+    await assert.rejects(
+      saveSkillDraft(skillsDir, draft({ provenance: [{ sessionId: 's', reason: 'r', ...bad }] })),
+      /provenance\[0\]\.(pitfalls|corrections) must be an array of non-empty strings/,
+    );
+  }
+});
+
 test('Skill names cannot escape the library directory', async () => {
   const skillsDir = join(makeTempDir('obelisk-skills-'), 'skills');
   for (const name of ['../escape', 'Upper', 'a/b', '', 'x'.repeat(65)]) {

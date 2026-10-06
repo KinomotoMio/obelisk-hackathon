@@ -47,10 +47,17 @@ export interface SkillProvenanceExcerpt {
   text: string;
 }
 
+// One source session of a Skill: why it was picked (the hit reason), short
+// verbatim excerpts, and the provenance card notes drawn from it — pitfalls hit
+// in that session and corrections the user made there. Excerpts come from
+// transcripts and are untrusted; pitfalls and corrections are drafted by the
+// agent. All of it is display data, escaped when rendered.
 export interface SkillProvenance {
   sessionId: string;
   reason: string;
   excerpts?: SkillProvenanceExcerpt[];
+  pitfalls?: string[];
+  corrections?: string[];
 }
 
 export interface SkillParent {
@@ -205,7 +212,7 @@ function parseProvenance(value: unknown): SkillProvenance[] {
   if (!Array.isArray(value)) fail('provenance must be an array');
   return value.map((entry, index) => {
     if (typeof entry !== 'object' || entry === null) fail(`provenance[${index}] must be an object`);
-    const { sessionId, reason, excerpts } = entry as Record<string, unknown>;
+    const { sessionId, reason, excerpts, pitfalls, corrections } = entry as Record<string, unknown>;
     if (typeof sessionId !== 'string' || sessionId === '') fail(`provenance[${index}].sessionId must be a non-empty string`);
     if (typeof reason !== 'string' || reason.trim() === '') fail(`provenance[${index}].reason must be a non-empty string`);
     const out: SkillProvenance = { sessionId, reason: reason.trim() };
@@ -217,6 +224,13 @@ function parseProvenance(value: unknown): SkillProvenance[] {
         if (messageUuid !== undefined && typeof messageUuid !== 'string') fail(`provenance[${index}].excerpts[${j}].messageUuid must be a string`);
         return messageUuid === undefined ? { text } : { messageUuid, text };
       });
+    }
+    for (const [field, value] of [['pitfalls', pitfalls], ['corrections', corrections]] as const) {
+      if (value === undefined) continue;
+      if (!Array.isArray(value) || value.some((item) => typeof item !== 'string' || item.trim() === '')) {
+        fail(`provenance[${index}].${field} must be an array of non-empty strings`);
+      }
+      out[field] = value.map((item: string) => item.trim());
     }
     return out;
   });
