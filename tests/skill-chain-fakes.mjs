@@ -1,9 +1,10 @@
 // Copyright (C) 2026 tommy0103 and contributors.
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// For running `obelisk skill mint` and `obelisk skill fetch` through the
-// built CLI: a stand-in for the online service's Skill side
-// (service/src/skills.ts plus MintSkill / PublishVersion through /v1/relay),
+// For running `obelisk skill mint`, `obelisk skill fetch`, and `obelisk usage`
+// through the built CLI: a stand-in for the online service's Skill side
+// (service/src/skills.ts and usage.ts, plus MintSkill / PublishVersion /
+// ReportUsage through /v1/relay),
 // and people with their own HOME, data directory, and keychain entries. It keeps a
 // SkillRegistry in memory and checks signatures, nonces, and fingerprints the
 // way the contract and the service do. The real routes are covered in
@@ -17,7 +18,7 @@ import { join } from 'node:path';
 
 import { getAddress, recoverTypedDataAddress } from 'viem';
 
-import { obeliskDomain, pinnedDeployments, skillContentTypes, skillRegistryTypes } from '../packages/core/src/chain-protocol.ts';
+import { obeliskDomain, pinnedDeployments, skillContentTypes, skillRegistryTypes, usageStatsTypes } from '../packages/core/src/chain-protocol.ts';
 import { cliEnv, installFakeKeychain, runCliAsync } from './chain-cli-fakes.mjs';
 import { makeTempDir } from './temp-dirs.mjs';
 
@@ -30,11 +31,15 @@ const EXPLORER = 'https://scan.bohr.life';
  */
 export async function startFakeSkillService() {
   const skills = []; // index + 1 = Skill id
-  const nonces = new Map();
+  const nonces = new Map(); // `${contract}:${address}` -> next nonce
+  const usage = new Map(); // `${fingerprint}:${address}` -> { cumulative, scenes, outcomes }
   const contents = new Map(); // 0x fingerprint -> { name, description, body, author }
   const relays = [];
   const respond = { relay: null, tamper: false };
   const domain = obeliskDomain('SkillRegistry', 968, testnet.contracts.SkillRegistry);
+  const usageDomain = obeliskDomain('UsageStats', 968, testnet.contracts.UsageStats);
+  const nonceOf = (contract, address) => BigInt(nonces.get(`${contract}:${address}`) ?? 0);
+  const useNonce = (contract, address) => nonces.set(`${contract}:${address}`, Number(nonceOf(contract, address)) + 1);
 
   const versionOf = (fingerprint) => {
     for (const [index, skill] of skills.entries()) {
@@ -77,14 +82,61 @@ export async function startFakeSkillService() {
     if (url.pathname === '/v1/chain') {
       return send(200, { chainId: 968, name: 'BOT Chain Testnet', explorerUrl: EXPLORER, contracts: testnet.contracts, relayer: null });
     }
-    const nonceMatch = /^\/v1\/nonces\/SkillRegistry\/(0x[0-9a-fA-F]{40})$/.exec(url.pathname);
+    const nonceMatch = /^\/v1\/nonces\/(SkillRegistry|UsageStats)\/(0x[0-9a-fA-F]{40})$/.exec(url.pathname);
     if (nonceMatch) {
-      const address = getAddress(nonceMatch[1]);
-      return send(200, { contract: 'SkillRegistry', address, nonce: String(nonces.get(address) ?? 0) });
+      const address = getAddress(nonceMatch[2]);
+      return send(200, { contract: nonceMatch[1], address, nonce: String(nonceOf(nonceMatch[1], address)) });
+    }
+    const usageMatch = /^\/v1\/usage\/(0x[0-9a-f]{64})$/.exec(url.pathname);
+    if (usageMatch && request.method === 'GET') {
+      const fingerprint = usageMatch[1];
+      const found = versionOf(fingerprint);
+      if (!found) return fail(404, 'unknown_skill', `No Skill version with fingerprint ${fingerprint}`);
+      const reports = [...usage].filter(([key]) => key.startsWith(`${fingerprint}:`));
+      const wallet = url.searchParams.get('wallet');
+      return send(200, {
+        chainId: 968, fingerprint, skillId: String(found.skillId), versionIndex: found.versionIndex,
+        totalInvocations: reports.reduce((sum, [, report]) => sum + report.cumulative, 0),
+        uniqueWallets: reports.length,
+        lastReportAt: null,
+        ...(wallet ? { wallet: { address: getAddress(wallet), cumulative: usage.get(`${fingerprint}:${getAddress(wallet)}`)?.cumulative ?? 0, reportedAt: null } } : {}),
+      });
     }
     if (url.pathname === '/v1/relay' && request.method === 'POST') {
       const { action, message, signature } = JSON.parse(raw);
       relays.push({ action, message });
+      if (action === 'ReportUsage') {
+        const reporter = getAddress(message.reporter);
+        const buckets = (list) => list.map((bucket) => ({ key: bucket.key, cumulative: BigInt(bucket.cumulative) }));
+        const typed = {
+          ...message, cumulativeInvocations: BigInt(message.cumulativeInvocations), scenes: buckets(message.scenes), outcomes: buckets(message.outcomes),
+          nonce: BigInt(message.nonce), deadline: BigInt(message.deadline),
+        };
+        const signer = await recoverTypedDataAddress({ domain: usageDomain, types: usageStatsTypes, primaryType: 'ReportUsage', message: typed, signature });
+        if (signer !== reporter) return fail(401, 'invalid_signature', `The signature was not made by ${reporter}`);
+        if (typed.nonce !== nonceOf('UsageStats', reporter)) return fail(409, 'stale_nonce', 'stale nonce');
+        if (!versionOf(message.fingerprint)) return fail(422, 'contract_rejected', `UsageStats rejected ReportUsage: UnknownFingerprint(${message.fingerprint})`);
+        const key = `${message.fingerprint}:${reporter}`;
+        const previous = usage.get(key) ?? { cumulative: 0, scenes: {}, outcomes: {} };
+        if (Number(typed.cumulativeInvocations) < previous.cumulative) return fail(422, 'contract_rejected', 'InvocationsDecreased');
+        for (const kind of ['scenes', 'outcomes']) {
+          const keys = message[kind].map((bucket) => bucket.key);
+          if (keys.some((bucketKey, index) => index > 0 && bucketKey <= keys[index - 1])) return fail(422, 'contract_rejected', 'BucketKeysNotAscending');
+          for (const bucket of message[kind]) {
+            if (Number(bucket.cumulative) < (previous[kind][bucket.key] ?? 0)) return fail(422, 'contract_rejected', 'BucketDecreased');
+            if (BigInt(bucket.cumulative) > typed.cumulativeInvocations) return fail(422, 'contract_rejected', 'BucketExceedsInvocations');
+          }
+        }
+        const next = { cumulative: Number(typed.cumulativeInvocations), scenes: { ...previous.scenes }, outcomes: { ...previous.outcomes } };
+        for (const kind of ['scenes', 'outcomes']) for (const bucket of message[kind]) next[kind][bucket.key] = Number(bucket.cumulative);
+        usage.set(key, next);
+        useNonce('UsageStats', reporter);
+        const txHash = `0x${String(relays.length).padStart(4, '0')}${'c'.repeat(60)}`;
+        const pending = respond.relay === 'pending';
+        respond.relay = null;
+        if (pending) return send(202, { status: 'pending', action, signer: reporter, txHash, explorerUrl: `${EXPLORER}/tx/${txHash}` });
+        return send(200, { status: 'confirmed', action, signer: reporter, txHash, blockNumber: '9', explorerUrl: `${EXPLORER}/tx/${txHash}` });
+      }
       if (action !== 'MintSkill' && action !== 'PublishVersion') return fail(400, 'unknown_action', action);
       const author = getAddress(message.author);
       const typed = action === 'MintSkill'
@@ -92,7 +144,7 @@ export async function startFakeSkillService() {
         : { ...message, skillId: BigInt(message.skillId), nonce: BigInt(message.nonce), deadline: BigInt(message.deadline) };
       const signer = await recoverTypedDataAddress({ domain, types: skillRegistryTypes, primaryType: action, message: typed, signature });
       if (signer !== author) return fail(401, 'invalid_signature', `The signature was not made by ${author}`);
-      if (typed.nonce !== BigInt(nonces.get(author) ?? 0)) return fail(409, 'stale_nonce', 'stale nonce');
+      if (typed.nonce !== nonceOf('SkillRegistry', author)) return fail(409, 'stale_nonce', 'stale nonce');
       const taken = versionOf(message.fingerprint);
       if (taken) return fail(422, 'contract_rejected', `SkillRegistry rejected ${action}: FingerprintTaken(${message.fingerprint}, ${taken.skillId})`);
       const publishedAt = `2026-10-07T00:00:${String(relays.length).padStart(2, '0')}.000Z`;
@@ -108,7 +160,7 @@ export async function startFakeSkillService() {
         if (skill.author !== author) return fail(422, 'contract_rejected', `NotAuthor(${typed.skillId}, ${author})`);
         skill.versions.push({ fingerprint: message.fingerprint, publishedAt });
       }
-      nonces.set(author, (nonces.get(author) ?? 0) + 1);
+      useNonce('SkillRegistry', author);
       const txHash = `0x${String(relays.length).padStart(4, '0')}${'a'.repeat(60)}`;
       const pending = respond.relay === 'pending';
       respond.relay = null;
@@ -153,6 +205,7 @@ export async function startFakeSkillService() {
     url: `http://127.0.0.1:${server.address().port}`,
     skills,
     contents,
+    usage,
     relays,
     respond,
     close: () => server.close(),
