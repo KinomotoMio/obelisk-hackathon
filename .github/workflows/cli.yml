@@ -30,6 +30,13 @@ jobs:
       - name: Verify complete repository suite
         if: runner.os == 'Linux'
         run: npm test
+      - name: Verify BOT Chain contracts
+        if: runner.os == 'Linux'
+        working-directory: chain
+        run: |
+          npm ci
+          npm test
+          npm run typecheck
       - run: npm run build:cli
       - name: Verify CLI package and runtime contract
         run: node --experimental-test-module-mocks --test tests/cli-package.test.mjs tests/runtime-cli-envelope.test.mjs tests/runtime.test.mjs tests/codex-index.test.mjs
