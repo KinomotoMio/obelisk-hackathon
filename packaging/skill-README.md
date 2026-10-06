@@ -31,6 +31,12 @@ Then in any Claude Code session:
 /obelisk <your question>
 ```
 
+The repository also carries standalone skills that use the same CLI. Pick
+them when the installer asks which skills to install:
+
+- `obelisk-distill` (「沉淀 Skill」): distill a Skill draft with a provenance
+  card from your own session history, e.g. "把我最近准备求职材料的做法沉淀成一个 Skill".
+
 ## Source
 
 This repository is **auto-published** from the docs-only skill artifact of

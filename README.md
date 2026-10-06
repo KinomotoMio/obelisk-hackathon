@@ -261,6 +261,9 @@ skill-doc/                    # Source for the docs-only obelisk agent skill
 └── references/               # Progressive-disclosure API/schema/pattern docs
     └── recap/                # Per-card recap retrieval + writing references
 
+agent-skills/                 # Standalone docs-only skills shipped with obelisk
+└── obelisk-distill/          # 「沉淀 Skill」: distill a Skill draft from history
+
 app/                          # Electron desktop app (electron-vite + Vue)
 ├── src/main/                 # TypeScript main process (consumes shared core)
 ├── src/preload/              # CJS preload (sandbox)
@@ -299,9 +302,12 @@ It starts at `skill-doc/references/recap/overview.md` and proceeds card-by-card:
   and `schema.sql`.
 - `dist/obelisk-skill/` is produced by `npm run build:skill`. It is the
   docs-only skill artifact: `SKILL.md`, references, and skill package metadata.
-- Skill publishing stages that artifact at `skills/obelisk/` in the
-  `obelisk-skill` repository; only `README.md` and `LICENSE` remain at the
-  repository root for `npx skills` discovery.
+- `dist/agent-skills/<name>/` is also produced by `npm run build:skill`: one
+  docs-only artifact per standalone skill in `agent-skills/`.
+- Skill publishing stages the obelisk artifact at `skills/obelisk/` and each
+  standalone skill at `skills/<name>/` in the `obelisk-skill` repository; only
+  `README.md` and `LICENSE` remain at the repository root for `npx skills`
+  discovery.
 
 Both directories are generated and should not be edited by hand. The Electron
 app imports `packages/core/src/` directly so electron-vite can bundle Core.

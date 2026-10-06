@@ -54,6 +54,37 @@ test('skill release staging produces the npx skills repository layout', () => {
   }
 });
 
+test('skill release staging installs standalone skills next to obelisk under skills/<name>', () => {
+  const root = makeTempDir('obelisk-skill-release-');
+  const artifact = join(root, 'artifact');
+  const standalone = join(root, 'agent-skills');
+  const target = join(root, 'repo');
+  try {
+    mkdirSync(join(artifact, 'references'), { recursive: true });
+    writeFileSync(join(artifact, 'SKILL.md'), '---\nname: obelisk\ndescription: test\n---\n');
+    writeFileSync(join(artifact, 'package.json'), '{"type":"module"}\n');
+    mkdirSync(join(standalone, 'obelisk-distill'), { recursive: true });
+    writeFileSync(join(standalone, 'obelisk-distill', 'SKILL.md'), '---\nname: obelisk-distill\ndescription: test\n---\n');
+    mkdirSync(join(standalone, 'not-a-skill'), { recursive: true });
+
+    const result = spawnSync('bash', [stageScript, target, artifact, standalone], { cwd: repoRoot, encoding: 'utf8' });
+    assert.equal(result.status, 0, result.stderr || result.stdout);
+    assert.deepEqual(readdirSync(join(target, 'skills')).sort(), ['obelisk', 'obelisk-distill']);
+    assert.equal(existsSync(join(target, 'skills', 'obelisk-distill', 'SKILL.md')), true);
+    assert.equal(existsSync(join(target, 'skills', 'obelisk', 'SKILL.md')), true);
+
+    // A standalone skill may not shadow the obelisk skill; refuse before touching the target.
+    mkdirSync(join(standalone, 'obelisk'), { recursive: true });
+    writeFileSync(join(standalone, 'obelisk', 'SKILL.md'), '---\nname: obelisk\ndescription: impostor\n---\n');
+    const collision = spawnSync('bash', [stageScript, target, artifact, standalone], { cwd: repoRoot, encoding: 'utf8' });
+    assert.notEqual(collision.status, 0);
+    assert.match(collision.stderr, /collides with the obelisk skill/);
+    assert.equal(existsSync(join(target, 'skills', 'obelisk-distill', 'SKILL.md')), true);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+
 test('CI and local publish use the same skill repository staging step', () => {
   const workflow = readFileSync(join(repoRoot, '.github', 'workflows', 'publish-skill.yml'), 'utf8');
   const localPublish = readFileSync(join(repoRoot, 'packaging', 'publish-skill.sh'), 'utf8');

@@ -8,6 +8,8 @@ import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { findDynamicSkillContent } from '../packages/core/src/skills.ts';
+
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const artifact = join(repoRoot, 'dist', 'obelisk-skill');
@@ -34,4 +36,24 @@ test('build:skill produces a docs-only skill that delegates execution to the CLI
   assert.match(skill, /Never\s+degrade to a stale, read-only index/);
   assert.doesNotMatch(skill, /\$SKILL_DIR\/scripts\/runtime\.js/);
   assert.doesNotMatch(`${skill}\n${schema}`, /scripts\//);
+});
+
+test('build:skill ships the standalone 沉淀 Skill as a docs-only skill that delegates to the CLI', () => {
+  execFileSync(npmCommand, ['run', 'build:skill'], {
+    cwd: repoRoot,
+    encoding: 'utf8',
+    shell: process.platform === 'win32',
+    stdio: 'pipe',
+  });
+
+  const distill = join(repoRoot, 'dist', 'agent-skills', 'obelisk-distill');
+  assert.equal(existsSync(join(distill, 'SKILL.md')), true);
+  assert.equal(existsSync(join(distill, 'scripts')), false, 'skill must not ship a second runtime');
+  const skill = readFileSync(join(distill, 'SKILL.md'), 'utf8');
+  assert.match(skill, /^---\nname: obelisk-distill\n/);
+  assert.match(skill, /Bash\(obelisk:\*\)/);
+  assert.match(skill, /obelisk skill save/);
+  assert.match(skill, /obelisk skill scenes/);
+  // Claude Code rewrites these on load; the skill must load exactly as written.
+  assert.deepEqual(findDynamicSkillContent(skill), []);
 });
