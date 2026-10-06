@@ -26,6 +26,8 @@ export interface ObeliskPaths {
   // Wallet address and keychain locator (#4); the private key lives in the
   // system keychain, never here. See wallet.ts.
   readonly walletPath: string;
+  // Private share drafts and sent-share records (#8), see share-drafts.ts.
+  readonly sharesDir: string;
   // Pre-~/.obelisk database location, copied forward only in the legacy layout.
   readonly legacyDbPath: string;
 }
@@ -67,6 +69,7 @@ export function resolveObeliskPaths({
     recapDir: join(dataDir, 'recap'),
     skillsDir: join(dataDir, 'skills'),
     walletPath: join(dataDir, 'wallet.json'),
+    sharesDir: join(dataDir, 'shares'),
     legacyDbPath,
   };
 }
