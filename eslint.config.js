@@ -16,6 +16,8 @@ export default tseslint.config(
       'node_modules/**',
       'app/**',
       'dist/**',
+      // Workspace build output (tsc emits .js and .d.ts here).
+      'packages/*/dist/**',
       'release/**',
       '.dev.docs/**',
       '.obelisk/**',
