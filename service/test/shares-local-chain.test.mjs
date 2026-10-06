@@ -4,7 +4,7 @@
 // Private shares end to end on a local Hardhat node (see local-chain.mjs):
 // content encrypted exactly as the CLI does it (packages/core/src), uploaded,
 // and the share authorization written on chain through the relay; then opened
-// by the recipient (open receipt first, key package after).
+// by the recipient (open receipt first, key package after) and revoked.
 
 import { after, before, test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -181,7 +181,7 @@ test('打开：回执先上链，再交出钥匙包；同一请求可续上，�
 
 test('打开被拒：转发者、冒充接收者、已撤回、已过期；拒绝时不花 gas', { skip }, async () => {
   const app = makeApp();
-  const { sender, recipient, shareId } = await createdShare(app, { maxOpens: 3 });
+  const { sender, recipient, shareId, created } = await createdShare(app, { maxOpens: 3 });
   const forwardee = privateKeyToAccount(generatePrivateKey());
   const refuse = async (path, request, status, code) => {
     const result = await app.call('POST', path, request);
@@ -204,13 +204,20 @@ test('打开被拒：转发者、冒充接收者、已撤回、已过期；拒�
   await refuse(`/v1/shares/${shareId}/open`, tooLong, 400, 'deadline_too_far');
   // RecordOpen reaches the chain only through the open flow, never POST /v1/relay.
   await refuse('/v1/relay', { action: 'RecordOpen', ...(await signOpen(app, recipient.account, shareId)) }, 400, 'unknown_action');
+  await refuse(`/v1/shares/${shareId}/revoke`, await signRevoke(app, forwardee, shareId), 403, 'not_sender');
   assert.equal(await publicClient.getBalance({ address: relayerWallet.address }), balanceBefore, 'no gas was spent');
 
-  const revoked = await app.call('POST', '/v1/relay', { action: 'RevokeShare', ...(await signRevoke(app, sender, shareId)) });
+  const revoked = await app.call('POST', `/v1/shares/${shareId}/revoke`, await signRevoke(app, sender, shareId));
   assert.equal(revoked.status, 200, JSON.stringify(revoked.body));
-  assert.equal((await app.call('GET', `/v1/shares/${shareId}`)).body.status, 'revoked');
+  assert.equal(revoked.body.status, 'confirmed');
+  assert.equal(revoked.body.shareId, shareId);
+  const read = await app.call('GET', `/v1/shares/${shareId}`);
+  assert.equal(read.body.status, 'revoked');
+  assert.equal(read.body.transactions.revoke.txHash, revoked.body.txHash);
+  assert.equal(read.body.transactions.create.txHash, created.body.txHash);
   await refuse(`/v1/shares/${shareId}/open`, await signOpen(app, recipient.account, shareId), 410, 'share_revoked');
   await refuse(`/v1/shares/${shareId}/open`, await signOpen(app, forwardee, shareId), 403, 'not_recipient');
+  await refuse(`/v1/shares/${shareId}/revoke`, await signRevoke(app, sender, shareId), 409, 'already_revoked');
 
   const short = await createdShare(app, { ttl: 2 });
   await new Promise((resolve) => setTimeout(resolve, 2500));

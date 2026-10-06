@@ -13,6 +13,7 @@
 //   POST /v1/shares                     upload a share's ciphertext + key package, relay CreateShare
 //   GET  /v1/shares/:id                 a share's on-chain rules, status, and receipts
 //   POST /v1/shares/:id/open            recipient-signed RecordOpen -> receipt on chain, then the key package
+//   POST /v1/shares/:id/revoke          sender-signed RevokeShare -> relayed, transaction kept with the share
 //
 // The service never sees plaintext content and does nothing that needs AI.
 
@@ -22,7 +23,7 @@ import { RequestError } from './actions.ts';
 import type { ServiceChainConfig } from './chains.ts';
 import { parseAddressParam, parseContractParam, readKey, readNonce, readTransaction } from './reads.ts';
 import type { Relayer, RelayRecord } from './relayer.ts';
-import { createShare, MAX_SHARE_BODY_BYTES, openShare, parseShareId, readShare, type ShareDeps, type ShareStore } from './shares.ts';
+import { createShare, MAX_SHARE_BODY_BYTES, openShare, parseShareId, readShare, revokeShare, type ShareDeps, type ShareStore } from './shares.ts';
 
 export const MAX_BODY_BYTES = 64 * 1024;
 
@@ -128,6 +129,10 @@ export async function handleRequest(request: Request, deps: AppDeps): Promise<Re
     }
     if (request.method === 'POST' && route.length === 3 && route[0] === 'shares' && route[2] === 'open') {
       const reply = await openShare(shareDeps(request, deps), parseShareId(route[1]!), await readJsonBody(request));
+      return json(reply.body, reply.status);
+    }
+    if (request.method === 'POST' && route.length === 3 && route[0] === 'shares' && route[2] === 'revoke') {
+      const reply = await revokeShare(shareDeps(request, deps), parseShareId(route[1]!), await readJsonBody(request));
       return json(reply.body, reply.status);
     }
     if (request.method !== 'GET') throw new RequestError(405, 'method_not_allowed', `${request.method} is not supported on ${pathname}`);

@@ -31,7 +31,8 @@ are involved.
 | `POST /v1/relay` | submits `{ action, message, signature }` and returns `200 confirmed` with the explorer link, or `202 pending` if the receipt took longer than about 25 s (poll `/v1/tx/:hash`) |
 | `POST /v1/shares` | stores a private share's ciphertext and key package, then relays its `CreateShare`; see [Private shares](#private-shares) |
 | `GET /v1/shares/:id` | a share's on-chain rules and `status` (`active`, `exhausted`, `expired`, `revoked`), open receipts, transaction links, and whether its content is stored |
-| `POST /v1/shares/:id/open` | the recipient's signed `RecordOpen`: checks the rules, puts the open receipt on chain, then returns the key package and ciphertext; see [Opening](#opening) |
+| `POST /v1/shares/:id/open` | the recipient's signed `RecordOpen`: checks the rules, puts the open receipt on chain, then returns the key package and ciphertext; see [Opening and revoking](#opening-and-revoking) |
+| `POST /v1/shares/:id/revoke` | the sender's signed `RevokeShare`: relayed like `/v1/relay`, and its transaction is kept with the share |
 
 `action` is the EIP-712 primary type: `RegisterKey`, `CreateShare`,
 `RevokeShare`, `MintSkill`, `PublishVersion`, or `ReportUsage`. `message` is
@@ -76,7 +77,7 @@ has registered now (`409 recipient_key_changed`), that the share id is new
 stores the upload and relays `CreateShare` like `/v1/relay`, answering with
 the relay result plus `shareId`. If the relay refuses, the upload is deleted.
 
-### Opening
+### Opening and revoking
 
 The recipient opens a share by signing `RecordOpen { recipient, shareId,
 nonce, deadline }` (nonce from `GET /v1/nonces/ShareRegistry/:address`,
@@ -103,6 +104,12 @@ and `ciphertext` (base64). Every release is therefore counted on chain. If
 the receipt takes longer than about 25 s, the answer is `202` with `status:
 "pending"`; posting the same signed request again resumes that open (it
 never counts twice) and returns the key package once confirmed.
+
+`POST /v1/shares/:id/revoke` takes the sender's signed `RevokeShare { sender,
+shareId, nonce, deadline }`. It refuses a signer other than the sender (`403
+not_sender`) and a share already revoked (`409 already_revoked`) before
+relaying, and keeps the transaction so `GET /v1/shares/:id` links it. The
+stored ciphertext is kept; opens are refused from then on.
 
 ### Formats
 

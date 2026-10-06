@@ -13,6 +13,7 @@
 //   POST /v1/shares             { message: CreateShare, signature, keyPackage, ciphertext (base64) }
 //   GET  /v1/shares/:id         the on-chain rules, status, open receipts, and transactions
 //   POST /v1/shares/:id/open    { message: RecordOpen, signature } -> receipt, key package, ciphertext
+//   POST /v1/shares/:id/revoke  { message: RevokeShare, signature } -> relayed RevokeShare
 //
 // Formats (the CLI writes them in packages/core/src/share-crypto.ts; the web
 // reader, #10, reads them):
@@ -404,4 +405,29 @@ export async function openShare(deps: ShareDeps, shareId: Hex, body: unknown): P
   const latest = await store.getTransactions(shareId);
   await store.putTransactions(shareId, { ...latest, opens: [...(latest.opens ?? []), { txHash, openCount: null, request: requestId }] });
   return finishOpen(deps, store, share, txHash);
+}
+
+/** POST /v1/shares/:id/revoke: relay the sender's RevokeShare and keep its transaction with the share. */
+export async function revokeShare(deps: ShareDeps, shareId: Hex, body: unknown): Promise<ShareReply> {
+  if (typeof body !== 'object' || body === null) throw new RequestError(400, 'invalid_request', 'Request body must be a JSON object');
+  const { message, signature } = body as Record<string, unknown>;
+  const request = parseRelayRequest({ action: 'RevokeShare', message, signature });
+  if (request.message['shareId'] !== shareId) {
+    throw new RequestError(400, 'share_id_mismatch', `message.shareId is ${String(request.message['shareId'])}, but the URL names share ${shareId}`);
+  }
+  const share = await readOnChainShare(deps, shareId);
+  if (!share) throw new RequestError(404, 'unknown_share', `No share ${shareId} on ${deps.config.chain.name}`);
+  await verifyActionSignature(deps.publicClient, deps.config, request);
+  if (!isAddressEqual(share.sender, request.signer)) {
+    throw new RequestError(403, 'not_sender', `Only the sender ${getAddress(share.sender)} can revoke this share`);
+  }
+  if (share.revoked) throw new RequestError(409, 'already_revoked', `This share was already revoked at ${iso(share.revokedAt)}`);
+
+  const relayed = await deps.relay({ action: 'RevokeShare', message, signature });
+  if (relayed.status >= 400) return relayFailure(relayed);
+  const result = await relayed.json() as Record<string, unknown> & { txHash: Hex };
+  if (deps.store) {
+    await deps.store.putTransactions(shareId, { ...(await deps.store.getTransactions(shareId)), revoke: result.txHash }).catch(() => undefined);
+  }
+  return { status: relayed.status, body: { ...result, shareId } };
 }
