@@ -14,7 +14,7 @@
     "bindings": [{ "name": "RELAY_QUEUE", "class_name": "RelayQueue" }]
   },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["RelayQueue"] }],
-  // No ids: wrangler provisions the namespace and bucket on first deploy.
-  "kv_namespaces": [{ "binding": "INDEX" }],
-  "r2_buckets": [{ "binding": "BLOBS" }]
+  // Provisioned by the first deploy; ids pinned so later deploys reuse them.
+  "kv_namespaces": [{ "binding": "INDEX", "id": "33e64093414b4c5a9177986f5c54a63b" }],
+  "r2_buckets": [{ "binding": "BLOBS", "bucket_name": "obelisk-service-blobs" }]
 }
