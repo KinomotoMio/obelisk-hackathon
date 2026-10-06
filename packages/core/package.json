@@ -10,6 +10,7 @@
     "./indexer": "./dist/indexer.js",
     "./index-finalize": "./dist/index-finalize.js",
     "./parsing": "./dist/parsing.js",
+    "./paths": "./dist/paths.js",
     "./persist": "./dist/persist.js",
     "./provider-indexing": "./dist/provider-indexing.js",
     "./session-detail": "./dist/session-detail.js",
