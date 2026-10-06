@@ -83,6 +83,13 @@ export async function startFakeService({ contracts = testnet.contracts } = {}) {
   const shares = new Map();
   const uploads = [];
   const respond = { share: null };
+  const txUrl = (hash) => `https://scan.bohr.life/tx/${hash}`;
+  const shareStatus = (share) => {
+    if (share.revoked) return 'revoked';
+    if (Date.now() / 1000 >= Number(share.message.expiresAt)) return 'expired';
+    if (share.opens.length >= share.message.maxOpens) return 'exhausted';
+    return 'active';
+  };
   const server = createServer(async (request, response) => {
     let body = '';
     for await (const chunk of request) body += chunk;
@@ -158,7 +165,7 @@ export async function startFakeService({ contracts = testnet.contracts } = {}) {
       uploads.push(upload);
       shareNonces.set(sender, (shareNonces.get(sender) ?? 0) + 1);
       const txHash = `0x${String(uploads.length).padStart(4, '0')}${'5'.repeat(60)}`;
-      shares.set(message.shareId, { message: typed, txHash });
+      shares.set(message.shareId, { message: typed, txHash, opens: [], revoked: null, revokeTx: null });
       const explorerUrl = `https://scan.bohr.life/tx/${txHash}`;
       if (forced === 'pending') return send(202, { status: 'pending', action: 'CreateShare', signer: sender, txHash, explorerUrl, shareId: message.shareId });
       return send(200, { status: 'confirmed', action: 'CreateShare', signer: sender, txHash, blockNumber: '7', explorerUrl, shareId: message.shareId });
@@ -168,26 +175,27 @@ export async function startFakeService({ contracts = testnet.contracts } = {}) {
       const share = shares.get(shareMatch[1]);
       if (!share) return send(404, { error: { code: 'unknown_share', message: 'unknown share' } });
       const { message, txHash } = share;
+      const link = (hash) => (hash ? { txHash: hash, explorerUrl: txUrl(hash) } : null);
       return send(200, {
         shareId: message.shareId,
-        status: 'active',
+        status: shareStatus(share),
         sender: getAddress(message.sender),
         recipient: getAddress(message.recipient),
         contentHash: message.contentHash,
         maxOpens: message.maxOpens === 0xffffffff ? null : message.maxOpens,
-        openCount: 0,
+        openCount: share.opens.length,
         createdAt: '2026-10-07T00:00:00.000Z',
         expiresAt: new Date(Number(message.expiresAt) * 1000).toISOString(),
-        revoked: false,
-        revokedAt: null,
-        receipts: [],
-        transactions: { create: { txHash, explorerUrl: `https://scan.bohr.life/tx/${txHash}` }, revoke: null },
+        revoked: Boolean(share.revoked),
+        revokedAt: share.revoked,
+        receipts: share.opens.map((open, index) => ({ openCount: index + 1, openedAt: open.openedAt, blockNumber: '8', txHash: open.txHash, explorerUrl: txUrl(open.txHash) })),
+        transactions: { create: link(txHash), revoke: link(share.revokeTx) },
         contentStored: true,
       });
     }
     const txMatch = /^\/v1\/tx\/(0x[0-9a-f]{64})$/.exec(url.pathname);
     if (txMatch) {
-      return send(200, { txHash: txMatch[1], status: 'pending', explorerUrl: `https://scan.bohr.life/tx/${txMatch[1]}`, relay: null });
+      return send(200, { txHash: txMatch[1], status: 'pending', explorerUrl: txUrl(txMatch[1]), relay: null });
     }
     return send(404, { error: { code: 'not_found', message: 'not found' } });
   });
@@ -199,6 +207,13 @@ export async function startFakeService({ contracts = testnet.contracts } = {}) {
     respond,
     /** Mark a wallet as activated with `pubKey`, as a confirmed RegisterKey would. */
     registerKey: (address, pubKey) => keys.set(getAddress(address), { pubKey, version: 1 }),
+    /** The recipient opened `shareId`, as a confirmed RecordOpen would record it. */
+    recordOpen: (shareId, openedAt) => {
+      const share = shares.get(shareId);
+      share.opens.push({ openedAt, txHash: `0x${'8'.repeat(4)}${String(share.opens.length + 1).padStart(60, '0')}` });
+    },
+    /** Move `shareId` past its expiry. */
+    expire: (shareId) => { shares.get(shareId).message.expiresAt = 1n; },
     close: () => server.close(),
   };
 }

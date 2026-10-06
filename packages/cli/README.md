@@ -106,6 +106,8 @@ obelisk share draft <session-id> --to 0x… \
   [--messages 12-48] [--opens 1|unlimited] [--expires 24h]   # privacy check: types and locations only
 obelisk share send <draft-id> --redact all          # preview (or --redact 1,3 / --redact none)
 obelisk share send <draft-id> --confirm             # encrypt, upload, write the share on chain
+obelisk share list [--to 0x…]                       # sent shares: unread / read / expired / revoked (#11)
+obelisk share status <draft-id|share-id>            # one share, with every open receipt
 ```
 
 Message numbers are positions in the session detail as the App shows it. The
