@@ -12,6 +12,10 @@ export default defineConfig({
     settings: {
       evmVersion: EVM,
       optimizer: { enabled: true, runs: 200 },
+      // The *BySig entry points take the user's fields plus deadline and
+      // signature, which exceeds the legacy pipeline's stack; the IR pipeline
+      // handles it without reshaping the public ABI.
+      viaIR: true,
     },
   },
   networks: {

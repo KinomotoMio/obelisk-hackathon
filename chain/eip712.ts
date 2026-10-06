@@ -14,6 +14,7 @@ export const EIP712_VERSION = "1";
 
 export const domainNames = {
   KeyRegistry: "ObeliskKeyRegistry",
+  ShareRegistry: "ObeliskShareRegistry",
 } as const;
 
 export type ObeliskContractName = keyof typeof domainNames;
@@ -33,4 +34,39 @@ export const keyRegistryTypes = {
     { name: "nonce", type: "uint256" },
     { name: "deadline", type: "uint256" },
   ],
+} as const;
+
+export const shareRegistryTypes = {
+  CreateShare: [
+    { name: "sender", type: "address" },
+    { name: "shareId", type: "bytes32" },
+    { name: "recipient", type: "address" },
+    { name: "contentHash", type: "bytes32" },
+    { name: "maxOpens", type: "uint32" },
+    { name: "expiresAt", type: "uint64" },
+    { name: "nonce", type: "uint256" },
+    { name: "deadline", type: "uint256" },
+  ],
+  RecordOpen: [
+    { name: "recipient", type: "address" },
+    { name: "shareId", type: "bytes32" },
+    { name: "nonce", type: "uint256" },
+    { name: "deadline", type: "uint256" },
+  ],
+  RevokeShare: [
+    { name: "sender", type: "address" },
+    { name: "shareId", type: "bytes32" },
+    { name: "nonce", type: "uint256" },
+    { name: "deadline", type: "uint256" },
+  ],
+} as const;
+
+/** `ShareRegistry.checkOpen` result codes. */
+export const OpenStatus = {
+  Ok: 0,
+  Unknown: 1,
+  NotRecipient: 2,
+  Exhausted: 3,
+  Expired: 4,
+  Revoked: 5,
 } as const;
