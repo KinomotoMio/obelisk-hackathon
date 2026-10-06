@@ -14,6 +14,7 @@
     "./persist": "./dist/persist.js",
     "./provider-indexing": "./dist/provider-indexing.js",
     "./session-detail": "./dist/session-detail.js",
+    "./skills": "./dist/skills.js",
     "./providers/claude": "./dist/providers/claude.js",
     "./providers/codex": "./dist/providers/codex.js",
     "./providers/deepseek": "./dist/providers/deepseek.js",

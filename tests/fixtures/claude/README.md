@@ -13,3 +13,17 @@ parser-irrelevant noise; no retained line was edited.
 
 The provider consumes `custom-title` and ignores `agent-name`; both are
 kept to document what real transcripts carry.
+
+`skill-load-session.jsonl` holds the two records Claude Code 2.1.289 wrote
+when it loaded `skills/fingerprint-probe/SKILL.md` (copied here unchanged),
+captured on 2026-10-07 from a project whose `.claude/skills/` contained only
+that Skill:
+
+    claude -p --model haiku "/fingerprint-probe"
+    claude -p --model haiku 'Use the Skill tool to run the fingerprint-probe skill with args "alpha beta".'
+
+The first record is the slash-command load, the second the Skill-tool load
+with arguments (Claude Code appends `ARGUMENTS: alpha beta`). Only the
+capture directory was rewritten to `/tmp/fp-probe`; everything else is
+byte-for-byte. They pin the Skill version fingerprint contract
+(`packages/core/src/skills.ts`).

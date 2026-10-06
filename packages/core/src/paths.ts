@@ -21,6 +21,8 @@ export interface ObeliskPaths {
   readonly settingsPath: string;
   readonly dbPath: string;
   readonly recapDir: string;
+  // Local Skill library (#14), see skills.ts.
+  readonly skillsDir: string;
   // Pre-~/.obelisk database location, copied forward only in the legacy layout.
   readonly legacyDbPath: string;
 }
@@ -60,6 +62,7 @@ export function resolveObeliskPaths({
     settingsPath: join(dataDir, 'settings.json'),
     dbPath: join(dataDir, 'obelisk.sqlite'),
     recapDir: join(dataDir, 'recap'),
+    skillsDir: join(dataDir, 'skills'),
     legacyDbPath,
   };
 }
