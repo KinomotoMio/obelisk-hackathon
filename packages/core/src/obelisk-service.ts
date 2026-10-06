@@ -204,6 +204,16 @@ export class ObeliskServiceClient {
     });
   }
 
+  /** Relay the sender's signed RevokeShare; the service keeps the transaction with the share. */
+  revokeShare(shareId: Hex, body: { message: Record<string, unknown>; signature: Hex }): Promise<RelayOutcome & { shareId: Hex }> {
+    return this.#request<RelayOutcome & { shareId: Hex }>(`/v1/shares/${shareId}/revoke`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body, (_key, value) => (typeof value === 'bigint' ? value.toString() : value)),
+      timeoutMs: 60_000,
+    });
+  }
+
   /** Where a share is opened; the web reader (#10) serves it. */
   shareLink(shareId: Hex): string {
     return `${this.baseUrl}/s/${shareId}`;

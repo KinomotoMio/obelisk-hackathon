@@ -72,9 +72,11 @@ export function installFakeKeychain(root) {
 }
 
 /**
- * A stand-in for service/ that checks RegisterKey and CreateShare signatures
- * like the contracts do. `respond.share` can force the next share upload's
- * answer: `{ status, body }`, or `'pending'` to store it but report pending.
+ * A stand-in for service/ that checks RegisterKey, CreateShare, and
+ * RevokeShare signatures like the contracts do. `respond.share` and
+ * `respond.revoke` can force the next upload's or revoke's answer:
+ * `{ status, body }`, or `'pending'` to accept it but report pending (a
+ * pending revoke lands only when the test calls `confirmRevoke`).
  */
 export async function startFakeService({ contracts = testnet.contracts } = {}) {
   const keys = new Map();
@@ -82,7 +84,8 @@ export async function startFakeService({ contracts = testnet.contracts } = {}) {
   const shareNonces = new Map();
   const shares = new Map();
   const uploads = [];
-  const respond = { share: null };
+  const respond = { share: null, revoke: null };
+  const confirmedTxs = new Set();
   const txUrl = (hash) => `https://scan.bohr.life/tx/${hash}`;
   const shareStatus = (share) => {
     if (share.revoked) return 'revoked';
@@ -170,6 +173,34 @@ export async function startFakeService({ contracts = testnet.contracts } = {}) {
       if (forced === 'pending') return send(202, { status: 'pending', action: 'CreateShare', signer: sender, txHash, explorerUrl, shareId: message.shareId });
       return send(200, { status: 'confirmed', action: 'CreateShare', signer: sender, txHash, blockNumber: '7', explorerUrl, shareId: message.shareId });
     }
+    const revokeMatch = /^\/v1\/shares\/(0x[0-9a-f]{64})\/revoke$/.exec(url.pathname);
+    if (revokeMatch && request.method === 'POST') {
+      const share = shares.get(revokeMatch[1]);
+      if (!share) return send(404, { error: { code: 'unknown_share', message: 'unknown share' } });
+      const { message, signature } = JSON.parse(body);
+      const sender = getAddress(message.sender);
+      const signer = await recoverTypedDataAddress({
+        domain: obeliskDomain('ShareRegistry', 968, testnet.contracts.ShareRegistry),
+        types: shareRegistryTypes,
+        primaryType: 'RevokeShare',
+        message: { ...message, nonce: BigInt(message.nonce), deadline: BigInt(message.deadline) },
+        signature,
+      });
+      if (signer !== sender) return send(401, { error: { code: 'invalid_signature', message: `The signature was not made by ${sender}` } });
+      if (sender !== getAddress(share.message.sender)) return send(403, { error: { code: 'not_sender', message: `Only the sender ${getAddress(share.message.sender)} can revoke this share` } });
+      if (share.revoked) return send(409, { error: { code: 'already_revoked', message: `This share was already revoked at ${share.revoked}` } });
+      if (BigInt(message.nonce) !== BigInt(shareNonces.get(sender) ?? 0)) return send(409, { error: { code: 'stale_nonce', message: 'stale nonce' } });
+      const forced = respond.revoke;
+      respond.revoke = null;
+      if (forced && forced !== 'pending') return send(forced.status, forced.body);
+      shareNonces.set(sender, (shareNonces.get(sender) ?? 0) + 1);
+      const txHash = `0x${'7'.repeat(4)}${message.shareId.slice(6)}`;
+      share.revokeTx = txHash;
+      if (forced === 'pending') return send(202, { status: 'pending', action: 'RevokeShare', signer: sender, txHash, explorerUrl: txUrl(txHash), shareId: message.shareId });
+      share.revoked = '2026-10-07T12:00:00.000Z';
+      confirmedTxs.add(txHash);
+      return send(200, { status: 'confirmed', action: 'RevokeShare', signer: sender, txHash, blockNumber: '9', explorerUrl: txUrl(txHash), shareId: message.shareId });
+    }
     const shareMatch = /^\/v1\/shares\/(0x[0-9a-f]{64})$/.exec(url.pathname);
     if (shareMatch) {
       const share = shares.get(shareMatch[1]);
@@ -195,7 +226,7 @@ export async function startFakeService({ contracts = testnet.contracts } = {}) {
     }
     const txMatch = /^\/v1\/tx\/(0x[0-9a-f]{64})$/.exec(url.pathname);
     if (txMatch) {
-      return send(200, { txHash: txMatch[1], status: 'pending', explorerUrl: txUrl(txMatch[1]), relay: null });
+      return send(200, { txHash: txMatch[1], status: confirmedTxs.has(txMatch[1]) ? 'confirmed' : 'pending', explorerUrl: txUrl(txMatch[1]), relay: null });
     }
     return send(404, { error: { code: 'not_found', message: 'not found' } });
   });
@@ -214,6 +245,12 @@ export async function startFakeService({ contracts = testnet.contracts } = {}) {
     },
     /** Move `shareId` past its expiry. */
     expire: (shareId) => { shares.get(shareId).message.expiresAt = 1n; },
+    /** A pending revoke of `shareId` lands. */
+    confirmRevoke: (shareId) => {
+      const share = shares.get(shareId);
+      share.revoked = '2026-10-07T12:00:00.000Z';
+      confirmedTxs.add(share.revokeTx);
+    },
     close: () => server.close(),
   };
 }

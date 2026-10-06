@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 // `obelisk share outline | draft | send` (#8, docs/vision/02 S1/S2/S6) and
-// `obelisk share list | status` (#11, S3).
+// `obelisk share list | status | revoke` (#11, S2/S3).
 //
 // Agent-facing like `obelisk wallet`: each command prints one JSON object and,
 // in `next`, what to do next. Sending encrypts content for someone else and
@@ -48,6 +48,7 @@ export const SHARE_USAGE = [
   '  obelisk share send <draft-id> [--redact all|none|<n>,<n>…] [--confirm]',
   '  obelisk share list [--to <0x address>]',
   '  obelisk share status <draft-id|share-id>',
+  '  obelisk share revoke <draft-id|share-id> [--confirm]',
 ].join('\n');
 
 /** How long a CreateShare signature stays valid for the relay. */
@@ -468,11 +469,11 @@ function submitted(record: ShareDraft, outbox: ShareOutbox, explorer: string | n
   };
 }
 
-// --- sent shares: list, status (#11) ----------------------------------------
+// --- sent shares: list, status, revoke (#11) --------------------------------
 
 const SHARE_ID = /^0x[0-9a-fA-F]{64}$/;
 
-/** What a sent share looks like in `list` and `status`. */
+/** What a sent share looks like in `list`, `status`, and `revoke`. */
 function sentShareView(sent: SentShare | null, info: ShareInfo | null) {
   return {
     ...(sent ? { draft: sent.draftId } : {}),
@@ -539,7 +540,7 @@ async function list(args: string[], deps: ShareCommandDeps) {
     ...(chain ? { network: networkLabel(chain.chainId) } : {}),
     next: shares.length === 0
       ? (to === undefined ? 'No shares have been sent from this computer yet.' : `No shares have been sent to ${getAddress(to as string)} from this computer.`)
-      : 'Report each share by title, recipient, and state (unread, read with the last open time, expired, or revoked) with its record.explorerUrl.',
+      : 'Report each share by title, recipient, and state (unread, read with the last open time, expired, or revoked) with its record.explorerUrl. To revoke one, preview it with `obelisk share revoke <draft>`.',
   };
 }
 
@@ -558,6 +559,100 @@ async function status(args: string[], deps: ShareCommandDeps) {
   };
 }
 
+function signRevokeShare(account: Awaited<ReturnType<typeof loadWallet>>['account'], chain: ChainInfo, message: Record<string, unknown>): Promise<Hex> {
+  return account.signTypedData({
+    domain: obeliskDomain('ShareRegistry', chain.chainId, chain.contracts.ShareRegistry),
+    types: shareRegistryTypes,
+    primaryType: 'RevokeShare',
+    message: message as never,
+  });
+}
+
+async function revoke(args: string[], deps: ShareCommandDeps) {
+  const { positional, flags } = parseFlags(args, { '--confirm': 'switch' });
+  if (positional.length !== 1) throw new Error(SHARE_USAGE);
+  const ref = positional[0]!;
+  const { shareId, sent } = await resolveSent(ref, deps);
+  const client = service(deps);
+  const chain = await client.chain();
+  let info = await readShareInfo(client, chain, shareId, sent);
+  const { account } = await loadWallet(walletContext(deps));
+  if (getAddress(info.sender) !== account.address) {
+    throw new Error(`Share ${shareId} was sent from ${getAddress(info.sender)}; this wallet (${account.address}) cannot revoke it`);
+  }
+  if (info.revoked) {
+    return { status: 'already_revoked', ...sentShareView(sent, info), next: 'Tell the user this share was already revoked; nobody can open it.' };
+  }
+  const view = sentShareView(sent, info);
+  const stillOpen = info.status === 'active';
+
+  if (!flags.has('--confirm')) {
+    return {
+      preview: true,
+      action: 'Revoke this share on BOT Chain. From then on nobody can open it, including the recipient. This cannot be undone.',
+      share: view,
+      ...(stillOpen ? {} : { note: `It can no longer be opened anyway (${info.status}); revoking only records that on chain.` }),
+      from: account.address,
+      network: networkLabel(chain.chainId),
+      contract: chain.contracts.ShareRegistry,
+      fee: 'Paid by the Obelisk online service; this wallet is not charged.',
+      next: `Show this preview to the user. Only after they confirm, run \`obelisk share revoke ${ref} --confirm\`.`,
+    };
+  }
+
+  // A revoke sent earlier that has not landed yet: wait for it, do not send another.
+  if (info.transactions.revoke) {
+    const tx = await client.tx(info.transactions.revoke.txHash).catch(() => null);
+    if (tx?.status === 'pending') return revokeSubmitted(ref, shareId, tx.txHash, tx.explorerUrl, chain);
+  }
+
+  const nowSeconds = Math.floor(now(deps).getTime() / 1000);
+  const message = {
+    sender: account.address,
+    shareId,
+    nonce: await client.nonce('ShareRegistry', account.address),
+    deadline: BigInt(nowSeconds + SIGNATURE_DEADLINE_SECONDS),
+  };
+  const signature = await signRevokeShare(account, chain, message);
+  let outcome;
+  try {
+    outcome = await client.revokeShare(shareId, { message, signature });
+  } catch (error) {
+    if (error instanceof ServiceError && error.code === 'already_revoked') {
+      info = await readShareInfo(client, chain, shareId, sent);
+      return { status: 'already_revoked', ...sentShareView(sent, info), next: 'Tell the user this share was already revoked; nobody can open it.' };
+    }
+    const refused = error instanceof ServiceError
+      && ((error.status >= 400 && error.status < 500) || ['relay_unavailable', 'relay_out_of_funds'].includes(error.code));
+    if (refused) {
+      const retry = (error as ServiceError).code === 'stale_nonce' ? '; run the same command again' : '';
+      throw new Error(`The share was not revoked: ${error.message}${retry}`, { cause: error });
+    }
+    throw error;
+  }
+  if (outcome.status === 'pending') return revokeSubmitted(ref, shareId, outcome.txHash, outcome.explorerUrl, chain);
+  info = await readShareInfo(client, chain, shareId, sent);
+  return {
+    status: 'revoked',
+    ...sentShareView(sent, info),
+    network: networkLabel(chain.chainId),
+    transaction: outcome.txHash,
+    explorer: outcome.explorerUrl,
+    next: 'Tell the user the share is revoked: nobody can open the link any more, including the recipient. Give them the explorer link where the revocation can be checked.',
+  };
+}
+
+function revokeSubmitted(ref: string, shareId: Hex, txHash: Hex, explorer: string | null, chain: ChainInfo) {
+  return {
+    status: 'submitted',
+    shareId,
+    network: networkLabel(chain.chainId),
+    transaction: txHash,
+    explorer,
+    next: `The revocation was sent to the chain but not confirmed yet. In a minute, run \`obelisk share status ${ref}\` to check; run \`obelisk share revoke ${ref} --confirm\` again only if it is still not revoked.`,
+  };
+}
+
 export async function runShareCommand(args: string[], deps: ShareCommandDeps = {}): Promise<unknown> {
   const [action, ...rest] = args;
   if (action === 'outline') return outline(rest, deps);
@@ -565,5 +660,6 @@ export async function runShareCommand(args: string[], deps: ShareCommandDeps = {
   if (action === 'send') return send(rest, deps);
   if (action === 'list') return list(rest, deps);
   if (action === 'status') return status(rest, deps);
+  if (action === 'revoke') return revoke(rest, deps);
   throw new Error(SHARE_USAGE);
 }

@@ -1,9 +1,10 @@
 // Copyright (C) 2026 tommy0103 and contributors.
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// `obelisk share list | status` (#11) through the built CLI. Shares are sent
-// with `obelisk share send` first; the keychain and online service are the
-// fakes in chain-cli-fakes.mjs.
+// `obelisk share list | status | revoke` (#11) through the built CLI. Shares
+// are sent with `obelisk share send` first; the keychain and online service
+// are the fakes in chain-cli-fakes.mjs, and service/test covers the real
+// service's revoke.
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -99,6 +100,52 @@ test('分享状态：未读 / 已读及时间 / 已过期，附链上记录', { 
   assert.equal((await run('share', 'status', read.shareId)).json.draft, read.draft, 'a share id finds the same record');
 });
 
+test('撤回：先预览、确认后上链；已撤回的不再重复；别人的钱包不能撤回', { skip }, async (t) => {
+  const { service, run, as, share, sender } = await setup(t);
+  const b = await activated(service);
+  const first = await share(b);
+
+  const preview = await run('share', 'revoke', first.draft);
+  assert.equal(preview.status, 0, preview.stdout);
+  assert.equal(preview.json.preview, true);
+  assert.match(preview.json.action, /nobody can open it, including the recipient\. This cannot be undone\./);
+  assert.equal(preview.json.share.state, 'unread');
+  assert.equal(preview.json.from, sender);
+  assert.match(preview.json.next, /Only after they confirm, run `obelisk share revoke [0-9a-f]{8} --confirm`/);
+  assert.equal((await run('share', 'status', first.draft)).json.state, 'unread', 'a preview revokes nothing');
+
+  const revoked = await run('share', 'revoke', first.draft, '--confirm');
+  assert.equal(revoked.status, 0, revoked.stdout);
+  assert.equal(revoked.json.status, 'revoked');
+  assert.equal(revoked.json.state, 'revoked');
+  assert.equal(revoked.json.canOpen, false);
+  assert.equal(revoked.json.record.kind, 'revoke');
+  assert.equal(revoked.json.record.explorerUrl, revoked.json.explorer);
+  assert.equal((await run('share', 'revoke', first.draft)).json.status, 'already_revoked');
+  assert.equal((await run('share', 'revoke', first.draft, '--confirm')).json.status, 'already_revoked');
+  assert.equal((await run('share', 'list')).json.shares[0].state, 'revoked');
+
+  // Not confirmed yet: running it again waits for that revoke instead of sending another.
+  const second = await share(b);
+  service.respond.revoke = 'pending';
+  const pending = await run('share', 'revoke', second.shareId, '--confirm');
+  assert.equal(pending.json.status, 'submitted', pending.stdout);
+  assert.match(pending.json.next, /obelisk share status 0x[0-9a-f]{64}/);
+  const again = await run('share', 'revoke', second.shareId, '--confirm');
+  assert.equal(again.json.status, 'submitted', again.stdout);
+  assert.equal(again.json.transaction, pending.json.transaction);
+  service.confirmRevoke(second.shareId);
+  assert.equal((await run('share', 'status', second.draft)).json.state, 'revoked');
+
+  const third = await share(b);
+  const bob = as('bob');
+  assert.equal((await bob('wallet', 'create')).status, 0);
+  const notMine = await bob('share', 'revoke', third.shareId, '--confirm');
+  assert.equal(notMine.status, 1);
+  assert.match(notMine.json.error, new RegExp(`^Share ${third.shareId} was sent from ${sender}; this wallet \\(0x[0-9a-fA-F]{40}\\) cannot revoke it$`));
+  assert.equal((await run('share', 'status', third.draft)).json.state, 'unread');
+});
+
 test('list and status explain an unreachable service and unknown shares', { skip }, async (t) => {
   const { service, run, as, share } = await setup(t);
   const b = await activated(service);
@@ -114,7 +161,7 @@ test('list and status explain an unreachable service and unknown shares', { skip
   const cases = [
     [['share', 'status', unsent], /^Share draft [0-9a-f]{8} has not been sent, so there is no share to look up/],
     [['share', 'status', `0x${'ab'.repeat(32)}`], /^BOT Chain testnet \(968\) has no share 0x(ab){32}$/],
-    [['share', 'status', 'deadbeef'], /No share draft deadbeef/],
+    [['share', 'revoke', 'deadbeef'], /No share draft deadbeef/],
     [['share', 'list', '--to', '0x1234'], /--to must be a wallet address/],
     [['share', 'status'], /Usage:/],
   ];

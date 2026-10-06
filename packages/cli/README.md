@@ -108,6 +108,7 @@ obelisk share send <draft-id> --redact all          # preview (or --redact 1,3 /
 obelisk share send <draft-id> --confirm             # encrypt, upload, write the share on chain
 obelisk share list [--to 0x…]                       # sent shares: unread / read / expired / revoked (#11)
 obelisk share status <draft-id|share-id>            # one share, with every open receipt
+obelisk share revoke <draft-id|share-id> [--confirm]  # preview, then revoke on chain
 ```
 
 Message numbers are positions in the session detail as the App shows it. The
