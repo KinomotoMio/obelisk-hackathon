@@ -1,105 +1,314 @@
-<!-- 复制自 obelisk-website 仓库 blog/why-obelisk/zh.md（2026-08-16 版本），随 vision 文件夹一起同步。原文有更新时请重新复制。 -->
+<!-- Copied from KinomotoMio.github.io dist/writing/why-obelisk/en.md (the published machine-readable version of src/content/writing/why-obelisk/en.mdx). Bundled with the vision docs at the author's request. Re-copy when the original changes. -->
 
-# 为什么是 Obelisk
+# Why Obelisk
 
-> Agent 早已把一切都记了下来。但没有一条留下地址。
+> The work behind Obelisk, and the values beneath what it delivers.
 
----
-
-你正陷在一个问题里，忽然认了出来。不是细节，是那个形状。这个问题你解过。几周前的某个晚上，你当时在做完全不相干的事，却顺手想明白了：那个看起来最顺理成章的做法为什么不行，以及该怎么绕开它。
-
-但你拿不回来了。你不记得那是哪一天、在哪个项目里、当时用的又是哪个工具。于是你做了所有人都会做的事：凭记忆把它复述一遍，复述得很糟，塞进一段 prompt 里。你的 Agent 就从这个劣化版本出发继续往下走——而那个结论，你早就付过一次代价了。
-
-严格说来，什么都没丢。那些对话完完整整地躺在你的硬盘上。Agent 是勤勉的记录员——没人要求，它也会把整场交流原样存下。记录是在的。你只是伸不进手去，因为记录是按坐标归档的，而人是按判断记事的。*我们当时决定不那么做。* *它必须可回退，是有原因的。* 坐标恰恰是你忘掉的那部分。要是你还记得，你也就不必去找了。
-
-## 那里面真正有价值的东西
-
-人们很容易把自己的历史当成一份事实档案——用来查某个东西从前叫什么名字。那恰恰是里面最不值钱的部分。
-
-和 Agent 一起工作，真正沉淀下来的是判断，而且大多是否定性的。你纠正它。它换个方式出错。你再纠正一次。每一次纠正都留下两样东西：你接受什么，以及你不接受什么。后者更值钱——因为在亲眼看见之前，你很少知道什么是该被禁止的。
-
-而你几乎从不会在当下意识到这一点。很少有人会在一次有用的纠正之后停下来，问一句这值不值得变成一条规则。你发现某个判断是承重的，总是在很久以后，在你已经重复过许多次之后——而那时，它的证据早已散落在你做出过这些判断的每一场对话里。这就是为什么一个醒目的"存下来以后用"按钮解决的是错误的问题：它要求你在最投入工作的那一刻，去识别什么东西具有长久的价值。回看才是更体恤人的那个动作——先让人把活干完，再帮他找回那些他当时并不知道该留下的东西。
-
-## 记忆系统回答的是另一个问题
-
-大多数记忆类产品的出发点和我们相近，但随后拐向了另一个方向。它们问的是：*系统应该记住什么，又该忘掉什么？* 然后靠把这个问题答好来立身——抽取要点、给重要性打分、让过期的失效，再把幸存下来的那些注入你接下来要做的事情里。
-
-这个问题把你放在一个不舒服的位置上。你从此要信任两个看不见的决定：你日后会需要的那件事，被判定为值得留下；而你不会需要的那些，被判定为可以丢弃。等它让你失望的时候，你甚至分不清是哪一个决定出了错。更麻烦的是，一条只是"在别的场合正确"的记忆，并不会中立地进来——它会和你眼前的证据争夺注意力，把方向悄悄带偏，让一个旧结论变成当下的约束。这是一种很常见的失败：对话变糟了，而原因恰恰是系统引以为傲地记住了某样东西。
-
-Obelisk 的起点不在这里。记录早就发生了。不论有没有谁判定它们重要，那些对话都躺在硬盘上。所以真正要做的不是决定留下什么，而是让已经存在的东西变得够得着——把"相不相关"这件事留到提问的那一刻，交给提问的人来定，并且始终连着它的出处。
-
-说成一句承诺：**你不该需要去关心某样东西有没有被正确地记住，或者被正确地遗忘。想知道，就足够了——在你想知道的那一刻。**
-
-后半句比它看上去更重要。念头是会坏掉的。*等等——这个我们不是早就有过结论了吗？* 这种闪念总是在你忙着别的事情时冒出来，而且不会等你。如果去追它的成本高过了产生它的那点冲动，你就会放手，然后重新手工造一个答案出来——一个你早已付过一次代价的结论，就这样被付了第二次。
-
-Obelisk 确实也保留持久记忆——经你批准的结论，带着一条能回到支撑它的那场对话的路径——但它被刻意做成了较小的那一半。召回给你的是一份摘要和一个指针，不是一次注入。没有你点头，什么都不会被写入或撤下。对话是证据，不是答案；记忆是一副透镜，不是一道命令。
-
-## 要么全部，要么没有
-
-Obelisk 索引你的整台机器——你用过的每一个编码 Agent，跨越每一个项目。听到这句话，第一反应通常是不安。这份不安值得一个回答。
-
-先看看另一种做法。这个领域里的检索，大多把范围限定在你当前所在的项目里，理由都很充分：精确、及时，边界也容易辩护。但"限定在当前项目"只在一种情况下有用——你已经知道答案就在当前项目里。而那恰恰是你本来就不需要检索的情况。它的价值只在答案在别处时才会显现：你放弃掉的那个原型，你在另一个工具里度过的那个晚上，或者你名义上在处理另一个问题、却顺手把这个问题解决掉的那一次。
-
-所以边界并没有消失，它只是挪了位置。它不再由一个猜测你将来会想要什么的系统在记录写入时划定，而是由清楚自己在找什么的那个人，在提问的那一刻划定。这之所以站得住，取决于这份档案是什么：你自己的历史，在你自己的机器上，归你掌控，并且你能在 Agent 查询的同一份索引里亲眼看到它。换成共享的历史，这条论证就不成立了——我们也没有声称它成立。
-
-## 为什么历史是格外好的材料
-
-旧对话之所以是好材料，是有原因的，而这个原因和这些模型真正擅长的事情有关。
-
-它们真正独特的操作不是回忆，是连接。给模型几样具体的东西，再给一个方向，它会提出这些东西共有的结构——在某个维度上，两件你原本分开归档的事，原来是同一件事。这个提议可能是错的，也可能很浅。但它便宜，可以反复来。而在从前，同样的操作需要一个有耐心、有学识、并且恰好有空的人。
-
-如果这才是核心操作，那么限制它的，就是你能递过去的东西的质量。泛泛的例子只会得到泛泛的结论。让你的材料变得具体的，是它属于你：真实的决定，真实的拒绝，你说出*不，不是这样*的那一刻，以及更少见的、你说出*对，就是这样*的那一刻。这里有一个很有用的不对称——判断某样东西是不是你想要的，远比事先说清你想要什么容易得多。你的历史正是一份关于"容易的那一半"的长长记录，而其中几乎没有任何一条变成过文档。
-
-这么做不是要把你冻结在过去里。而是当一个 Agent 穿过一个陌生问题时，手边应该有足够多你的判断，好让它走的方向仍然认得出是你的方向。当这样的判断积累到一定程度，协作关系的性质就变了——你不必再一遍遍解释你是谁、你在意什么。我们把这个叫做 **context vibe**：与其说它是一个功能，不如说它是一种工作方式。
-
-## 你仍然必须自己带来的东西
-
-到这里为止的论证容易被误读，值得直接纠正一下。Obelisk 并不是一个用来找出什么好、什么坏的系统。它对你的哪些判断是对的不持任何观点，不给过去的决定按质量排序，也没有关于什么才算好工作的理论。纠正只是收益最容易被看见的地方——因为品味恰恰是最顽固地拒绝被写下来的那样东西。Obelisk 真正暴露出来的，比那朴素也一般得多：够得着。
-
-一项一般的能力，也带着一个一般的前提。模型是沿着一个方向去找结构的，而方向是你给的。把它指向一件无趣的事，它会忠实地返回一件无趣的事的结构。
-
-所以它能为你做到的那个上限，起点在你这里：在你还说不出所以然之前，先感到这两样东西之间有联系。这算不上什么稀有的天赋——它就是*等等，这让我想起了什么*的那种日常体验——但它恰恰是任何工具都给不了的那一部分。你必须带来那份怀疑。你不必带来答案；给出答案，正是模型的用处所在。
-
-这一点值得不加修饰地讲清楚，因为它正是一件好工具和一件神器之间的区别。一个你根本没能成形的问题，也就不是一个你能让工具替你回答的问题。Obelisk 让你自己的材料在你伸手的那一刻变得够得着，而且它在这件事上做得很好。至于该伸手去够什么，那仍然是你的事。
-
-## 上下文的生命周期
-
-Agent 工程已经分派出了好几个生命周期。工具有它的归属——注册、schema、权限、结果。外部集成有。Skill 也有——安装、作用域、加载、优先级。每划出这样一条线，就有一堆临时拼凑的胶水变成了某个人明确的责任，不必再在每个项目里重新发明一次。
-
-唯独上下文没有归属。它由碰巧在组装它的那个人组装：一点写在指令里，一点被工具返回值夹带进来，一点由某个 skill 的描述添上，还有一点在没人选择的时刻被压缩掉了。可上下文偏偏是模型真正收到的唯一东西。一个 harness 里的其它一切，都只是在决定什么最终会进到它里面的策略而已。
-
-**Harness 应该对上下文负责，因为模型消费的正是上下文。** 划清这条线，剩下的工作就自然分开了：一边是普通的软件工程——存储、传输、界面；另一边是数量小得多、真正只属于 Agent 的那些问题。工具，集成，skill。下一个就是上下文。
-
-DeepSeek Harness 是我们见到的第一个明确围绕这件事组织自己的 harness，而且它的做法是任何人都能核验的。它的每个插件各自持有一片具名的上下文，并且每个插件都要公开自己摆到模型面前的东西——贡献了哪段确切的文字，代价是多少，对缓存又做了什么。一个不触及模型所见的插件，也要明说自己不触及。这就是老意义上的面向切面：贡献者声明自己作用在哪个切面上，而不是把自己穿进主流程里；而它们能够作用的那几个切面，恰好都是要紧的——模型被告知了什么，它能调用什么，以及旁观的人看到了什么。
-
-## 一套语义，多扇门
-
-在别的地方，Obelisk 是以一个命令行工具加一份 skill 的形态出现的。Agent 读懂该怎么查，然后在 shell 里把命令跑起来。这样是行得通的，今天的 Obelisk 就是这样被使用的。
-
-但请注意那些规则住在哪里。只读。不要一直跑下去。不要把对话淹掉。失败了意味着什么。这里的每一条，都只是模型同意遵守的一段文字而已。
-
-在 DeepSeek Harness 里，注册一项能力足够便宜，便宜到我们可以把这些规则改成声明出来。Obelisk 挂载为一次只读查询。它改不了任何东西——不是因为我们请求它别改，而是因为会改动的那部分根本没有被注册进去，所以写入一条记忆仍然走在需要你批准的那条路上。它自带截止时间，也自带返回量的上限，所以一个过宽的问题不会把对话淹没。失败时，它说的是该去检查什么，而不是甩给你一段 shell 报错。而且因为这次调用有名字，你看见的是"Obelisk 被查询了一次"，而不是又一行滚过去的 shell。
-
-查询语言没有变。什么才算一个好问题，依然只由那份 skill 定义，模型在这里加载的和在别处加载的是同一份。变的是：那些限制不再是请求，而成了宿主的一部分。
-
-这就是全部的集成优势所在，而它是那个更大主张的一个小小实例：**当一个 harness 对上下文负起责任，什么可以进入上下文的边界，就可以被声明，而不必被请求。**
-
-这个插件是可选启用的，双方都没有为了迁就对方而改动自己的核心。它是对 harness 自带检索的补充，而不是替代：那套检索在你所站的这间屋子里，实时而精确；Obelisk 则是整栋楼的档案。由此也带来两处应当明说的缺口。刚刚结束的一场对话，要等到下一次刷新才会出现。以及，目前的流向是单向的——DeepSeek Harness 的会话还没有进入档案库，这不是我们持有的某种立场，只是我们还没做的工作。一个组织方式如此不同的 harness，正好是一个把问题重新问一遍、而不是直接沿用答案的机会：我们吸收其它每一个工具的历史的方式，未必就是吸收它的正确方式。
-
-## 是地板，不是天花板
-
-复杂度不会消失，它只是转移。而关于任何一套架构，真正有意思的问题是：它把复杂度转移到了一个足够小、足够稳定的地方吗？
-
-一个衡量的办法：我们做这个插件时没有读过 harness 的源码。只依据它公开的契约，五轮 prompt 产出了设计记录、插件本身、测试和界面——大约二十五分钟，几块钱的 token。这不是一个关于模型写代码有多快的故事。这是一个关于它为此需要理解的东西有多少的故事：不是一整个代码库，而是少数几条又小又稳的约定——一个贡献作用在哪个切面上，以及它可以往模型面前放什么。
-
-同样的纪律，也是让一个 harness 不至于变成天花板的东西。用我们已经知道该怎么描述的东西搭起来的约束，非常擅长把 Agent 关在有效区域内，这类约束我们也在造。但一个能把所有值得抵达的地方都描述清楚的 harness，同时也是在宣称：所有值得抵达的地方，都已经在我们的地图上了。风险不在于约束让模型变得无用。风险在于完美的约束让它只在我们已经理解的那些方向上有用——可靠性在上升，意外却被设计掉了；而模型最有意思的性质，恰恰是帮你越过你已经知道该如何描述的那道边界。
-
-Obelisk 交付出来的东西，看上去是检索你过去的能力。而它真正要解决的事情更小、也更具体：你不该为了再次用上某句话，而必须先记得它说在哪里——与你协作的那一方，也不该。
-
-Obelisk 是方尖碑。方尖碑不是一台机器，它是一处地标。一整块石头，立在某件事发生过的地方，把碑文刻在外面——刻在那些当时不在场的人也依然读得到的地方。它不作解释。它不会跟在你身后，一遍遍提醒你些什么。它只是足够高，高到不论你站在哪里，都找得到它。
-
-你不需要为了使用一处地标而做准备。你抬头看一眼就够了。这就是我们全部的野心——不是一个替你决定该记住什么的系统，而是一座立在你自己历史里的碑。想知道，就足够了——在你想知道的那一刻。
+- Canonical: https://kinomotomio.github.io/writing/why-obelisk/
+- Machine-readable URL: https://kinomotomio.github.io/writing/why-obelisk/en.md
+- Language: EN (en)
+- Published: 2026-08-04
+- Last modified: 2026-08-04
+- Rights: © 2026 KinomotoMio. You are welcome to share the original link. Except for quotations permitted by law, this article may not be republished, redistributed, adapted, or translated without the author's prior written permission. Quotations must credit KinomotoMio and link to the original article.
 
 ---
 
-*Obelisk 在 [github.com/tommy0103/obelisk](https://github.com/tommy0103/obelisk) 开源。关于这些想法的一份更长、也更私人的记述在[这里](https://kinomotomio.github.io/writing/why-obelisk/)。*
+I met [Yuu](https://github.com/tommy0103) at Adventure 2026, where I learned about the work she had been doing on [Obelisk](https://github.com/tommy0103/obelisk). I was convinced of its value almost immediately. The project was already deeply appealing on the surface—both in the quality of its interface and in the technical direction it had chosen—but my reaction came from somewhere more personal, too. Years spent building context had led me toward almost exactly this kind of work: a direction I had long believed would be useful, and had very much wanted to pursue myself.
+
+Yuu had not only made concrete something that had, until then, existed mostly in my head. She had brought to it a depth of technical taste that I lacked—something more rigorous than what I had learned through vibe coding alone. In a moment when so many people are busy playing with concepts, finding someone whose taste genuinely resonates with your own is remarkably difficult. Meeting her felt extraordinarily fortunate.
+
+I want to introduce the work we are doing on Obelisk, and, more importantly, the value judgments beneath what Obelisk appears to deliver.
+
+## The history we fail to mark
+
+One of our most recent concrete experiments began when I suggested that Yuu use Obelisk to look back across her earlier pull-request reviews. She holds code entering the project to a high standard. But a standard that lives largely in the attention and memory of one independent maintainer is difficult to sustain as a community grows. The problem was not how to reject more outside contributions. It was how to help more contributors understand what good work meant in this particular project, without turning Yuu into its permanent interpretive bottleneck.
+
+The result was [a pull request that derived Obelisk's contribution requirements from earlier code reviews](https://github.com/tommy0103/obelisk/pull/27). Several external contributions had arrived in apparently excellent condition: lint-clean, type-safe, and green on their own tests. They had nevertheless stalled for the same small set of reasons. A capability described in the PR was unreachable in the code. A test asserted the implementation instead of the requirement. A migration worked only if it was never interrupted. An existing concept had been invented again under another name. Untrusted transcript content had been treated as trusted input.
+
+These were not style violations. A generic checklist would not have found them. They were judgments specific to the architecture, its history, and the way its owner expected the project to evolve. The eventual `CONTRIBUTING.md` was useful precisely because its rules were not invented in advance. They were recovered from work that had already happened, then made available to people who had not been present when the project learned them.
+
+This exposed two gaps that are easy to confuse. The way a human formulates a problem is not the way an agent searches for evidence. And the instruction a human believes they have given is not necessarily the instruction an agent has received. When we write, "review a pull request for A, B, and C," we are already compressing a large amount of tacit knowledge: where to look, which failure modes matter, which apparent improvements would violate an older decision, and when a result merely looks complete. An agent has different boundaries, different retrieval habits, and different places where it is likely to go wrong.
+
+Left alone, an AI is unlikely to produce every judgment we expect—not necessarily because it lacks intelligence, but because the target itself is not generic. Some of our expectations are intensely personal, even idiosyncratic. A model may produce a clean, defensible, technically sophisticated solution and still miss exactly what would make it feel right to us. General capability cannot faithfully recover a preference that has never been allowed to leave evidence. Asking an agent to infer all of it from the current repository is sometimes asking it to reconstruct a person from traces that do not yet exist.
+
+Most memory systems begin from some version of this diagnosis. If the model cannot infer a preference from the present, preserve more of the past and retrieve it when the preference might matter. The diagnosis is reasonable; the usual remedy is much less convincing. Retrieval is itself a judgment about timing, scope, and authority. A memory that is slightly wrong, or merely right for a different moment, does not enter the context neutrally. It competes with current evidence, redirects attention, and quietly turns an old conclusion into a present constraint. The result is one of the most irritating failures in agent systems: context polluted by something the system was proud to remember.
+
+Context vibe begins from a different ambition. We are not trying to construct one permanent vibe that makes an agent agreeable in every possible situation. We want to recover a situated field of judgment: the taste, expectations, corrections, and room for surprise that matter within a particular kind of collaboration. The scope is part of the artifact. Outside it, the agent should be free to think again rather than continue performing a personality it retrieved from somewhere else.
+
+Retrieval is a judgment
+
+### Similarity can find a memory and still make the context worse
+
+A retrieved item does not enter context neutrally. Before relevance, a system must judge whether the evidence belongs to this scene, remains current, and has the authority to constrain the next decision.
+
+**Tests should assert requirements**
+
+**Prefer exhaustive inline comments**
+
+**Avoid adding comments to obvious code**
+
+**Interrupted migrations must recover**
+
+**Three confident instructions**: High semantic similarity admits contradictory advice from another project and a private note whose authority was never established. Old conclusions compete with present evidence.
+
+**Two scene-valid anchors**: The gate rejects useful-looking material that belongs to another scene. What survives is smaller, inspectable, and explicitly scoped to Obelisk review. The model receives evidence, then remains free to judge.
+
+The point is not to retrieve less by default. It is to make inclusion answerable to the scene instead of to similarity alone.
+
+A real collaboration gradually records the difference. We correct an agent's decisions as it works. Each correction produces both a positive pattern—*this is what I will accept*—and a negative one—*this is what I will reject*. The negative patterns are often more valuable, because we rarely know what must be forbidden until we see the mistake happen.
+
+The difficulty is that humans are bad at recognizing this history while it is being made. We do not stop after every useful correction and ask whether it deserves to become infrastructure. We usually notice that a judgment is valuable only after making it twelve or twenty times. By then, the evidence has been scattered across twelve or twenty sessions. Obelisk makes the act of looking back smaller: the history we failed to mark in the moment can still be recalled when we finally understand what it contains.
+
+## A skill should be discovered, not invented
+
+This changed how I thought about skills. A good skill should not begin as an abstract specification of how an agent ought to behave. It should crystallize from a collaboration that has already succeeded.
+
+The usual sequence is almost the reverse of skill authoring. An agent makes a decision that does not satisfy us. We correct it. It fails differently. We correct it again. Eventually a stable mode of collaboration emerges, the problem is genuinely solved, and the owner is satisfied with the whole process rather than merely its final output. Only then do we have enough evidence to say what the skill is.
+
+In the language I will use later, each of those sessions is a sample. The skill is neither the mind itself nor a complete description of its taste. It is a partial textual projection of a higher-dimensional way of judging, recovered from the points at which that judgment became observable. Deriving a skill from session history is therefore already an instance of the larger operation Obelisk makes possible: sampling the past so that a latent pattern can become available in a form we can read, revise, and use.
+
+Evidence constellation
+
+### The past does not contain a skill. It contains occasions to infer one.
+
+No session is the mind itself, and no timeline makes the pattern true. A useful projection appears only when several situated judgments are selected for a present purpose.
+
+**latent project judgment**
+
+#### A project-specific skill
+
+**A project-specific skill**: Repeated corrections become compact guidance for a particular collaboration. The selected evidence is narrow enough to act on and broad enough to explain why. Useful because the next scene is known.
+
+**A durable conclusion**: A smaller subset supports a conclusion worth carrying forward. Provenance must remain available because another scene may require another reading. A lens over evidence, not a command.
+
+**A situated field of taste**: Heterogeneous judgments sketch a recognizable direction without pretending that taste can be reduced to one instruction or copied in full. The distribution matters more than any single rule.
+
+Switch projections to see why the same historical evidence can honestly support different artifacts.
+
+This is why a prominent "record this as a skill" button would solve the wrong problem. It asks a person to recognize reusable value at the exact moment they are occupied with the work itself. That is contrary to how people actually learn what matters. Retrospective retrieval is the more humane operation: first let people work, then help them recover the repeated corrections they did not know to preserve.
+
+It also suggests why accumulating a large pile of skills can be actively harmful. Agent instructions are not inert files on a shelf. Even a description can become ambient interference, quietly shifting how an agent frames a task. A backend engineer who happens to have installed a contradictory collection of frontend skills may find the agent drifting toward a mode of thought they never intended. More instruction does not automatically produce more alignment; it can simply produce more noise.
+
+The PR-review skill we discussed was an exception for a reason. Its scope was narrow, its evidence came from the repository's own history, and its effect would be to improve a specific relationship: the one between an owner and a contributor. Its value would not come from announcing universal review wisdom. It would come from recovering how this project had already learned to recognize good work.
+
+Nor does the result have to be a skill. It might become a contribution guide, a review workflow, an interface, or some form we have not invented yet. The container is secondary. What matters is whether the history has made the project's values more available without reducing participation to compliance. That deeper object—the thing that can survive across several external forms—is what led us toward context vibe.
+
+## From taste to context vibe
+
+What such a skill preserves is not merely procedure. Beneath the review rules, formatting choices, technical evaluations, and repeated corrections lies something harder to name: taste.
+
+Taste is not one preference. It may appear as an architectural judgment in one session, an aesthetic objection in another, a review standard in a third, or a tiny formatting correction somewhere else. Nor can it be copied one-to-one into an agent. We cannot enumerate every future situation in which taste will need to act, or define a perfectly non-overlapping scope for every preference. At best, we can collect enough samples to reconstruct something like a distribution.
+
+I began calling this a **context vibe**. The word *vibe* matters because it admits that the result is not an exact replica. It is a field built from many instances of taste: a technical assessment, an editorial preference, a review decision, a prompt and the response it rejected, another prompt and the response it accepted. The goal is not to make every agent produce the same answer. It is to let different answers remain recognizably inside the same space of judgment.
+
+But a distribution without a declared domain is just another ambient instruction. A context vibe must say what scene it belongs to: reviewing a contribution, shaping an interface, conducting a research conversation, or making a particular class of tradeoff. The objective is not to make the agent universally more like us. It is to provide enough situated evidence that, inside this scene, the model can use its own intelligence to notice everything that deserves judgment.
+
+This resembles what people already do when they craft prompts for generative models. A language model behaves like a strange function: alter the input and the output changes, yet good inputs can keep many different outputs within a desired distribution. The hard part is rarely stating the entire distribution as a rule. It is finding representative inputs and outputs that reveal its shape.
+
+That is where history becomes more than an archive. Obelisk can help us recover the old input-output pairs through which our taste became visible. Instead of relying on a few examples we happen to remember—or asking a larger model to turn an incomplete description into a more confidently worded incomplete description—we can return to the moments when we actually judged something. Deciding whether a result is what we wanted is often much easier than explaining in advance what we want. Our histories contain those decisions, even when we never promoted them into documentation.
+
+## Context that can travel
+
+This leads to one of the concrete directions we are now considering for Obelisk.
+
+Sharing context is much harder than sharing text. We can export a session into Markdown, send it to someone else, and preserve every visible sentence. Yet the recipient receives something inert. Their agent cannot naturally follow the parent chain, distinguish a tool call from its result, inspect a subagent, recover the working directory in which a decision was made, or ask for the source record behind a suspicious summary. A transcript can be readable without being continuable.
+
+Obelisk has already built half of a more interesting path. Claude Code, Codex, and Kimi Code all describe their sessions differently. Each provider adapter interprets its own source and emits a shared [canonical transcript language](https://github.com/tommy0103/obelisk/blob/main/packages/core/src/providers/types.ts): sessions, messages, roles, tool calls and results, summaries, parent relationships, subagents, workflows, visibility, provenance, and a small number of state transitions. The same record stream can be assembled directly for a human reader or persisted and later reconstructed from SQLite. In the architecture, [SQLite is explicitly a serialization adapter rather than the source of transcript meaning](https://github.com/tommy0103/obelisk/blob/main/docs/adr/0007-canonical-transcript-session-detail-seam.md).
+
+That distinction is easy to miss, but it changes the shape of the opportunity. Obelisk is not merely collecting several vendors' chat logs into one database. It is maintaining an intermediate representation of what happened in a session. Today the flow mostly travels in one direction:
+
+> provider history → canonical records → query and human-readable surfaces
+
+What we are considering is the reverse projection:
+
+> canonical records → a session history another agent can genuinely consume
+
+Semantic conservation
+
+### Portable context should preserve the ability to ask a different question
+
+The canonical IR is not another transcript format. It keeps relationships stable while different consumers take projections suited to reading, continuing work, or carrying forward a conclusion.
+
+**message**
+
+**tool call**
+
+**result**
+
+**branch**
+
+**A legible narrative**: Events are ordered and rendered for comprehension. Structure can be folded away, but source links remain available for inspection.
+
+**A traversable foreign history**: The agent can follow causes, expand branches, and cite evidence without being told that it personally experienced the session.
+
+**A compact, approved lens**: A conclusion travels cheaply with scope and evidence anchors. It summarizes the graph without claiming to replace it.
+
+Change the consumer. The projection changes; provenance, causality, visibility and branch structure remain conserved.
+
+This should not mean forging a native transcript and pretending the receiving agent was present for events it never experienced. Provenance must remain visible. A better model may be to mount a foreign history as an interactive context: something the receiving agent can traverse, expand, question, and cite while still knowing where each event came from. The goal is continuity without impersonation.
+
+The existing intermediate representation gives us a promising seam, not a finished interchange format. Obelisk's own architecture notes acknowledge that provider-specific concepts may currently be projected lossily or ignored. Indexed message and tool content is bounded, while the `raw()` path returns to the provider's original record when more fidelity is required. A portable context therefore needs an explicit answer to what it promises to conserve. At minimum, I think it must preserve the relationships that make work intelligible: who or what produced an event, which result belongs to which action, what was visible, what was retracted, which branch of work a subagent followed, and how to return to original evidence.
+
+This suggests a design with a small, versioned semantic core and provider-specific escape hatches, rather than an enormous universal transcript schema. Target adapters could project that core into the forms different agents understand, while capability metadata makes any loss explicit. Portability would then mean conservation of meaning, not accidental similarity between JSON formats.
+
+It must also remain selective. Portability is not publication. Real sessions contain secrets, private reasoning, failed explorations, irrelevant digressions, and tool output that was safe only inside its original boundary. Obelisk already separates visible content, metadata, and source-level raw records; a shareable projection would need to extend that discipline into user-controlled disclosure. The right unit is unlikely to be “everything in this session.” It is the smallest honest context from which the receiving agent can still understand and interact with the work.
+
+### Memory is a projection, not a replacement
+
+This direction is closely aligned with Obelisk's Memory design. A Memory can be synthesized from work done in one coding agent and consumed later from another because it does not belong to any provider's private format. It is a Markdown conclusion registered with a summary and, when available, provenance back to a project, session, message range, and other anchors.
+
+But Obelisk does not treat Memory as a grand new substrate that should silently fill every prompt. The full content remains in an ordinary file. Recall returns a compact summary and path; an agent can decide whether to read it, ignore it, or verify it against session evidence. Writing or retiring one requires the user's approval. Even a high-value memory expects some understanding from its consumer. It offers a prior judgment, not an instruction that must be obeyed.
+
+The implementation makes the distinction between the two layers unusually clear. Session records are derived evidence: the index can be rebuilt from provider histories. Memories are human-approved syntheses and survive that rebuild. One layer records what happened in a form that can be queried again. The other records what someone concluded was worth carrying forward. Put more compactly:
+
+> A session is evidence, not an answer. A memory is a lens, not a command.
+
+The boundary between them should not be settled too early. For a familiar decision, a memory may be the cleanest and least expensive context. For a novel or high-stakes question, the agent may need to return to the underlying sessions and form a different interpretation. Often the right answer will combine both: recall an earlier synthesis as orientation, then inspect the historical evidence that can confirm, complicate, or overturn it.
+
+This is also why the lightest access may be the clearest—and the least coercive. Many memory systems promise to remember more and inject the result more automatically. Obelisk can take a lighter, quieter path: preserve rich local evidence, expose small and composable retrieval tools, let people see the same substrate their agents query, and expand context only when the task calls for it. Its desktop app and its agent-facing interface already share one index. Any future portable context should preserve that dual legibility—consumable by an agent, inspectable by a person.
+
+There is a deeper connection here to the conceptual space I will describe next. A memory is one projection made from historical points. A flat exported summary is one projection too. Once either is detached from its evidence, every future reader is forced to inherit the same interpretation. A traversable session representation keeps more of the points available. Another person or agent can ask a question we did not anticipate and construct a new projection from the same history.
+
+The purpose of portable context, then, is not to put more old text into a new context window. It is to preserve the ability to think again.
+
+## A query can be a form of thought
+
+One of Obelisk's most consequential interfaces may also be its least visible. It does not merely give an agent another `search` tool and ask it to take one careful step after another. It lets the agent write a small JavaScript program against the history: call several retrieval helpers, follow relationships, filter and group records, compare candidates, and return only the evidence that deserves to enter its context. The [query runs in a bounded sandbox](https://github.com/tommy0103/obelisk/blob/main/packages/core/src/core.ts); the exposed history APIs are read-only, and raw SQL is restricted to `SELECT` and `WITH`. This is controlled freedom in miniature.
+
+Agentic search is often narrated as a virtuous ritual: think, call a tool, read the result, think again, call another tool. That rhythm is useful when each result should genuinely change the next decision. But it becomes wasteful when the intermediate work is mechanical. A model should not have to spend another inference turn narrating every loop, join, filter, retry, and aggregation merely so that the harness can watch it advance one tool call at a time. Step-by-step observability is not the same thing as intelligence. Sometimes it is only bureaucracy imposed on thought.
+
+CodeAct changes which layer must explain itself. The agent can express the deterministic part of a retrieval plan as code, execute it next to the data, and admit only a compact result into the linguistic context where judgment happens. The reasoning has not disappeared. The plumbing has stopped demanding to be written as prose. We expect this to save context and, more importantly, to leave the model with more room for the part of the task that cannot be reduced to a loop. We have not yet quantified that expectation, so it should be read as a design hypothesis rather than a benchmark result.
+
+The broader model ecosystem appears to be moving back toward the same shape. Anthropic's [Programmatic Tool Calling](https://www.anthropic.com/engineering/advanced-tool-use) lets a model orchestrate tools through code so that large intermediate results can be processed without repeatedly entering the model's context. OpenAI's current [model guidance](https://developers.openai.com/api/docs/guides/latest-model) draws a similar boundary: programmatic calling is valuable for bounded filtering, joining, ranking, deduplication, aggregation, and validation, while direct calls remain better when each result must redirect semantic judgment. The important return is not simply that frontier models can issue more calls in parallel. It is that tool use is becoming expressive enough to serve a more complicated internal plan, rather than forcing the plan to collapse into a sequence of externally legible gestures.
+
+Writing code that calls tools and writing code that queries history are therefore close relatives, but they are not identical. From the runtime's perspective, a query may be just another tool invocation. From the agent's epistemic perspective, it is an argument about evidence: which records belong together, which distinctions must survive, and what compact object would be sufficient to answer the question. Tool orchestration transforms an environment through actions. A query transforms an environment into something the agent can know. Agent engineering loses an important distinction when it treats both as generic tool use.
+
+This is also where the higher-dimensional metaphor stops being merely decorative. A CodeAct query chooses samples and defines a projection over them. It is not only fetching old text; it is specifying how scattered historical points should be composed into a temporary object for thought. The better the model becomes at expressing that operation, the less Obelisk needs to prescribe the path in advance. Its job is to preserve the evidence, expose meaningful relations, and make the projection cheap enough to attempt again.
+
+CodeAct as epistemic compression
+
+### Mechanical retrieval should not consume the language in which judgment happens
+
+When every filter and join becomes another turn, the search protocol occupies the same scarce context as the conclusion. CodeAct moves deterministic plumbing beside the data and returns one compact object for thought.
+
+```javascript
+const reviews = await find("stalled PR");
+const evidence = await Promise.all(
+reviews.map(review => detail(review.id))
+);
+return clusterByFailure(evidence);
+```
+
+## Sampling a larger space
+
+There is another way to describe what we are trying to do, one that borrows—loosely—from philosophy, geometry, and set theory.
+
+Imagine that everything we can intuitively construct and express in everyday language forms a space. A particular concept is a sample taken from that space: one point we can name, examine, and communicate. Human inquiry in science, philosophy, and almost every other field proceeds by connecting such points. We begin with concepts available to perception and language, then search for a structure in which their relationship becomes intelligible. What first appears to be several isolated, lower-dimensional intuitions may turn out to be projections of a richer abstraction.
+
+To understand a complex subject deeply, in this picture, is not simply to accumulate more facts about it. It is to discover a higher-dimensional concept and find a sufficiently faithful projection of it into the dimensions we can recognize. The projection will never be the thing in full. It is valuable because it preserves the relationships that matter while making them available to thought.
+
+For most of human history, constructing such projections was extraordinarily difficult. It depended on rare combinations of talent, intelligence, education, time, and access to other minds. People argued with one another, searched libraries, read encyclopedias, and, later, queried search engines. Each method helped us reach more points, but the work of sensing a latent relationship among them remained scarce.
+
+Large language models alter the cost of that operation. They give us something that can feel like a magic function over concepts. We can sample several points from the range we know how to describe, present them to a model, and ask for a plausible mapping toward a space we cannot yet articulate. Ask what two apparently unrelated concepts have in common, and the model attempts to identify dimensions along which both can be understood. The answer may be wrong, shallow, or merely suggestive; nevertheless, the operation that once required unusual access to a patient and knowledgeable interlocutor is now available at any hour, and can be repeated almost without limit.
+
+In its most familiar form, we call this learning. But the same operation appears anywhere concepts are made: in research, design, engineering, criticism, and the early stages of invention. The world we share is built through these movements between samples and abstractions, between what can be said directly and the larger structure we are trying to perceive.
+
+This also clarifies why the history surrounding a model matters so much. A model can propose mappings, but the points we give it determine which region of the space it can help us explore. Generic examples lead toward generic abstractions. A history of real decisions, corrections, rejections, and moments of recognition supplies a much more particular set of samples. Obelisk can recover those samples—not to freeze a person inside their past, but to let a model trace relationships that the person could feel before they could explain them.
+
+Context vibe is one possible name for the shape that appears. It is neither a complete theory of a person's taste nor a rigid encoding of it. It is a workable projection assembled from enough situated judgments that an agent can begin to move through unfamiliar problems without becoming detached from the values that made the earlier work good.
+
+## The limits of the harness
+
+This puts context vibe beside another increasingly popular idea: [Harness Engineering](https://openai.com/index/harness-engineering/). The practice names real and necessary work. Agents need legible environments, clear intent, useful tools, verification, feedback loops, and safe boundaries. We will build these things too. Our disagreement begins only when harness engineering is treated not as one engineering discipline, but as a complete theory of how model capability should be made useful.
+
+A harness is built from what we already know how to specify, observe, test, or forbid. That makes it exceptionally good at keeping an agent inside a valid region of a problem. It can prevent a destructive migration, require a test, expose a hidden dependency, or make an architectural boundary visible. These are genuine gains, and rejecting them in the name of creativity would merely romanticize failure.
+
+But the model I described above is valuable for another reason. As a strange, probabilistic function over concepts, it can sometimes suggest a projection from the points we know toward a structure we do not yet know how to name. If we believe harness engineering can solve everything, we are also claiming that a human can write enough rules to provide a stable route to every higher-dimensional capability worth reaching. Yet a destination that can be fully prescribed in advance already lies, in an important sense, inside our existing map.
+
+The danger is not that a harness makes a model useless. It is that a perfect harness makes the model useful only in ways we already understand. Reliability increases while surprise is designed away. The system becomes excellent at reproducing the boundary of its designers' knowledge, precisely when the most interesting property of the model may be its ability to help them see beyond it.
+
+What we want instead is **controlled freedom**. The control is real: irreversible actions need gates, claims need evidence, and shared systems need enforceable safety. But inside those boundaries, the model should retain room to connect distant points, propose an unfamiliar abstraction, and produce something that no checklist could have specified. The harness should provide a floor, not become the ceiling.
+
+We should not imagine that a context vibe has to be finished before a harness can be designed. The latent project judgment in Figure 02 is *never directly observed*; it becomes more legible through the very work of deciding what the harness should protect. Each time a test catches a real regression, an exception reveals that a rule was too broad, or a reviewer distinguishes a safety boundary from a taste preference, the project produces another situated sample. Context vibe can grow with the harness rather than arrive as its constitution.
+
+As a harness grows, however, its successful past can harden into a closed world. It therefore needs counter-signals from people: not vague permission to ignore every rule, but explicit judgment about which boundaries remain firm, which should become defaults, and where exploration deserves an exception path. [open-your-mind](https://github.com/centitenka/open-your-mind) is a small example of that attitude. Its [SKILL.md](https://github.com/centitenka/open-your-mind/blob/main/SKILL.md) asks an agent to preserve constraints that protect safety and correctness while finding rules whose force has grown larger than the risk they control, then return the consequential choices to the owner. It is a skill built inside a harness to keep the harness from mistaking itself for the whole imagination.
+
+This also reveals two different design regimes that are too often collapsed into one roadmap. In a highly automated regime, people specify the boundary and evaluate the result while the system executes most of the path. The present enthusiasm for harness engineering belongs naturally here. Its central questions are how to make delegation reliable, legible, recoverable, and safe.
+
+The other regime keeps a person lightly but continuously inside the collaboration. The person does not micromanage every tool call, yet they remain present enough to redirect attention, contribute taste, expose a half-formed thought, or recognize that the problem itself has changed. Several current projects approach this space from different directions: [Multica](https://multica.ai/docs) keeps humans and agents in the same task workspace; [Raft](https://docs.raft.build/welcome/) describes agents as teammates while people remain in the conversation to steer; [Syncless](https://docs.syncless.ai/) models the handoffs through which agents move context while judgment remains with responsible people; and [Claude Tag](https://www.anthropic.com/news/introducing-claude-tag) puts one shared Claude into a team's Slack channels, where multiple people can see, continue, and redirect its work. These are not interchangeable products, and not all of them would use our language. What they share is more important: the social surface between people and agents is treated as part of the system rather than as temporary scaffolding around an autonomous worker.
+
+I think this second regime is profoundly underestimated. It is often described as a halfway state we will discard once agents become autonomous enough. That assumes the destination of intelligence is the removal of participation. I suspect the opposite: lightly participatory environments may be one of the most practical ways AI changes the basic coordination patterns of human society. They let intelligence compound through shared attention before it can be fully delegated. At the very least, until the thing people call AGI actually arrives, this is not a consolation prize. It is one of the few places where a new form of collective work can already be built.
+
+Two collaboration regimes
+
+### Automation and participation are different design destinations
+
+One system removes people from the execution path after they set its boundary. The other keeps people, agents, and artifacts in a shared social surface where direction can continue to change.
+
+#### Human at the boundary
+
+The harness defines a valid region. The agent executes most of the path; the person approves, interrupts, or evaluates.
+
+#### Human inside the shared surface
+
+People do not micromanage tool calls. They remain close enough to redirect attention, contribute taste, or recognize that the problem has changed.
+
+The right-hand regime is not failed autonomy. It treats continued human participation as a source of collective intelligence.
+
+Context vibe steers through a different material. It does not attempt to enumerate every acceptable answer. It supplies a field of situated judgments from which the model can infer direction while it moves. In a community, that difference matters twice. An over-engineered contribution process can turn a contributor into the operator of someone else's machine. They may satisfy every gate while gradually losing ownership, curiosity, and enthusiasm. A context vibe should help them understand why the project chooses as it does, then leave enough space for them to contribute something the owner did not already possess.
+
+## Atmosphere is part of the context
+
+There is another kind of context in the conversation where these ideas appeared, and it would be a mistake to edit it away. We were not conducting a formal product workshop. We were trading half-formed thoughts, jokes, screenshots, stickers, misunderstandings, and sudden recognitions. One idea made the next one easier to say. A phrase that was too abstract became clearer when the other person playfully failed to understand it. Excitement made us willing to follow an association further than either of us might have followed it alone.
+
+A good atmosphere makes people more creative.
+
+Atmosphere has causal force
+
+### A conversation does not merely carry ideas. It changes which ideas can appear.
+
+Safety makes an unfinished thought speakable; playful misunderstanding forces it into a clearer shape; recognition gives both people energy to follow the association further.
+
+**“Maybe a skill is not written…”**
+
+The idea is valuable but still too vague to defend.
+
+**“I do not quite understand.”**
+
+A misunderstanding, joke, or correction asks for another articulation without punishing the first attempt.
+
+**“A skill is discovered from history.”**
+
+The result was not waiting intact in either participant. It emerged from the exchange.
+
+This sounds softer than retrieval architecture or skill design, but it is no less structural. Creativity requires enough safety to expose an unfinished idea, enough curiosity to stay with a misunderstanding, and enough energy to make another attempt at articulation. A sterile exchange may be efficient at transferring conclusions while being terrible at producing new ones. Warmth, humor, and aesthetic pleasure are not decorations applied after serious work. They alter which thoughts become available to the people doing it.
+
+Most context engineering asks what information a model needs in order to answer well. That is only half the system. We should also ask what context a human needs in order to think well. A tool can preserve every relevant fact and still diminish the work if its presence makes people guarded, tired, or unimaginative. Conversely, a thoughtful interface and a generous conversational rhythm can invite a person to explore, correct, and create.
+
+This is part of why Obelisk's visual and technical taste mattered to me before I could fully explain its utility. The care visible in the surface suggested care in the relationship the tool wanted to have with its user. And the atmosphere of our own conversation did more than help us describe that relationship: it generated ideas that neither of us had brought into the conversation fully formed.
+
+If context can carry taste, perhaps it can also carry some of the conditions under which taste becomes generative. The purpose would not be to manufacture intimacy or reduce creativity to another optimization target. It would be to recognize that the quality of a working context is measured not only by what it helps an agent retrieve, but also by what it helps a person imagine.
+
+## Recovering the vibe
+
+The word *vibe* has already traveled through two popular phrases. Andrej Karpathy's original description of [vibe coding](https://x.com/karpathy/status/1886192184808149383) was not simply a name for generating code from a natural-language requirement. It described a mode in which you give in to the feedback loop, stop attending closely to the code, and let seeing, saying, running, and adjusting carry the work forward. The phrase was quickly flattened into a label for almost any use of AI in programming.
+
+Later, Simon Willison proposed [vibe engineering](https://simonwillison.net/2025/Oct/7/vibe-engineering/)—partly in jest—to distinguish that loose mode from the work of experienced developers who use language models heavily while remaining accountable for the software they produce. That distinction is useful. Yet the word *vibe* points toward something that even this more responsible definition does not fully contain.
+
+A vibe is not natural language as a substitute for syntax. It is not the absence of standards, and it is not a softer name for a pipeline of tests and guardrails. It is an emergent sense of direction among participants who cannot reduce everything they know to rules. It appears in the rhythm of correction, in the examples that need no explanation, in the permission to offer an unfinished thought, and in the moment when somebody else's response reveals what you were trying to say.
+
+Such a vibe can exist between one person and one coding agent. It can also exist between people, as it did in the conversation from which this essay grew. More importantly, it will almost certainly exist within groups made of both people and agents. Those groups will not be well described as humans operating tools, nor as autonomous agent swarms with a human placed somewhere above them. They will develop shared histories, local tastes, modes of disagreement, and conditions under which their members become more or less creative.
+
+This is the direction we want to explore after Obelisk. The path will not be wild. We will use verification, boundaries, and the techniques now gathered under harness engineering wherever they are needed. But those techniques are means, not the final character of the environment.
+
+The environment we hope to build is one in which every person's creativity and inspiration can be released as fully as possible, and agents act as catalysts within it. Not agents that merely obey, and not agents that replace the difficult pleasure of thinking together, but agents that help a group recover what it knows, reach what it does not yet know, and become capable of ideas that none of its members would have reached alone.
+
+What Obelisk delivers today may look like the ability to search our past. The value beneath it is more ambitious: to make history available as a living context for how humans and agents learn to think together.
+
+I am, in truth, deeply reluctant to publish my opinions in communities. Discussions around these subjects too often become impatient, with everyone trying to demonstrate how singular their position is. I did not write this to prove that my ideas are more original, or possessed of some more refined taste. I wrote it because this friendship makes me happy, and because I wanted to let what I had been thinking settle into words. I hope Yuu, when she has time, can read it with her agents and understand more clearly the values we are trying to carry through our work.
+
+This essay is itself a product of the process it describes. I spoke its central ideas aloud, had an agent help me develop them into prose, and completed the whole thing in tens of minutes rather than days. That does not make the thinking less mine or the experience less complete. I was able to finish a line of thought that mattered to me, and I enjoyed doing it. I believe Yuu will enjoy reading it too.
+
+So I will not hide the use of AI behind a careful disclaimer. I am proud of it. It gave us another way to sustain the atmosphere we value even when we could not sit together face to face. The technology did not substitute for the friendship or the thought. It helped the connection remain generative across distance and time.
+
+We warmly welcome fellow travelers to join this work. We want to move AI forward in practical ways, while keeping human beings—not technical spectacle—at the center of that progress.
