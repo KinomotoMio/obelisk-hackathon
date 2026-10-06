@@ -40,5 +40,8 @@
   "scripts": {
     "build": "rm -rf dist && tsc -p tsconfig.build.json && cp src/schema.sql dist/schema.sql",
     "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "viem": "^2.57.3"
   }
 }

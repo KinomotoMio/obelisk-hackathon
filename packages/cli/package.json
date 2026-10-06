@@ -20,5 +20,8 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "dependencies": {
+    "viem": "^2.57.3"
   }
 }

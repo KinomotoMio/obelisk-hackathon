@@ -23,6 +23,9 @@ export interface ObeliskPaths {
   readonly recapDir: string;
   // Local Skill library (#14), see skills.ts.
   readonly skillsDir: string;
+  // Wallet address and keychain locator (#4); the private key lives in the
+  // system keychain, never here. See wallet.ts.
+  readonly walletPath: string;
   // Pre-~/.obelisk database location, copied forward only in the legacy layout.
   readonly legacyDbPath: string;
 }
@@ -63,6 +66,7 @@ export function resolveObeliskPaths({
     dbPath: join(dataDir, 'obelisk.sqlite'),
     recapDir: join(dataDir, 'recap'),
     skillsDir: join(dataDir, 'skills'),
+    walletPath: join(dataDir, 'wallet.json'),
     legacyDbPath,
   };
 }
