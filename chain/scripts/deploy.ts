@@ -1,0 +1,130 @@
+// SPDX-License-Identifier: AGPL-3.0-only
+// Copyright (C) 2026 tommy0103 and contributors.
+
+// Deploys KeyRegistry, ShareRegistry, SkillRegistry, and UsageStats (wired to
+// that SkillRegistry) to the selected network and records the result in
+// deployments/<chainId>.json for the online service and CLI.
+//
+//   npx hardhat run --build-profile production --network botTestnet scripts/deploy.ts
+//
+// Re-running converges: each contract is written to the record as soon as
+// its deployment is mined, and a later run reuses any recorded contract that
+// still has code on-chain instead of deploying it again. An interrupted run
+// therefore resumes; a run against a fresh chain (e.g. the in-process
+// `hardhat` network) redeploys everything.
+
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
+import { network } from "hardhat";
+import { getAddress, type Hex } from "viem";
+
+import type { EXPORTED_CONTRACTS } from "./abi-format.js";
+
+type ContractName = (typeof EXPORTED_CONTRACTS)[number];
+
+interface DeployedContract {
+  address: Hex;
+  txHash: Hex;
+  blockNumber: number;
+  deployer: Hex;
+}
+
+interface DeploymentRecord {
+  chainId: number;
+  network: string;
+  /** False while a run is in progress or was interrupted; re-run to finish. */
+  complete: boolean;
+  updatedAt: string;
+  contracts: Partial<Record<ContractName, DeployedContract>>;
+}
+
+const deploymentsDir = join(dirname(fileURLToPath(import.meta.url)), "..", "deployments");
+
+const { viem, networkName } = await network.create();
+const publicClient = await viem.getPublicClient();
+const [deployer] = await viem.getWalletClients();
+if (deployer === undefined) {
+  throw new Error(`No deployer account for network "${networkName}". Set BOT_DEPLOYER_PRIVATE_KEY (see chain/README.md).`);
+}
+const chainId = await publicClient.getChainId();
+const recordPath = join(deploymentsDir, `${chainId}.json`);
+
+function load(): DeploymentRecord {
+  if (existsSync(recordPath)) {
+    const previous = JSON.parse(readFileSync(recordPath, "utf8")) as DeploymentRecord;
+    if (previous.chainId !== chainId) throw new Error(`${recordPath} records chainId ${previous.chainId}, connected to ${chainId}`);
+    return { ...previous, network: networkName };
+  }
+  return {
+    chainId,
+    network: networkName,
+    complete: false,
+    updatedAt: new Date().toISOString(),
+    contracts: {},
+  };
+}
+
+function save(record: DeploymentRecord) {
+  mkdirSync(deploymentsDir, { recursive: true });
+  record.updatedAt = new Date().toISOString();
+  // Write-then-rename so an interrupted write never leaves a truncated record.
+  const tmp = `${recordPath}.tmp`;
+  writeFileSync(tmp, `${JSON.stringify(record, null, 2)}\n`);
+  renameSync(tmp, recordPath);
+}
+
+async function hasCode(address: Hex) {
+  const code = await publicClient.getCode({ address });
+  return code !== undefined && code !== "0x";
+}
+
+const record = load();
+
+async function ensure(name: ContractName, args: readonly unknown[] = []): Promise<Hex> {
+  const existing = record.contracts[name];
+  if (existing && (await hasCode(existing.address))) {
+    console.log(`${name}: reusing ${existing.address}`);
+    return existing.address;
+  }
+  // UsageStats is bound to a SkillRegistry at construction; a new
+  // SkillRegistry invalidates the recorded UsageStats.
+  if (name === "SkillRegistry") delete record.contracts.UsageStats;
+  delete record.contracts[name];
+  record.complete = false;
+
+  // `name` is a union here, so viem cannot type the constructor arguments.
+  const { contract, deploymentTransaction } = await viem.sendDeploymentTransaction(name, args as never);
+  const receipt = await publicClient.waitForTransactionReceipt({ hash: deploymentTransaction.hash });
+  if (receipt.status !== "success") throw new Error(`${name} deployment reverted in tx ${deploymentTransaction.hash}`);
+
+  record.contracts[name] = {
+    address: getAddress(contract.address),
+    txHash: deploymentTransaction.hash,
+    blockNumber: Number(receipt.blockNumber),
+    deployer: getAddress(deployer.account.address),
+  };
+  save(record);
+  console.log(
+    `${name}: deployed ${contract.address} (tx ${deploymentTransaction.hash}, block ${receipt.blockNumber}, gas ${receipt.gasUsed})`,
+  );
+  return contract.address;
+}
+
+console.log(`Deploying to ${networkName} (chainId ${chainId}) from ${deployer.account.address}`);
+await ensure("KeyRegistry");
+await ensure("ShareRegistry");
+const skillRegistry = await ensure("SkillRegistry");
+const usageStats = await ensure("UsageStats", [skillRegistry]);
+
+// UsageStats must point at the SkillRegistry recorded beside it.
+const stats = await viem.getContractAt("UsageStats", usageStats);
+const wired = await stats.read.skillRegistry();
+if (getAddress(wired) !== getAddress(skillRegistry)) {
+  throw new Error(`UsageStats at ${usageStats} reads SkillRegistry ${wired}, expected ${skillRegistry}`);
+}
+
+record.complete = true;
+save(record);
+console.log(`Wrote ${recordPath}`);
