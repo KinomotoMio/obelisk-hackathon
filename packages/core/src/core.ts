@@ -22,6 +22,7 @@ import {
 } from './provider-settings.ts';
 import type { ProviderRegistry } from './providers/registry.ts';
 import { createQueryApi, createAttuneApi } from './query.ts';
+import { querySessionDetail, type SessionDetailForRead } from './session-detail-query.ts';
 import { recognizeSkillInvocations } from './skill-invocations.ts';
 import type { SkillInvocation, SkillInvocationFilter } from './skill-invocations.ts';
 import type { SqliteDb } from './sqlite-types.ts';
@@ -425,6 +426,22 @@ export function findSkillInvocations(filter?: SkillInvocationFilter): SkillInvoc
   try {
     try {
       return recognizeSkillInvocations(db, providerRegistry, filter);
+    } catch (error) {
+      return rethrowUnlessSchemaBlocked(error);
+    }
+  } finally {
+    db.close();
+  }
+}
+
+// One session's detail from the freshly refreshed index, by id or unique id
+// prefix (sharing, #8). Read-only, like a query.
+export function readSessionDetail(ref: string): SessionDetailForRead {
+  refreshQueryIndex();
+  const db = openReadDb();
+  try {
+    try {
+      return querySessionDetail(db, ref);
     } catch (error) {
       return rethrowUnlessSchemaBlocked(error);
     }

@@ -34,3 +34,16 @@ byte-for-byte. They pin the Skill version fingerprint contract
 10,000 characters the index keeps, so it pins recovering truncated Skill loads
 from the source record (#22). Only the capture directory was rewritten to
 `/tmp/long-probe`.
+
+`share-secrets-session.jsonl` holds the user and assistant records Claude Code
+2.1.289 wrote on 2026-10-07 for:
+
+    cd /private/tmp/obelisk-share-capture
+    claude -p "Read deploy-notes.txt, then reply in one short sentence saying which database host the notes mention." --model haiku --allowedTools Read
+
+`deploy-notes.txt` was written for the capture and holds planted, worthless
+values (a home-directory path, a credentialed database URL, Hardhat's public
+development key #0, an email address, a phone number), so the Read tool result
+pins the pre-share privacy check (#8) on real tool output. The capture's
+attachment, queue-operation, and bookkeeping records were dropped; no retained
+line was edited.
