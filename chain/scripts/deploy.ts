@@ -12,12 +12,18 @@
 // still has code on-chain instead of deploying it again. An interrupted run
 // therefore resumes; a run against a fresh chain (e.g. the in-process
 // `hardhat` network) redeploys everything.
+//
+// The deployment transaction hash is recorded under `pending` before waiting
+// for its receipt. BOT Chain's public RPC can briefly answer "transaction not
+// found" right after accepting a transaction (hardhat-viem's
+// sendDeploymentTransaction fails on exactly that), so a crash or timeout
+// while waiting must not lose a contract that was in fact mined.
 
 import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { network } from "hardhat";
+import { artifacts, network } from "hardhat";
 import { getAddress, type Hex } from "viem";
 
 import type { EXPORTED_CONTRACTS } from "./abi-format.js";
@@ -38,6 +44,8 @@ interface DeploymentRecord {
   complete: boolean;
   updatedAt: string;
   contracts: Partial<Record<ContractName, DeployedContract>>;
+  /** Deployment transactions sent but not yet confirmed by a receipt. */
+  pending?: Partial<Record<ContractName, Hex>>;
 }
 
 const deploymentsDir = join(dirname(fileURLToPath(import.meta.url)), "..", "deployments");
@@ -94,22 +102,44 @@ async function ensure(name: ContractName, args: readonly unknown[] = []): Promis
   delete record.contracts[name];
   record.complete = false;
 
-  // `name` is a union here, so viem cannot type the constructor arguments.
-  const { contract, deploymentTransaction } = await viem.sendDeploymentTransaction(name, args as never);
-  const receipt = await publicClient.waitForTransactionReceipt({ hash: deploymentTransaction.hash });
-  if (receipt.status !== "success") throw new Error(`${name} deployment reverted in tx ${deploymentTransaction.hash}`);
+  // A deployment sent by an earlier, interrupted run may have been mined.
+  const pendingHash = record.pending?.[name];
+  if (pendingHash) {
+    const previous = await publicClient.getTransactionReceipt({ hash: pendingHash }).catch(() => null);
+    if (previous?.status === "success" && previous.contractAddress && (await hasCode(previous.contractAddress))) {
+      return confirm(name, pendingHash, previous.contractAddress, previous.blockNumber, previous.gasUsed);
+    }
+    if (previous === null) {
+      throw new Error(`${name} deployment tx ${pendingHash} has no receipt yet; re-run once it is mined or dropped (remove it from "pending" in ${recordPath} if dropped)`);
+    }
+    delete record.pending?.[name];
+  }
 
-  record.contracts[name] = {
-    address: getAddress(contract.address),
-    txHash: deploymentTransaction.hash,
-    blockNumber: Number(receipt.blockNumber),
-    deployer: getAddress(deployer.account.address),
-  };
+  const artifact = await artifacts.readArtifact(name);
+  const hash = await deployer.deployContract({
+    abi: artifact.abi,
+    bytecode: artifact.bytecode as Hex,
+    args: args as never,
+  });
+  record.pending = { ...record.pending, [name]: hash };
   save(record);
-  console.log(
-    `${name}: deployed ${contract.address} (tx ${deploymentTransaction.hash}, block ${receipt.blockNumber}, gas ${receipt.gasUsed})`,
-  );
-  return contract.address;
+  // Polls through transient "not found" answers until the receipt exists.
+  const receipt = await publicClient.waitForTransactionReceipt({ hash, timeout: 300_000 });
+  if (receipt.status !== "success" || !receipt.contractAddress) throw new Error(`${name} deployment reverted in tx ${hash}`);
+  return confirm(name, hash, receipt.contractAddress, receipt.blockNumber, receipt.gasUsed);
+}
+
+function confirm(name: ContractName, txHash: Hex, address: Hex, blockNumber: bigint, gasUsed: bigint): Hex {
+  record.contracts[name] = {
+    address: getAddress(address),
+    txHash,
+    blockNumber: Number(blockNumber),
+    deployer: getAddress(deployer!.account.address),
+  };
+  delete record.pending?.[name];
+  save(record);
+  console.log(`${name}: deployed ${address} (tx ${txHash}, block ${blockNumber}, gas ${gasUsed})`);
+  return getAddress(address);
 }
 
 console.log(`Deploying to ${networkName} (chainId ${chainId}) from ${deployer.account.address}`);
