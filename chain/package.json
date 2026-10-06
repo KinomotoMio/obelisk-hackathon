@@ -8,7 +8,8 @@
   "scripts": {
     "build": "hardhat build",
     "test": "hardhat test",
-    "typecheck": "hardhat build && tsc --noEmit"
+    "typecheck": "hardhat build && tsc --noEmit",
+    "export-abi": "hardhat run scripts/export-abi.ts"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox-viem": "^5.0.7",
