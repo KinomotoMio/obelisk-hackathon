@@ -175,3 +175,59 @@ test('one load recorded under two index rows counts once', () => {
     db.close();
   }
 });
+
+test('识别 Skill 调用并对应到铸造版本: Claude Code and Codex loads map to library versions by fingerprint', async () => {
+  const home = makeTempDir('obelisk-skill-usage-');
+  writeHistory(home);
+  const work = join(home, 'work');
+  mkdirSync(work, { recursive: true });
+  writeFileSync(join(work, 'probe.json'), JSON.stringify({ name: 'fingerprint-probe', description: 'probe', body: probeMd }));
+  writeFileSync(join(work, 'long.json'), JSON.stringify({ name: 'long-probe', description: 'long', body: longMd }));
+  cli(home, ['skill', 'save', join(work, 'probe.json')]);
+  cli(home, ['skill', 'save', join(work, 'long.json')]);
+  const mint = { chainId: 968, skillId: '1', versionIndex: 0, author: '0x00000000000000000000000000000000000000a1', txHash: '0x01', mintedAt: '2026-10-07T00:00:00.000Z' };
+  await recordMintedVersion(join(home, '.obelisk', 'skills'), 'fingerprint-probe', { fingerprint: probeFp, mint });
+
+  const overview = cli(home, ['skill', 'invocations']);
+  assert.equal(overview.total, 4);
+  assert.deepEqual(overview.unresolved, []);
+  assert.deepEqual(overview.other, []);
+  const probe = overview.library.find((entry) => entry.name === 'fingerprint-probe');
+  assert.deepEqual(
+    { fingerprint: probe.fingerprint, state: probe.state, skillId: probe.mint.skillId, invocations: probe.invocations, sessions: probe.sessions },
+    { fingerprint: probeFp, state: 'minted', skillId: '1', invocations: 3, sessions: 3 },
+  );
+  const long = overview.library.find((entry) => entry.name === 'long-probe');
+  assert.deepEqual({ state: long.state, invocations: long.invocations }, { state: 'draft', invocations: 1 });
+
+  const detail = cli(home, ['skill', 'invocations', 'fingerprint-probe']);
+  assert.equal(detail.invocations, 3);
+  assert.deepEqual(detail.items.map((item) => item.source).sort(), ['claude', 'claude', 'codex']);
+  assert.ok(detail.items.every((item) => item.fingerprint === probeFp && item.textFrom === 'index' && item.loadedAs === 'fingerprint-probe'));
+});
+
+test('the CLI reports a load longer than the index keeps with its full-text fingerprint', () => {
+  const home = makeTempDir('obelisk-skill-usage-long-');
+  writeHistory(home);
+  assert.ok(claudeText(longLoad).length > 10000, 'the captured load is longer than the index keeps');
+  writeFileSync(join(home, 'q.mjs'), `return sql("SELECT length(text) AS n FROM messages WHERE uuid = ?", ${JSON.stringify(longLoad.uuid)})[0].n;`);
+  assert.equal(cli(home, ['--query', join(home, 'q.mjs')]), 10000, 'the indexed copy is truncated');
+
+  const work = join(home, 'work');
+  mkdirSync(work, { recursive: true });
+  writeFileSync(join(work, 'long.json'), JSON.stringify({ name: 'long-probe', description: 'long', body: longMd }));
+  cli(home, ['skill', 'save', join(work, 'long.json')]);
+  const detail = cli(home, ['skill', 'invocations', 'long-probe']);
+  assert.equal(detail.invocations, 1);
+  assert.deepEqual(
+    { fingerprint: detail.items[0].fingerprint, textFrom: detail.items[0].textFrom, messageUuid: detail.items[0].messageUuid },
+    { fingerprint: longFp, textFrom: 'raw', messageUuid: longLoad.uuid },
+  );
+});
+
+test('the CLI refuses usage for a Skill that is not in the library', () => {
+  const home = makeTempDir('obelisk-skill-usage-missing-');
+  const result = runCli(['skill', 'invocations', 'nope'], { home });
+  assert.equal(result.status, 1);
+  assert.match(JSON.parse(result.stdout).error, /Skill not found in the local library: nope/);
+});

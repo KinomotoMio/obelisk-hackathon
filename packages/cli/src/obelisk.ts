@@ -13,6 +13,7 @@ import {
   searchText,
   executeQuery,
   executeAttune,
+  findSkillInvocations,
 } from '../../core/src/core.ts';
 import { resolveObeliskPaths } from '../../core/src/paths.ts';
 import {
@@ -23,6 +24,11 @@ import {
   skillFingerprint,
 } from '../../core/src/skills.ts';
 import { SCENE_DIMENSIONS, SCENES } from '../../core/src/scenes.ts';
+import {
+  skillUsageFor,
+  skillVersionsByFingerprint,
+  summarizeSkillUsage,
+} from '../../core/src/skill-invocations.ts';
 import { runWalletCommand } from './wallet-command.ts';
 
 async function main() {
@@ -136,10 +142,19 @@ async function main() {
           scenes: SCENES.filter((scene) => scene.dimension === dimension.id)
             .map(({ id, label, labelEn }) => ({ id, label, labelEn })),
         })));
+      } else if (action === 'invocations') {
+        // Skill loads recognized in the index, mapped to library versions by
+        // fingerprint. With a name: that Skill's versions and every load.
+        if (target && !(await readSkill(skillsDir, target))) {
+          throw new Error(`Skill not found in the local library: ${target}`);
+        }
+        const versions = await skillVersionsByFingerprint(skillsDir);
+        const invocations = findSkillInvocations();
+        emit(target ? skillUsageFor(target, invocations, versions) : summarizeSkillUsage(invocations, versions));
       } else if (action === 'fingerprint' && target) {
         emit({ fingerprint: skillFingerprint(skillBodyFromMarkdown(readFileSync(resolve(target), 'utf8'))) });
       } else {
-        throw new Error('Usage: obelisk skill list | show <name> | save <draft.json> | scenes | fingerprint <SKILL.md>');
+        throw new Error('Usage: obelisk skill list | show <name> | save <draft.json> | scenes | invocations [<name>] | fingerprint <SKILL.md>');
       }
     } catch (error) { fail(error); }
     return;
@@ -163,7 +178,7 @@ async function main() {
     }
     return;
   }
-  process.stderr.write('Usage:\n  obelisk install [skills options]\n  obelisk --build\n  obelisk --search "text" [--nonce <token>]\n  obelisk --query <file.js>\n  obelisk --attune <file.js>\n  obelisk skill list | show <name> | save <draft.json> | scenes | fingerprint <SKILL.md>\n  obelisk wallet create | show | activate [--confirm]\n');
+  process.stderr.write('Usage:\n  obelisk install [skills options]\n  obelisk --build\n  obelisk --search "text" [--nonce <token>]\n  obelisk --query <file.js>\n  obelisk --attune <file.js>\n  obelisk skill list | show <name> | save <draft.json> | scenes | invocations [<name>] | fingerprint <SKILL.md>\n  obelisk wallet create | show | activate [--confirm]\n');
   process.exitCode = 1;
 }
 

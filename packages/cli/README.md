@@ -27,6 +27,7 @@ obelisk skill save draft.json        # create or replace a draft
 obelisk skill list                   # newest first
 obelisk skill show <name>            # draft, provenance, versions
 obelisk skill scenes                 # the fixed scene list for birthScenes
+obelisk skill invocations [<name>]   # Skill loads found in history, by version
 obelisk skill fingerprint SKILL.md   # version fingerprint of a body
 ```
 
@@ -38,6 +39,15 @@ fingerprint is the lowercase hex sha256 of the body without frontmatter,
 trimmed, with LF line endings — the same value usage recognition derives from
 the text Claude Code loads. Bodies that Claude Code would rewrite on load
 (`$ARGUMENTS`, `$0`, `${CLAUDE_*}`, `` !`cmd` ``) are refused.
+
+`obelisk skill invocations` refreshes the index like `--query`, finds every
+Skill load Claude Code and Codex recorded, fingerprints the loaded text with the
+same rule, and maps it to library versions: `library` lists invoked versions
+(`minted` or `draft`) with invocation and session counts, `other` lists loaded
+Skills that are not in the library, and `unresolved` lists loads whose full
+text could no longer be read (the index keeps 10,000 characters; longer loads
+are re-read from the transcript). With a name it prints that Skill's versions,
+including ones never invoked, and every load.
 
 ## Wallet
 

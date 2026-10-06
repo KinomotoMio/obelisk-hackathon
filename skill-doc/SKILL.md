@@ -440,6 +440,23 @@ markdown memory with `remember()`. If the user explicitly corrected the memory,
 that correction is approval for the combined archive-plus-write flow. If you
 discovered the mismatch yourself, ask first.
 
+## Skill Library
+
+Obelisk keeps a local Skill library (drafts, minted versions, provenance) next
+to the index. Read it through the CLI, not through query scripts:
+
+```bash
+obelisk skill list                   # Skills, newest first
+obelisk skill show <name>            # draft body, provenance card, versions
+obelisk skill invocations [<name>]   # how often each version was really loaded
+```
+
+`invocations` counts Skill loads recorded in Claude Code and Codex history and
+matches them to versions by body fingerprint; report its numbers as they are,
+including `unresolved` loads. Distilling a new Skill from history is the
+separate `obelisk-distill` skill (「沉淀 Skill」); do not draft or save Skills
+from this skill.
+
 ## Minimal Patterns
 
 Search, then expand one promising hit:
