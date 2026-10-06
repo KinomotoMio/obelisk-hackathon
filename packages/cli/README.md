@@ -38,3 +38,21 @@ fingerprint is the lowercase hex sha256 of the body without frontmatter,
 trimmed, with LF line endings — the same value usage recognition derives from
 the text Claude Code loads. Bodies that Claude Code would rewrite on load
 (`$ARGUMENTS`, `$0`, `${CLAUDE_*}`, `` !`cmd` ``) are refused.
+
+## Wallet
+
+`obelisk wallet` manages the data directory's BOT Chain wallet (#4). The private
+key is kept in the system keychain (macOS Keychain or the Linux Secret Service,
+service `obelisk-wallet`, account = the absolute data directory), so every
+`OBELISK_HOME` has its own wallet. It is never printed.
+
+```bash
+obelisk wallet create              # new wallet, or report the existing one
+obelisk wallet show                # address and activation status
+obelisk wallet activate            # preview registering the encryption key
+obelisk wallet activate --confirm  # sign it; the online service submits and pays
+```
+
+Activation goes through the Obelisk online service (`service/`); set
+`OBELISK_SERVICE_URL` to its URL. The CLI signs only for the contract addresses
+pinned from `chain/deployments/` (`npm run sync:chain` refreshes them).

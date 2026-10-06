@@ -23,6 +23,7 @@ import {
   skillFingerprint,
 } from '../../core/src/skills.ts';
 import { SCENE_DIMENSIONS, SCENES } from '../../core/src/scenes.ts';
+import { runWalletCommand } from './wallet-command.ts';
 
 async function main() {
   const args = process.argv.slice(2);
@@ -143,6 +144,10 @@ async function main() {
     } catch (error) { fail(error); }
     return;
   }
+  if (args[0] === 'wallet') {
+    try { emit(await runWalletCommand(args.slice(1))); } catch (error) { fail(error); }
+    return;
+  }
   if (args[0] === 'install') {
     const npx = process.platform === 'win32' ? 'npx.cmd' : 'npx';
     const child = spawnSync(
@@ -158,7 +163,7 @@ async function main() {
     }
     return;
   }
-  process.stderr.write('Usage:\n  obelisk install [skills options]\n  obelisk --build\n  obelisk --search "text" [--nonce <token>]\n  obelisk --query <file.js>\n  obelisk --attune <file.js>\n  obelisk skill list | show <name> | save <draft.json> | scenes | fingerprint <SKILL.md>\n');
+  process.stderr.write('Usage:\n  obelisk install [skills options]\n  obelisk --build\n  obelisk --search "text" [--nonce <token>]\n  obelisk --query <file.js>\n  obelisk --attune <file.js>\n  obelisk skill list | show <name> | save <draft.json> | scenes | fingerprint <SKILL.md>\n  obelisk wallet create | show | activate [--confirm]\n');
   process.exitCode = 1;
 }
 
