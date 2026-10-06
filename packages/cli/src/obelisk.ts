@@ -40,6 +40,7 @@ import {
   summarizeSkillUsage,
 } from '../../core/src/skill-invocations.ts';
 import { runShareCommand } from './share-command.ts';
+import { runSkillMintCommand } from './skill-mint-command.ts';
 import { runWalletCommand } from './wallet-command.ts';
 
 async function main() {
@@ -185,10 +186,12 @@ async function main() {
         const versions = await skillVersionsByFingerprint(skillsDir);
         const invocations = findSkillInvocations();
         emit(target ? skillUsageFor(target, invocations, versions) : summarizeSkillUsage(invocations, versions));
+      } else if (action === 'mint') {
+        emit(await runSkillMintCommand(args.slice(2)));
       } else if (action === 'fingerprint' && target) {
         emit({ fingerprint: skillFingerprint(skillBodyFromMarkdown(readFileSync(resolve(target), 'utf8'))) });
       } else {
-        throw new Error('Usage: obelisk skill list | show <name> | save <draft.json> | scenes | tag <name> [--add <tag>] [--remove <tag>] | invocations [<name>] | fingerprint <SKILL.md>');
+        throw new Error('Usage: obelisk skill list | show <name> | save <draft.json> | scenes | tag <name> [--add <tag>] [--remove <tag>] | invocations [<name>] | fingerprint <SKILL.md> | mint <name> [--confirm <fingerprint>]');
       }
     } catch (error) { fail(error); }
     return;
@@ -216,7 +219,7 @@ async function main() {
     }
     return;
   }
-  process.stderr.write('Usage:\n  obelisk install [skills options]\n  obelisk --build\n  obelisk --search "text" [--nonce <token>]\n  obelisk --query <file.js>\n  obelisk --attune <file.js>\n  obelisk skill list | show <name> | save <draft.json> | scenes | tag <name> [--add <tag>] [--remove <tag>] | invocations [<name>] | fingerprint <SKILL.md>\n  obelisk wallet create | show | activate [--confirm]\n  obelisk share outline <session-id>\n  obelisk share draft <session-id> --to <0x address> [--messages <from>-<to>|all] [--opens <n>|unlimited] [--expires <n>m|h|d]\n  obelisk share send <draft-id> [--redact all|none|<n>,<n>…] [--confirm]\n');
+  process.stderr.write('Usage:\n  obelisk install [skills options]\n  obelisk --build\n  obelisk --search "text" [--nonce <token>]\n  obelisk --query <file.js>\n  obelisk --attune <file.js>\n  obelisk skill list | show <name> | save <draft.json> | scenes | tag <name> [--add <tag>] [--remove <tag>] | invocations [<name>] | fingerprint <SKILL.md> | mint <name> [--confirm <fingerprint>]\n  obelisk wallet create | show | activate [--confirm]\n  obelisk share outline <session-id>\n  obelisk share draft <session-id> --to <0x address> [--messages <from>-<to>|all] [--opens <n>|unlimited] [--expires <n>m|h|d]\n  obelisk share send <draft-id> [--redact all|none|<n>,<n>…] [--confirm]\n');
   process.exitCode = 1;
 }
 

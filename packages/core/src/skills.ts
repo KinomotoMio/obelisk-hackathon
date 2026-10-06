@@ -75,7 +75,8 @@ export interface SkillMint {
   skillId: string;
   versionIndex: number;
   author: string;
-  txHash: string;
+  // null when the mint was confirmed by a later run that did not send it.
+  txHash: string | null;
   mintedAt: string;
 }
 
