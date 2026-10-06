@@ -1,0 +1,20 @@
+// Obelisk online service (issue #3). Deploy with `npm run deploy` after
+// `npx wrangler secret put RELAYER_PRIVATE_KEY`; see README.md.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "obelisk-service",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-10-01",
+  "observability": { "enabled": true },
+  "vars": {
+    // 968 = BOT Chain testnet, 677 = mainnet (once chain/deployments/677.json exists).
+    "CHAIN_ID": "968"
+  },
+  "durable_objects": {
+    "bindings": [{ "name": "RELAY_QUEUE", "class_name": "RelayQueue" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["RelayQueue"] }],
+  // No ids: wrangler provisions the namespace and bucket on first deploy.
+  "kv_namespaces": [{ "binding": "INDEX" }],
+  "r2_buckets": [{ "binding": "BLOBS" }]
+}
