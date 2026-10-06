@@ -278,9 +278,11 @@ and ask whether to continue.
 
 ## Step 3 — Show the evidence
 
-Before drafting, show the user what you are building on, then continue without
-waiting. One line per session: title, tool, date, and the hit reason in the
-user's language. When there is a keep-out list, phrase the reasons in its
+Before drafting, post the evidence list as a message of its own, then continue
+without waiting. It is where the user sees why each session was picked, and
+can drop an unrelated one, before it shapes the draft; the final report only
+counts sessions. One line per session: title, tool, date, and the hit reason
+in the user's language. When there is a keep-out list, phrase the reasons in its
 terms (how the work was done, not what was built):
 
 ```text
