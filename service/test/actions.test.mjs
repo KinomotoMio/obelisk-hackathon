@@ -7,6 +7,7 @@ import { readFileSync } from 'node:fs';
 import { encodeFunctionData } from 'viem';
 
 import { parseRelayRequest, RELAY_ACTIONS, RequestError } from '../src/actions.ts';
+import { handleRequest } from '../src/app.ts';
 import { resolveChainConfig } from '../src/chains.ts';
 import { HourlyRateLimiter } from '../src/limits.ts';
 import { CONTRACT_ABIS } from '../src/relayer.ts';
@@ -83,6 +84,17 @@ test('the testnet service config reads addresses from the committed deployment r
   assert.throws(() => resolveChainConfig({ CHAIN_ID: '677' }), /No complete deployment/);
   assert.throws(() => resolveChainConfig({ CHAIN_ID: '1' }), /Unsupported CHAIN_ID/);
   assert.throws(() => resolveChainConfig({ CHAIN_ID: '31337' }), /LOCAL_CONTRACTS/);
+});
+
+test('/v1/chain gives a browser wallet the public RPC, never the configured RPC_URL', async () => {
+  const config = resolveChainConfig({ CHAIN_ID: '968', RPC_URL: 'https://rpc.example/v1/not-public-key' });
+  const response = await handleRequest(new Request('http://service.test/v1/chain'), {
+    config, publicClient: null, relayerAddress: null, txIndex: null, storage: { kv: false, r2: false }, shares: null, relay: null,
+  });
+  const body = await response.json();
+  assert.equal(body.rpcUrl, 'https://rpc.bohr.life');
+  assert.deepEqual(body.nativeCurrency, { name: 'BOT', symbol: 'BOT', decimals: 18 });
+  assert.ok(!JSON.stringify(body).includes('not-public-key'));
 });
 
 test('relay limits cap each signer and the whole service per hour', async () => {

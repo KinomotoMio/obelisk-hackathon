@@ -5,7 +5,7 @@
 // so the same routing runs under `node --test` with in-memory bindings.
 //
 //   GET  /v1/health                     chain, relay wallet balance, storage bindings
-//   GET  /v1/chain                      chain id, explorer, contract addresses, relay wallet
+//   GET  /v1/chain                      chain id, explorer, public RPC, currency, contract addresses, relay wallet
 //   GET  /v1/keys/:address              KeyRegistry record + next RegisterKey nonce
 //   GET  /v1/nonces/:contract/:address  next signature nonce on any Obelisk contract
 //   GET  /v1/tx/:hash                   status of a relayed transaction
@@ -25,7 +25,7 @@
 import { formatEther, type Address, type PublicClient } from 'viem';
 
 import { RequestError } from './actions.ts';
-import type { ServiceChainConfig } from './chains.ts';
+import { localDevChain, type ServiceChainConfig } from './chains.ts';
 import { parseAddressParam, parseContractParam, readKey, readNonce, readTransaction } from './reads.ts';
 import type { Relayer, RelayRecord } from './relayer.ts';
 import { createShare, MAX_SHARE_BODY_BYTES, openShare, parseShareId, readShare, revokeShare, type ShareDeps, type ShareStore } from './shares.ts';
@@ -170,6 +170,9 @@ export async function handleRequest(request: Request, deps: AppDeps): Promise<Re
         chainId: config.chain.id,
         name: config.chain.name,
         explorerUrl: config.explorerUrl,
+        // For a browser wallet to add the network. Never RPC_URL, which may carry a key.
+        rpcUrl: config.chain.id === localDevChain.id ? config.rpcUrl : config.chain.rpcUrls.default.http[0],
+        nativeCurrency: config.chain.nativeCurrency,
         contracts: config.contracts,
         relayer: deps.relayerAddress,
       });

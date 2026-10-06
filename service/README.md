@@ -27,7 +27,7 @@ are involved.
 | Route | Returns |
 | --- | --- |
 | `GET /v1/health` | chain, relay wallet address and balance, which storage bindings exist |
-| `GET /v1/chain` | `chainId`, `name`, `explorerUrl`, contract addresses, relay wallet |
+| `GET /v1/chain` | `chainId`, `name`, `explorerUrl`, the chain's public `rpcUrl` and `nativeCurrency` (for a browser wallet to add the network), contract addresses, relay wallet |
 | `GET /v1/keys/:address` | `KeyRegistry` record (`registered`, `pubKey`, `version`, `updatedAt`) and the `nonce` the next `RegisterKey` must sign |
 | `GET /v1/nonces/:contract/:address` | the signer's next nonce on any Obelisk contract |
 | `GET /v1/tx/:hash` | `confirmed`, `reverted`, or `pending`, with the explorer link and the relay record if this service sent it |
