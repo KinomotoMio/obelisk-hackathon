@@ -178,10 +178,11 @@ and add `--confirm` only after the user agrees.
 ## Sharing
 
 Requests to share a session with a wallet address ("把这段 session 分享给 0x…",
-"share this session with 0x…") belong to the `obelisk-share` skill. Sending
-encrypts content for someone else and writes on chain: preview with
-`obelisk share send <draft-id> --redact …` and add `--confirm` only after the
-user agrees. Report privacy findings by type and location only; never look up
+"share this session with 0x…"), to check whether a share was read, or to
+revoke one ("撤回我发给 0x… 的分享") belong to the `obelisk-share` skill. Sending
+and revoking write on chain: preview with `obelisk share send <draft-id>
+--redact …` or `obelisk share revoke <draft-id>` and add `--confirm` only after
+the user agrees. Report privacy findings by type and location only; never look up
 or quote their values.
 
 ## Minting and fetching Skills

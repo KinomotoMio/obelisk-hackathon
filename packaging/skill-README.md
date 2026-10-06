@@ -40,7 +40,7 @@ them when the installer asks which skills to install:
   identity), e.g. "帮我创建 Obelisk 钱包".
 - `obelisk-share`: privately share part of a session with one wallet, with a
   privacy check before anything leaves your computer, e.g. "把这段 session
-  分享给 0x…，只能打开 1 次".
+  分享给 0x…，只能打开 1 次"; then see whether it was read, or revoke it.
 - `obelisk-skill-assets`: mint a Skill from your library on BOT Chain, or fetch
   someone's minted Skill into Claude Code, previewing both first, e.g.
   "用 Obelisk 铸造 Skill 草稿「AI 能力履历」" or "取用 Skill #12".

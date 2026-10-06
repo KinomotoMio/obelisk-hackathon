@@ -94,6 +94,9 @@ test('build:skill ships the standalone share skill, which keeps privacy findings
   assert.match(skill, /obelisk share send <draft-id> --confirm/);
   assert.match(skill, /Do not add `--confirm` on your own/);
   assert.match(skill, /never print or look up the values/);
+  assert.match(skill, /撤回我发给 0x… 的分享/);
+  assert.match(skill, /obelisk share revoke <draft> --confirm/);
+  assert.match(skill, /`unread` \| 未读/);
   assert.deepEqual(findDynamicSkillContent(skill), []);
 });
 
