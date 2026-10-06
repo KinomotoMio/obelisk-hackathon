@@ -92,6 +92,23 @@ export const skillRegistryTypes = {
 } as const;
 
 /**
+ * Off chain: the author's signature over a minted Skill version's install
+ * metadata (the name and description that go into its SKILL.md frontmatter).
+ * No contract verifies it; the online service checks it against the version's
+ * on-chain author before storing the body for others to fetch (#16). It signs
+ * in the SkillRegistry domain but has no nonce or deadline: the stored record
+ * is written once per fingerprint and never replaced.
+ */
+export const skillContentTypes = {
+  SkillContent: [
+    { name: "author", type: "address" },
+    { name: "fingerprint", type: "bytes32" },
+    { name: "name", type: "string" },
+    { name: "description", type: "string" },
+  ],
+} as const;
+
+/**
  * Usage reports are cumulative running totals per (wallet, fingerprint).
  * Bucket keys are opaque bytes32 and must be strictly ascending.
  */
