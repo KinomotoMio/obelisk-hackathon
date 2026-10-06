@@ -45,7 +45,7 @@ the text Claude Code loads. Bodies that Claude Code would rewrite on load
 `obelisk skill invocations` refreshes the index like `--query`, finds every
 Skill load Claude Code and Codex recorded, fingerprints the loaded text with the
 same rule, and maps it to library versions: `library` lists invoked versions
-(`minted` or `draft`) with invocation and session counts, `other` lists loaded
+(`minted`, `draft`, or `fetched`) with invocation and session counts, `other` lists loaded
 Skills that are not in the library, and `unresolved` lists loads whose full
 text could no longer be read (the index keeps 10,000 characters; longer loads
 are re-read from the transcript). With a name it prints that Skill's versions,
