@@ -110,8 +110,11 @@ never counts twice) and returns the key package once confirmed.
 `POST /v1/shares/:id/revoke` takes the sender's signed `RevokeShare { sender,
 shareId, nonce, deadline }`. It refuses a signer other than the sender (`403
 not_sender`) and a share already revoked (`409 already_revoked`) before
-relaying, and keeps the transaction so `GET /v1/shares/:id` links it. The
-stored ciphertext is kept; opens are refused from then on.
+relaying, and keeps the transaction so `GET /v1/shares/:id` links it. Once
+the revoke is confirmed the stored ciphertext and key package are deleted
+(`contentStored: false`); a revoke that was still pending, or one relayed
+through `/v1/relay`, is cleaned up the next time the share is read or opened.
+The share's rules, status, and receipts stay readable from chain.
 
 ### Formats
 

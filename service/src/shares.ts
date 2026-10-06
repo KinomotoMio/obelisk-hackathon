@@ -13,7 +13,7 @@
 //   POST /v1/shares             { message: CreateShare, signature, keyPackage, ciphertext (base64) }
 //   GET  /v1/shares/:id         the on-chain rules, status, open receipts, and transactions
 //   POST /v1/shares/:id/open    { message: RecordOpen, signature } -> receipt, key package, ciphertext
-//   POST /v1/shares/:id/revoke  { message: RevokeShare, signature } -> relayed RevokeShare
+//   POST /v1/shares/:id/revoke  { message: RevokeShare, signature } -> relayed RevokeShare; content deleted
 //
 // Formats (the CLI writes them in packages/core/src/share-crypto.ts; the web
 // reader, #10, reads them):
@@ -175,6 +175,16 @@ export async function readOnChainShare(deps: ShareDeps, shareId: Hex): Promise<O
 
 const iso = (seconds: bigint) => new Date(Number(seconds) * 1000).toISOString();
 
+/**
+ * A revoked share's ciphertext and key package are deleted: nobody may open
+ * it again, so the service has no reason to keep them. Runs when a revoke is
+ * confirmed and again whenever a revoked share is read or opened, which also
+ * covers a revoke that was pending or relayed through /v1/relay.
+ */
+async function dropRevokedContent(store: ShareStore | null, shareId: Hex): Promise<void> {
+  if (store && (await store.hasContent(shareId).catch(() => false))) await store.deleteContent(shareId).catch(() => undefined);
+}
+
 /** POST /v1/shares: store the encrypted content, then relay CreateShare. */
 export async function createShare(deps: ShareDeps, body: unknown): Promise<Response> {
   const store = requireStore(deps);
@@ -230,6 +240,7 @@ export async function readShare(deps: ShareDeps, shareId: Hex) {
   if (!share) throw new RequestError(404, 'unknown_share', `No share ${shareId} on ${deps.config.chain.name}`);
   const { publicClient, config } = deps;
   const address = config.contracts.ShareRegistry;
+  if (share.revoked) await dropRevokedContent(deps.store, shareId);
   const [block, receiptCount, transactions, contentStored] = await Promise.all([
     publicClient.getBlock(),
     publicClient.readContract({ address, abi: shareRegistryAbi, functionName: 'receiptCount', args: [shareId] }),
@@ -394,6 +405,7 @@ export async function openShare(deps: ShareDeps, shareId: Hex, body: unknown): P
     functionName: 'checkOpen',
     args: [shareId, opener],
   });
+  if (status === OpenStatus.Revoked) await dropRevokedContent(store, shareId);
   if (status !== OpenStatus.Ok) throw openRefusal(deps, share, opener, status, transactions);
   if (!(await store.hasContent(shareId))) {
     throw new RequestError(410, 'content_unavailable', `The encrypted content of share ${shareId} is no longer stored on this service`);
@@ -428,6 +440,7 @@ export async function revokeShare(deps: ShareDeps, shareId: Hex, body: unknown):
   const result = await relayed.json() as Record<string, unknown> & { txHash: Hex };
   if (deps.store) {
     await deps.store.putTransactions(shareId, { ...(await deps.store.getTransactions(shareId)), revoke: result.txHash }).catch(() => undefined);
+    if (result['status'] === 'confirmed') await dropRevokedContent(deps.store, shareId);
   }
   return { status: relayed.status, body: { ...result, shareId } };
 }

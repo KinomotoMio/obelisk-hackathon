@@ -107,8 +107,8 @@ open of one share, run `obelisk share status <draft-id>` and list `receipts`.
    revoke.
 2. **Preview.** Run `obelisk share revoke <draft>` and show the user the
    share's title, recipient, and current state, and that revoking cannot be
-   undone. If the preview has a `note`, the share can no longer be opened
-   anyway; say so.
+   undone and also deletes the encrypted copy on the online service. If the
+   preview has a `note`, the share can no longer be opened anyway; say so.
 3. **Revoke.** Only after the user confirms, run
    `obelisk share revoke <draft> --confirm`. Tell them nobody can open the
    link any more, and give the `explorer` link where the revocation can be

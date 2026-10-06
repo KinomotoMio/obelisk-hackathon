@@ -215,6 +215,8 @@ test('打开被拒：转发者、冒充接收者、已撤回、已过期；拒�
   assert.equal(read.body.status, 'revoked');
   assert.equal(read.body.transactions.revoke.txHash, revoked.body.txHash);
   assert.equal(read.body.transactions.create.txHash, created.body.txHash);
+  assert.equal(read.body.contentStored, false, 'revoking deletes the stored ciphertext');
+  assert.equal(app.shares.content.has(shareId), false);
   await refuse(`/v1/shares/${shareId}/open`, await signOpen(app, recipient.account, shareId), 410, 'share_revoked');
   await refuse(`/v1/shares/${shareId}/open`, await signOpen(app, forwardee, shareId), 403, 'not_recipient');
   await refuse(`/v1/shares/${shareId}/revoke`, await signRevoke(app, sender, shareId), 409, 'already_revoked');
@@ -224,4 +226,16 @@ test('打开被拒：转发者、冒充接收者、已撤回、已过期；拒�
   await publicClient.request({ method: 'evm_mine', params: [] });
   await refuse(`/v1/shares/${short.shareId}/open`, await signOpen(app, short.recipient.account, short.shareId), 410, 'share_expired');
   assert.equal((await app.call('GET', `/v1/shares/${short.shareId}`)).body.receipts.length, 0);
+});
+
+test('撤回：经 /v1/relay 撤回的分享，在下次读取时也删除密文', { skip }, async () => {
+  const app = makeApp();
+  const { sender, shareId } = await createdShare(app);
+  const relayed = await app.call('POST', '/v1/relay', { action: 'RevokeShare', ...(await signRevoke(app, sender, shareId)) });
+  assert.equal(relayed.status, 200, JSON.stringify(relayed.body));
+  assert.equal(app.shares.content.has(shareId), true, 'the relay route itself does not touch storage');
+  const read = await app.call('GET', `/v1/shares/${shareId}`);
+  assert.equal(read.body.status, 'revoked');
+  assert.equal(read.body.contentStored, false);
+  assert.equal(app.shares.content.has(shareId), false);
 });

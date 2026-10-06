@@ -589,7 +589,7 @@ async function revoke(args: string[], deps: ShareCommandDeps) {
   if (!flags.has('--confirm')) {
     return {
       preview: true,
-      action: 'Revoke this share on BOT Chain. From then on nobody can open it, including the recipient. This cannot be undone.',
+      action: 'Revoke this share on BOT Chain. From then on nobody can open it, including the recipient. This cannot be undone. The online service also deletes its encrypted copy.',
       share: view,
       ...(stillOpen ? {} : { note: `It can no longer be opened anyway (${info.status}); revoking only records that on chain.` }),
       from: account.address,
