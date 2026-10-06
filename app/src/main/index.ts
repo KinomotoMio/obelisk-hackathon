@@ -16,6 +16,7 @@ import { buildEditorUrl, DEFAULT_EDITOR_SCHEME, EDITOR_SCHEMES, resolveFileRefer
 import { acquireWriterLease, writerLockPathFor } from '../../../packages/core/src/writer-lease.ts';
 import { migrateCoreSchemaColumns } from '../../../packages/core/src/schema-migrations.ts';
 import { resolveObeliskPaths } from '../../../packages/core/src/paths.ts';
+import { listSkills, readSkill } from '../../../packages/core/src/skills.ts';
 import { storedSessionCursor } from '../../../packages/core/src/provider-indexing.ts';
 import { createBuiltinProviderRegistry } from '../../../packages/core/src/providers/builtins.ts';
 import {
@@ -50,6 +51,7 @@ const OBELISK_PATHS = resolveObeliskPaths();
 const OBELISK_DIR = OBELISK_PATHS.dataDir;
 const RECAP_DIR = OBELISK_PATHS.recapDir;
 const SETTINGS_PATH = OBELISK_PATHS.settingsPath;
+const SKILLS_DIR = OBELISK_PATHS.skillsDir;
 
 function detectClaudeDir() {
   // macOS / Linux: ~/.claude
@@ -477,6 +479,11 @@ function onObeliskChange(filePath) {
   if (filePath.startsWith(RECAP_DIR)) {
     for (const win of BrowserWindow.getAllWindows()) {
       win.webContents.send('obelisk:recap-updated', filePath);
+    }
+  }
+  if (filePath.startsWith(SKILLS_DIR + path.sep)) {
+    for (const win of BrowserWindow.getAllWindows()) {
+      win.webContents.send('obelisk:skills-updated', filePath);
     }
   }
 }
@@ -916,6 +923,13 @@ ipcMain.handle('capture:copy', async (event, { cardIdx, archetype, filename } = 
   clipboard.writeImage(image);
   return true;
 });
+
+// --- Skill library (#14) ---
+// Read-only: drafts and mints are written by the CLI. readSkill() validates the
+// name, so a renderer-supplied value cannot leave the library directory.
+
+ipcMain.handle('skills:list', () => listSkills(SKILLS_DIR));
+ipcMain.handle('skills:get', (_, name) => readSkill(SKILLS_DIR, String(name)));
 
 // --- Recap files ---
 

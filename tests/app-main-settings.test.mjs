@@ -10,6 +10,7 @@ import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node
 import { join } from 'node:path';
 
 import { acquireWriterLease } from '../packages/core/src/writer-lease.ts';
+import { saveSkillDraft } from '../packages/core/src/skills.ts';
 import { makeTempDir } from './temp-dirs.mjs';
 
 const require = createRequire(import.meta.url);
@@ -1676,6 +1677,100 @@ test('OBELISK_HOME gives the app its own database, settings, and recaps', async 
     assert.ok(openedDbPaths.every(p => !p.startsWith(join(home, '.obelisk'))), `opened: ${openedDbPaths}`);
     assert.equal(readFileSync(join(home, '.claude', 'obelisk.sqlite'), 'utf8'), 'legacy');
     assert.ok(!existsSync(join(dataDir, 'obelisk.sqlite')) || readFileSync(join(dataDir, 'obelisk.sqlite'), 'utf8') !== 'legacy');
+  } finally {
+    await closeMainProcessDb(appHandlers);
+    restore();
+    restoreEnvVar('HOME', originalHome);
+    restoreEnvVar('USERPROFILE', originalProfile);
+    restoreEnvVar('OBELISK_HOME', originalObeliskHome);
+    rmSync(home, { recursive: true, force: true });
+  }
+});
+
+test('the app reads the Skill library of its data directory and announces changes', async () => {
+  const originalHome = process.env.HOME;
+  const originalProfile = process.env.USERPROFILE;
+  const originalObeliskHome = process.env.OBELISK_HOME;
+  const home = makeTempDir(`obelisk-main-skills-${Date.now()}`);
+  const dataDir = join(home, 'roles', 'alice');
+  mkdirSync(dataDir, { recursive: true });
+  process.env.HOME = home;
+  process.env.USERPROFILE = home; // os.homedir() reads USERPROFILE on Windows
+  process.env.OBELISK_HOME = dataDir;
+  const saved = await saveSkillDraft(join(dataDir, 'skills'), {
+    name: 'resume-helper',
+    description: 'Helps write resumes.',
+    body: '# Resume helper\n\nUse evidence.',
+    birthScenes: ['writing/resume'],
+    provenance: [{ sessionId: 'session-a', reason: 'origin' }],
+  });
+
+  const ipcHandlers = new Map();
+  const sent = [];
+  let watcherOptions = null;
+
+  class FakeDatabase {
+    pragma() {}
+    exec() {}
+    close() {}
+    prepare() {
+      return { get: () => null, all: () => [], run: () => ({}) };
+    }
+  }
+
+  class FakeBrowserWindow {
+    constructor() {
+      this.webContents = {
+        on() {}, setWindowOpenHandler() {}, getURL() { return ''; }, setZoomLevel() {}, openDevTools() {},
+        send: (channel, payload) => sent.push([channel, payload]),
+      };
+      FakeBrowserWindow.windows.push(this);
+    }
+    loadFile() {}
+    loadURL() {}
+    close() {}
+    static windows = [];
+    static getAllWindows() { return FakeBrowserWindow.windows; }
+    static fromWebContents() { return null; }
+  }
+
+  const appHandlers = new Map();
+  const restore = registerMocks([
+    [ELECTRON_URL, {
+      namedExports: electronNamespace({
+        app: { ...captureAppHandlers(appHandlers), getVersion: () => '0.0.0-test' },
+        BrowserWindow: FakeBrowserWindow,
+        ipcMain: { handle(channel, handler) { ipcHandlers.set(channel, handler); } },
+      }),
+    }],
+    [DATABASE_URL, { defaultExport: FakeDatabase }],
+    [WATCHER_URL, {
+      namedExports: {
+        createAdaptiveWatcher: (options) => {
+          if (options.targets.some(target => target.path === dataDir)) watcherOptions = options;
+          return { close() { return Promise.resolve(); } };
+        },
+      },
+    }],
+    [INDEXER_URL, { namedExports: { writeHeartbeat() {} } }],
+    [INDEXER_SERVICE_URL, { namedExports: defaultIndexerService() }],
+    [INDEXER_WORKER_URL, { namedExports: defaultIndexerWorkerClient() }],
+  ]);
+
+  try {
+    await importMain();
+    const listed = await ipcHandlers.get('skills:list')();
+    assert.deepEqual(listed.map(skill => skill.name), ['resume-helper']);
+    const detail = await ipcHandlers.get('skills:get')(null, 'resume-helper');
+    assert.equal(detail.draft.fingerprint, saved.draft.fingerprint);
+    assert.equal(detail.provenance[0].sessionId, 'session-a');
+    await assert.rejects(ipcHandlers.get('skills:get')(null, '../escape'), /Skill name must be/);
+
+    assert.ok(watcherOptions, 'the data directory is watched');
+    const changed = join(dataDir, 'skills', 'resume-helper', 'skill.json');
+    watcherOptions.onInvalidate({ type: 'paths', paths: [changed] });
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    assert.deepEqual(sent.filter(([channel]) => channel === 'obelisk:skills-updated'), [['obelisk:skills-updated', changed]]);
   } finally {
     await closeMainProcessDb(appHandlers);
     restore();

@@ -51,6 +51,13 @@ contextBridge.exposeInMainWorld('obelisk', {
     ipcRenderer.on('obelisk:recap-updated', listener);
     return () => ipcRenderer.removeListener('obelisk:recap-updated', listener);
   },
+  skillsList: () => ipcRenderer.invoke('skills:list'),
+  skillsGet: (name: string) => ipcRenderer.invoke('skills:get', name),
+  onSkillsUpdated: (callback: (filePath: unknown) => void) => {
+    const listener = (_: IpcRendererEvent, filePath: unknown) => callback(filePath);
+    ipcRenderer.on('obelisk:skills-updated', listener);
+    return () => ipcRenderer.removeListener('obelisk:skills-updated', listener);
+  },
   getSettings: () => ipcRenderer.invoke('settings:get'),
   browseFolder: () => ipcRenderer.invoke('settings:browseFolder'),
   setSetting: (key: string, value: unknown) => ipcRenderer.invoke('settings:set', key, value),
