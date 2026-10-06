@@ -9,11 +9,13 @@ A Cloudflare Worker that sits between local Obelisk and BOT Chain
 - **Chain reads.** BOT Chain does not serve `eth_getLogs`, so the service reads
   state through the contracts' view functions and serves it to the CLI, the
   App, and the web reader.
-- **Storage.** R2 (`BLOBS`) holds share ciphertext and key packages (and Skill
-  bodies, with #16), and KV (`INDEX`) holds small indexes: relayed
+- **Storage.** R2 (`BLOBS`) holds share ciphertext and key packages and
+  minted Skill bodies, and KV (`INDEX`) holds small indexes: relayed
   transactions and each share's transaction hashes.
 
-The service never sees plaintext and does nothing that needs AI.
+The service never sees plaintext session content and does nothing that needs
+AI. Minted Skill bodies are the exception by design: they are public, so
+anyone can fetch one and check it against its on-chain fingerprint.
 
 ## API
 
@@ -121,6 +123,33 @@ The web reader (#10) implements these with WebCrypto:
 | `contentHash` | SHA-256 of the ciphertext |
 | `keyPackage` | `{ version: 1, algorithm: "x25519-hkdf-sha256-aes-256-gcm", recipientKey, ephemeralPublicKey, nonce, wrappedKey }`. The X25519 shared secret of the ephemeral key and the recipient's registered key (`0x01` ‖ public key, derived as in `packages/core/src/wallet.ts`) goes through HKDF-SHA256 with salt = ephemeral public key ‖ recipient public key and info `obelisk/share-key/x25519/v1` to 32 bytes; `wrappedKey` is AES-256-GCM of the content key under it, AAD = share id bytes, tag appended |
 | snapshot | UTF-8 JSON, `format: "obelisk.share.snapshot/v1"` (`packages/core/src/share-snapshot.ts`) |
+
+## Minted Skills
+
+| Route | Returns |
+| --- | --- |
+| `GET /v1/skills/:ref` | a minted Skill version: `skillId`, `author`, `parentSkillId`, `birthScenes`, `versionCount`, `version { index, fingerprint, publishedAt }`, and `content { name, description, body }` (or `null` if no body is stored) |
+| `POST /v1/skills/:fingerprint/content` | stores that version's body: `{ author, name, description, body, signature }` |
+
+`:ref` is a Skill id (decimal) or a version fingerprint (`0x` + 64 hex). With
+a Skill id, `?versionIndex=N` picks a version; the default is the latest.
+
+A Skill is minted with `MintSkill` (or a new version published with
+`PublishVersion`) through `POST /v1/relay`; its body is stored afterwards
+(`obelisk skill mint` does both). The service stores a body only when:
+
+- `body` is normalized (LF line endings, no surrounding whitespace, no
+  frontmatter) and its sha256 is the fingerprint (`422 fingerprint_mismatch`)
+- the fingerprint is minted on chain (`409 not_minted`)
+- `signature` is the `SkillContent` typed data from
+  [`chain/eip712.ts`](../chain/eip712.ts), signed by `author`
+  (`401 invalid_signature`), and `author` minted that version
+  (`403 not_author`)
+
+`name` and `description` become the fetched Skill's `SKILL.md` frontmatter.
+Content is written once per fingerprint: storing the same content again
+returns `created: false`, and different content returns `409 content_exists`.
+Requests are limited to 256 KiB.
 
 ## Configuration
 

@@ -4,7 +4,7 @@
 // Cloudflare Worker entry point. Bindings (see wrangler.jsonc):
 //   RELAY_QUEUE  Durable Object; the one place relayed transactions are sent from
 //   INDEX        KV; small indexes (relayed transaction records today)
-//   BLOBS        R2; share ciphertext and key packages (#8), Skill bodies (#16)
+//   BLOBS        R2; share ciphertext and key packages (#8), minted Skill bodies (#16)
 //   RELAYER_PRIVATE_KEY  secret; the relay wallet that pays gas
 
 import { createPublicClient, createWalletClient, http, type Hex } from 'viem';
@@ -16,6 +16,7 @@ import { resolveChainConfig, type ChainEnv, type ServiceChainConfig } from './ch
 import { HourlyRateLimiter, parseLimit } from './limits.ts';
 import { Relayer, type RelayRecord } from './relayer.ts';
 import type { KeyPackage, ShareStore, ShareTransactions } from './shares.ts';
+import type { SkillContentStore } from './skills.ts';
 
 export interface Env extends ChainEnv {
   RELAYER_PRIVATE_KEY?: string;
@@ -90,6 +91,17 @@ function cloudflareShareStore(r2: R2Bucket | undefined, kv: KVNamespace | undefi
   };
 }
 
+function r2SkillContent(bucket: R2Bucket | undefined): SkillContentStore | null {
+  if (!bucket) return null;
+  return {
+    get: async (key) => (await bucket.get(key))?.text() ?? null,
+    putIfAbsent: async (key, value) => (await bucket.put(key, value, {
+      onlyIf: new Headers({ 'if-none-match': '*' }),
+      httpMetadata: { contentType: 'application/json; charset=utf-8' },
+    })) !== null,
+  };
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     try {
@@ -101,6 +113,7 @@ export default {
         txIndex: kvTxIndex(env.INDEX),
         storage: { kv: Boolean(env.INDEX), r2: Boolean(env.BLOBS) },
         shares: cloudflareShareStore(env.BLOBS, env.INDEX),
+        skillContent: r2SkillContent(env.BLOBS),
         relay: (forwarded) => env.RELAY_QUEUE.get(env.RELAY_QUEUE.idFromName('relay')).fetch(forwarded),
       });
     } catch (error) {

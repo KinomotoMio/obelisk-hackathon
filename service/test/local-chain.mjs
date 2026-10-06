@@ -85,7 +85,17 @@ export function memoryShareStore() {
   };
 }
 
-export function makeApp({ relayerKey = RELAYER_KEY, limits = {}, shares = memoryShareStore() } = {}) {
+/** In-memory stand-in for the R2 Skill body store in src/index.ts. */
+export function memorySkillContent() {
+  const objects = new Map();
+  return {
+    objects,
+    async get(key) { return objects.get(key) ?? null; },
+    async putIfAbsent(key, value) { return objects.has(key) ? false : (objects.set(key, value), true); },
+  };
+}
+
+export function makeApp({ relayerKey = RELAYER_KEY, limits = {}, shares = memoryShareStore(), skillContent = memorySkillContent() } = {}) {
   const config = resolveChainConfig(env);
   const transport = http(config.rpcUrl);
   const account = relayerKey ? privateKeyToAccount(relayerKey) : null;
@@ -106,11 +116,13 @@ export function makeApp({ relayerKey = RELAYER_KEY, limits = {}, shares = memory
     txIndex: { get: async (hash) => txRecords.get(hash) ?? null, put: async (hash, record) => { txRecords.set(hash, record); } },
     storage: { kv: true, r2: true },
     shares,
+    skillContent,
     relay: (request) => relayResponse(relayer, request),
   };
   return {
     config,
     shares,
+    skillContent,
     async call(method, path, body) {
       const response = await handleRequest(new Request(`http://service.test${path}`, {
         method,

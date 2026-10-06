@@ -14,6 +14,8 @@
 //   GET  /v1/shares/:id                 a share's on-chain rules, status, and receipts
 //   POST /v1/shares/:id/open            recipient-signed RecordOpen -> receipt on chain, then the key package
 //   POST /v1/shares/:id/revoke          sender-signed RevokeShare -> relayed, transaction kept with the share
+//   GET  /v1/skills/:ref                minted Skill version + stored body (skills.ts)
+//   POST /v1/skills/:fingerprint/content store a minted version's body (skills.ts)
 //
 // The service never sees plaintext content and does nothing that needs AI.
 
@@ -24,6 +26,7 @@ import type { ServiceChainConfig } from './chains.ts';
 import { parseAddressParam, parseContractParam, readKey, readNonce, readTransaction } from './reads.ts';
 import type { Relayer, RelayRecord } from './relayer.ts';
 import { createShare, MAX_SHARE_BODY_BYTES, openShare, parseShareId, readShare, revokeShare, type ShareDeps, type ShareStore } from './shares.ts';
+import { handleSkillRoute, type SkillContentStore } from './skills.ts';
 
 export const MAX_BODY_BYTES = 64 * 1024;
 
@@ -71,6 +74,8 @@ export interface AppDeps {
   shares: ShareStore | null;
   /** Forward a relay request to the single serialized relay queue. */
   relay(request: Request): Promise<Response>;
+  /** Minted Skill bodies (R2); null when no bucket is bound. */
+  skillContent?: SkillContentStore | null;
 }
 
 export async function readJsonBody(request: Request, maxBytes = MAX_BODY_BYTES): Promise<unknown> {
@@ -120,6 +125,9 @@ export async function handleRequest(request: Request, deps: AppDeps): Promise<Re
   try {
     if (parts[0] !== 'v1') throw new RequestError(404, 'not_found', `No route for ${request.method} ${pathname}`);
     const route = parts.slice(1);
+
+    const skillResult = await handleSkillRoute(request, route, deps);
+    if (skillResult !== null) return json(skillResult);
 
     if (request.method === 'POST' && route.length === 1 && route[0] === 'relay') {
       return await deps.relay(request);
