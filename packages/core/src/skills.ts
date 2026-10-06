@@ -410,6 +410,27 @@ export async function listUserSceneTags(skillsDir: string): Promise<UserSceneTag
   return [...tags].sort((a, b) => b.skills.length - a.skills.length || a.tag.localeCompare(b.tag));
 }
 
+// Add or remove birth scenes on a Skill by hand. Only skill.json changes: the
+// draft body and its fingerprint stay as they are, and minted versions keep the
+// scenes they were minted with. Tags are normalized like a saved draft, so a
+// bare vocabulary id removes the current-version tag.
+export async function updateSkillBirthScenes(
+  skillsDir: string,
+  name: string,
+  { add = [], remove = [] }: { add?: unknown[]; remove?: unknown[] },
+  { now = () => new Date().toISOString() } = {},
+): Promise<SkillView> {
+  const dir = skillDir(skillsDir, name);
+  const record = await readRecordFile(dir);
+  if (!record) fail(`Skill not found in the local library: ${name}`);
+  const removed = new Set(remove.map((tag) => parseSceneTag(tag).tag));
+  const birthScenes = normalizeBirthScenes([...record.birthScenes, ...add]).filter((tag) => !removed.has(tag));
+  const timestamp = now();
+  await writeFileAtomic(join(dir, 'skill.json'), `${JSON.stringify({ ...record, birthScenes, updatedAt: timestamp }, null, 2)}\n`);
+  await recordUserSceneTags(skillsDir, name, birthScenes, timestamp);
+  return (await readSkill(skillsDir, name))!;
+}
+
 // Freeze the current draft as a minted version (called by minting, #16).
 // Idempotent per fingerprint: re-recording the same mint is a no-op, so a
 // retried mint converges.

@@ -21,9 +21,10 @@ import {
   readSkill,
   saveSkillDraft,
   skillBodyFromMarkdown,
+  updateSkillBirthScenes,
   skillFingerprint,
 } from '../../core/src/skills.ts';
-import { SCENE_DIMENSIONS, SCENES } from '../../core/src/scenes.ts';
+import { SCENE_DIMENSIONS, SCENES, describeSceneTag } from '../../core/src/scenes.ts';
 import {
   skillUsageFor,
   skillVersionsByFingerprint,
@@ -142,6 +143,20 @@ async function main() {
           scenes: SCENES.filter((scene) => scene.dimension === dimension.id)
             .map(({ id, label, labelEn }) => ({ id, label, labelEn })),
         })));
+      } else if (action === 'tag' && target) {
+        // obelisk skill tag <name> [--add <tag>]... [--remove <tag>]...
+        const add: string[] = [];
+        const remove: string[] = [];
+        const rest = args.slice(3);
+        for (let i = 0; i < rest.length; i += 2) {
+          const value = rest[i + 1];
+          if ((rest[i] !== '--add' && rest[i] !== '--remove') || value === undefined) {
+            throw new Error('Usage: obelisk skill tag <name> [--add <tag>]... [--remove <tag>]...');
+          }
+          (rest[i] === '--add' ? add : remove).push(value);
+        }
+        const skill = await updateSkillBirthScenes(skillsDir, target, { add, remove });
+        emit({ name: skill.name, birthScenes: skill.birthScenes.map((tag) => describeSceneTag(tag)) });
       } else if (action === 'invocations') {
         // Skill loads recognized in the index, mapped to library versions by
         // fingerprint. With a name: that Skill's versions and every load.
@@ -154,7 +169,7 @@ async function main() {
       } else if (action === 'fingerprint' && target) {
         emit({ fingerprint: skillFingerprint(skillBodyFromMarkdown(readFileSync(resolve(target), 'utf8'))) });
       } else {
-        throw new Error('Usage: obelisk skill list | show <name> | save <draft.json> | scenes | invocations [<name>] | fingerprint <SKILL.md>');
+        throw new Error('Usage: obelisk skill list | show <name> | save <draft.json> | scenes | tag <name> [--add <tag>] [--remove <tag>] | invocations [<name>] | fingerprint <SKILL.md>');
       }
     } catch (error) { fail(error); }
     return;
@@ -178,7 +193,7 @@ async function main() {
     }
     return;
   }
-  process.stderr.write('Usage:\n  obelisk install [skills options]\n  obelisk --build\n  obelisk --search "text" [--nonce <token>]\n  obelisk --query <file.js>\n  obelisk --attune <file.js>\n  obelisk skill list | show <name> | save <draft.json> | scenes | invocations [<name>] | fingerprint <SKILL.md>\n  obelisk wallet create | show | activate [--confirm]\n');
+  process.stderr.write('Usage:\n  obelisk install [skills options]\n  obelisk --build\n  obelisk --search "text" [--nonce <token>]\n  obelisk --query <file.js>\n  obelisk --attune <file.js>\n  obelisk skill list | show <name> | save <draft.json> | scenes | tag <name> [--add <tag>] [--remove <tag>] | invocations [<name>] | fingerprint <SKILL.md>\n  obelisk wallet create | show | activate [--confirm]\n');
   process.exitCode = 1;
 }
 

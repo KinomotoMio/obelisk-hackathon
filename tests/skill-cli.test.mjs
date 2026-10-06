@@ -72,3 +72,29 @@ test('CLI lists the fixed scene list by dimension and refuses scenes outside it'
   assert.equal(refused.status, 1);
   assert.match(JSON.parse(refused.stdout).error, /is not a tag in scene vocabulary v1; use a tag from `obelisk skill scenes`/);
 });
+
+test('用户可以手动添加或修改草稿的场景标签 with obelisk skill tag', () => {
+  const home = makeTempDir('obelisk-skills-cli-');
+  const env = { OBELISK_HOME: join(home, 'data') };
+  const work = join(home, 'work');
+  mkdirSync(work, { recursive: true });
+  writeFileSync(join(work, 'draft.json'), JSON.stringify({ ...draft, body: '# Probe', birthScenes: ['task/testing', 'artifact/code'] }));
+  const saved = JSON.parse(runCli(['skill', 'save', join(work, 'draft.json')], { home, env }).stdout);
+
+  const tagged = runCli(['skill', 'tag', 'fingerprint-probe', '--remove', 'artifact/code', '--add', 'v1:role/engineer', '--add', 'user:artifact/指纹 样本'], { home, env });
+  assert.equal(tagged.status, 0, tagged.stderr || tagged.stdout);
+  assert.deepEqual(JSON.parse(tagged.stdout).birthScenes, [
+    { tag: 'v1:task/testing', kind: 'vocabulary', dimension: 'task', label: '测试' },
+    { tag: 'v1:role/engineer', kind: 'vocabulary', dimension: 'role', label: '工程师' },
+    { tag: 'user:artifact/指纹-样本', kind: 'user', dimension: 'artifact', label: '指纹-样本' },
+  ]);
+  const shown = JSON.parse(runCli(['skill', 'show', 'fingerprint-probe'], { home, env }).stdout);
+  assert.equal(shown.draft.fingerprint, saved.fingerprint, 'retagging leaves the body and its fingerprint alone');
+  assert.ok(existsSync(join(home, 'data', 'skills', 'user-scene-tags.json')));
+
+  const refused = runCli(['skill', 'tag', 'fingerprint-probe', '--add', 'task/nope'], { home, env });
+  assert.equal(refused.status, 1);
+  assert.match(JSON.parse(refused.stdout).error, /is not a tag in scene vocabulary v1/);
+  const usage = runCli(['skill', 'tag', 'fingerprint-probe', '--add'], { home, env });
+  assert.match(JSON.parse(usage.stdout).error, /Usage: obelisk skill tag/);
+});

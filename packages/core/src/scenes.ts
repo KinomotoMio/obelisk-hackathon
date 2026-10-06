@@ -211,6 +211,19 @@ export function parseSceneTag(input: unknown, catalogue = DEFAULT_CATALOGUE): Pa
   return { kind: 'vocabulary', tag: vocabularyTag(id, version), version, scene: found };
 }
 
+// A written tag with its display label, for listings. Tags that no longer
+// parse (free text from before versioning) come back as kind 'unknown'.
+export function describeSceneTag(tag: string, catalogue = DEFAULT_CATALOGUE): { tag: string; kind: 'vocabulary' | 'user' | 'unknown'; dimension: string | null; label: string } {
+  try {
+    const parsed = parseSceneTag(tag.startsWith(USER_TAG_PREFIX) || VOCABULARY_TAG_RE.test(tag) ? tag : `v1:${tag}`, catalogue);
+    return parsed.kind === 'user'
+      ? { tag, kind: 'user', dimension: parsed.dimension, label: parsed.label }
+      : { tag, kind: 'vocabulary', dimension: parsed.scene.dimension, label: parsed.scene.label };
+  } catch {
+    return { tag, kind: 'unknown', dimension: null, label: tag };
+  }
+}
+
 export function normalizeSceneTag(input: unknown, catalogue = DEFAULT_CATALOGUE): string {
   return parseSceneTag(input, catalogue).tag;
 }
