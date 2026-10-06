@@ -16,6 +16,7 @@ export const domainNames = {
   KeyRegistry: "ObeliskKeyRegistry",
   ShareRegistry: "ObeliskShareRegistry",
   SkillRegistry: "ObeliskSkillRegistry",
+  UsageStats: "ObeliskUsageStats",
 } as const;
 
 export type ObeliskContractName = keyof typeof domainNames;
@@ -87,5 +88,25 @@ export const skillRegistryTypes = {
     { name: "fingerprint", type: "bytes32" },
     { name: "nonce", type: "uint256" },
     { name: "deadline", type: "uint256" },
+  ],
+} as const;
+
+/**
+ * Usage reports are cumulative running totals per (wallet, fingerprint).
+ * Bucket keys are opaque bytes32 and must be strictly ascending.
+ */
+export const usageStatsTypes = {
+  ReportUsage: [
+    { name: "reporter", type: "address" },
+    { name: "fingerprint", type: "bytes32" },
+    { name: "cumulativeInvocations", type: "uint64" },
+    { name: "scenes", type: "Bucket[]" },
+    { name: "outcomes", type: "Bucket[]" },
+    { name: "nonce", type: "uint256" },
+    { name: "deadline", type: "uint256" },
+  ],
+  Bucket: [
+    { name: "key", type: "bytes32" },
+    { name: "cumulative", type: "uint64" },
   ],
 } as const;
