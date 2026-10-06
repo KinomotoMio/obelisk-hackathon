@@ -116,6 +116,9 @@ Create one scratch directory for this run and keep every file you write in it:
 mktemp -d /tmp/obelisk-distill.XXXXXX
 ```
 
+If the user started this skill as `/obelisk-distill <request>`, their request
+follows the skill text as `ARGUMENTS:`.
+
 ## Step 1 — Read the request
 
 From the user's sentence, work out:
