@@ -77,6 +77,30 @@ export type RelayOutcome =
   | { status: 'confirmed'; action: string; signer: Address; txHash: Hex; blockNumber: string; explorerUrl: string | null }
   | { status: 'pending'; action: string; signer: Address; txHash: Hex; explorerUrl: string | null };
 
+export interface ShareInfo {
+  shareId: Hex;
+  status: 'active' | 'exhausted' | 'expired' | 'revoked';
+  sender: Address;
+  recipient: Address;
+  contentHash: Hex;
+  /** null means no limit. */
+  maxOpens: number | null;
+  openCount: number;
+  createdAt: string;
+  expiresAt: string;
+  revoked: boolean;
+  revokedAt: string | null;
+  receipts: { openCount: number; openedAt: string; blockNumber: string; txHash: Hex | null; explorerUrl: string | null }[];
+  transactions: { create: { txHash: Hex; explorerUrl: string | null } | null; revoke: { txHash: Hex; explorerUrl: string | null } | null };
+  contentStored: boolean;
+}
+
+export interface TxInfo {
+  txHash: Hex;
+  status: 'confirmed' | 'reverted' | 'pending';
+  explorerUrl: string | null;
+}
+
 export class ObeliskServiceClient {
   readonly baseUrl: string;
   readonly #fetch: typeof fetch;
@@ -133,6 +157,40 @@ export class ObeliskServiceClient {
 
   key(address: Address): Promise<KeyInfo> {
     return this.#request<KeyInfo>(`/v1/keys/${address}`);
+  }
+
+  async nonce(contract: ObeliskContractName, address: Address): Promise<bigint> {
+    const { nonce } = await this.#request<{ nonce: string }>(`/v1/nonces/${contract}/${address}`);
+    return BigInt(nonce);
+  }
+
+  /** A share's on-chain record, or null when the chain has no such share. */
+  async share(shareId: Hex): Promise<ShareInfo | null> {
+    try {
+      return await this.#request<ShareInfo>(`/v1/shares/${shareId}`);
+    } catch (error) {
+      if (error instanceof ServiceError && error.code === 'unknown_share') return null;
+      throw error;
+    }
+  }
+
+  tx(hash: Hex): Promise<TxInfo> {
+    return this.#request<TxInfo>(`/v1/tx/${hash}`);
+  }
+
+  /** Upload a share's ciphertext and key package and relay its CreateShare. */
+  createShare(body: { message: Record<string, unknown>; signature: Hex; keyPackage: unknown; ciphertext: string }): Promise<RelayOutcome & { shareId: Hex }> {
+    return this.#request<RelayOutcome & { shareId: Hex }>('/v1/shares', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body, (_key, value) => (typeof value === 'bigint' ? value.toString() : value)),
+      timeoutMs: 120_000,
+    });
+  }
+
+  /** Where a share is opened; the web reader (#10) serves it. */
+  shareLink(shareId: Hex): string {
+    return `${this.baseUrl}/s/${shareId}`;
   }
 
   relay(body: { action: string; message: Record<string, unknown>; signature: Hex }): Promise<RelayOutcome> {

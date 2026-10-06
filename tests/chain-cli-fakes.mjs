@@ -12,9 +12,11 @@ import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { delimiter, join } from 'node:path';
 
+import { createHash } from 'node:crypto';
+
 import { getAddress, recoverTypedDataAddress } from 'viem';
 
-import { keyRegistryTypes, obeliskDomain, pinnedDeployments } from '../packages/core/src/chain-protocol.ts';
+import { keyRegistryTypes, obeliskDomain, pinnedDeployments, shareRegistryTypes } from '../packages/core/src/chain-protocol.ts';
 import { cliEntry, repoRoot } from './cli-test-helpers.mjs';
 
 export const supported = process.platform === 'darwin' || process.platform === 'linux';
@@ -69,10 +71,18 @@ export function installFakeKeychain(root) {
   };
 }
 
-/** A stand-in for service/ that checks RegisterKey signatures like KeyRegistry. */
+/**
+ * A stand-in for service/ that checks RegisterKey and CreateShare signatures
+ * like the contracts do. `respond.share` can force the next share upload's
+ * answer: `{ status, body }`, or `'pending'` to store it but report pending.
+ */
 export async function startFakeService({ contracts = testnet.contracts } = {}) {
   const keys = new Map();
   const relays = [];
+  const shareNonces = new Map();
+  const shares = new Map();
+  const uploads = [];
+  const respond = { share: null };
   const server = createServer(async (request, response) => {
     let body = '';
     for await (const chunk of request) body += chunk;
@@ -118,10 +128,79 @@ export async function startFakeService({ contracts = testnet.contracts } = {}) {
       const txHash = `0x${String(relays.length).padStart(64, '0')}`;
       return send(200, { status: 'confirmed', action, signer: user, txHash, blockNumber: '1', explorerUrl: `https://scan.bohr.life/tx/${txHash}` });
     }
+    const nonceMatch = /^\/v1\/nonces\/ShareRegistry\/(0x[0-9a-fA-F]{40})$/.exec(url.pathname);
+    if (nonceMatch) {
+      return send(200, { contract: 'ShareRegistry', address: getAddress(nonceMatch[1]), nonce: String(shareNonces.get(getAddress(nonceMatch[1])) ?? 0) });
+    }
+    if (url.pathname === '/v1/shares' && request.method === 'POST') {
+      const upload = JSON.parse(body);
+      const { message, signature, keyPackage, ciphertext } = upload;
+      const sender = getAddress(message.sender);
+      const typed = { ...message, maxOpens: Number(message.maxOpens), expiresAt: BigInt(message.expiresAt), nonce: BigInt(message.nonce), deadline: BigInt(message.deadline) };
+      const signer = await recoverTypedDataAddress({
+        domain: obeliskDomain('ShareRegistry', 968, testnet.contracts.ShareRegistry),
+        types: shareRegistryTypes,
+        primaryType: 'CreateShare',
+        message: typed,
+        signature,
+      });
+      if (signer !== sender) return send(401, { error: { code: 'invalid_signature', message: `The signature was not made by ${sender}` } });
+      if (shares.has(message.shareId)) return send(409, { error: { code: 'share_exists', message: `Share ${message.shareId} already exists on chain` } });
+      if (BigInt(message.nonce) !== BigInt(shareNonces.get(sender) ?? 0)) return send(409, { error: { code: 'stale_nonce', message: 'stale nonce' } });
+      const hash = `0x${createHash('sha256').update(Buffer.from(ciphertext, 'base64')).digest('hex')}`;
+      if (hash !== message.contentHash) return send(400, { error: { code: 'content_hash_mismatch', message: 'content hash mismatch' } });
+      const recipientKey = keys.get(getAddress(message.recipient))?.pubKey;
+      if (!recipientKey) return send(422, { error: { code: 'recipient_not_activated', message: `${message.recipient} has not activated an Obelisk wallet` } });
+      if (recipientKey.toLowerCase() !== keyPackage.recipientKey) return send(409, { error: { code: 'recipient_key_changed', message: 'recipient key changed' } });
+      const forced = respond.share;
+      respond.share = null;
+      if (forced && forced !== 'pending') return send(forced.status, forced.body);
+      uploads.push(upload);
+      shareNonces.set(sender, (shareNonces.get(sender) ?? 0) + 1);
+      const txHash = `0x${String(uploads.length).padStart(4, '0')}${'5'.repeat(60)}`;
+      shares.set(message.shareId, { message: typed, txHash });
+      const explorerUrl = `https://scan.bohr.life/tx/${txHash}`;
+      if (forced === 'pending') return send(202, { status: 'pending', action: 'CreateShare', signer: sender, txHash, explorerUrl, shareId: message.shareId });
+      return send(200, { status: 'confirmed', action: 'CreateShare', signer: sender, txHash, blockNumber: '7', explorerUrl, shareId: message.shareId });
+    }
+    const shareMatch = /^\/v1\/shares\/(0x[0-9a-f]{64})$/.exec(url.pathname);
+    if (shareMatch) {
+      const share = shares.get(shareMatch[1]);
+      if (!share) return send(404, { error: { code: 'unknown_share', message: 'unknown share' } });
+      const { message, txHash } = share;
+      return send(200, {
+        shareId: message.shareId,
+        status: 'active',
+        sender: getAddress(message.sender),
+        recipient: getAddress(message.recipient),
+        contentHash: message.contentHash,
+        maxOpens: message.maxOpens === 0xffffffff ? null : message.maxOpens,
+        openCount: 0,
+        createdAt: '2026-10-07T00:00:00.000Z',
+        expiresAt: new Date(Number(message.expiresAt) * 1000).toISOString(),
+        revoked: false,
+        revokedAt: null,
+        receipts: [],
+        transactions: { create: { txHash, explorerUrl: `https://scan.bohr.life/tx/${txHash}` }, revoke: null },
+        contentStored: true,
+      });
+    }
+    const txMatch = /^\/v1\/tx\/(0x[0-9a-f]{64})$/.exec(url.pathname);
+    if (txMatch) {
+      return send(200, { txHash: txMatch[1], status: 'pending', explorerUrl: `https://scan.bohr.life/tx/${txMatch[1]}`, relay: null });
+    }
     return send(404, { error: { code: 'not_found', message: 'not found' } });
   });
   await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
-  return { url: `http://127.0.0.1:${server.address().port}`, relays, close: () => server.close() };
+  return {
+    url: `http://127.0.0.1:${server.address().port}`,
+    relays,
+    uploads,
+    respond,
+    /** Mark a wallet as activated with `pubKey`, as a confirmed RegisterKey would. */
+    registerKey: (address, pubKey) => keys.set(getAddress(address), { pubKey, version: 1 }),
+    close: () => server.close(),
+  };
 }
 
 // spawnSync would block this process's event loop, and with it the fake service.

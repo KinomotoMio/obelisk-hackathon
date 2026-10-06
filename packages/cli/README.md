@@ -69,3 +69,21 @@ Activation goes through the Obelisk online service (`service/`). The CLI uses
 the deployed service by default; set `OBELISK_SERVICE_URL` to point it at
 another one, such as `http://127.0.0.1:8787` under `wrangler dev`. The CLI signs only for the contract addresses
 pinned from `chain/deployments/` (`npm run sync:chain` refreshes them).
+
+## Private sharing
+
+`obelisk share` shares a range of one session with one wallet (#8). Content is
+redacted and encrypted on this computer; the online service stores only
+ciphertext and records the rules (who, how many opens, until when) on BOT Chain.
+
+```bash
+obelisk share outline <session-id>                  # numbered messages, sensitive values masked
+obelisk share draft <session-id> --to 0x… \
+  [--messages 12-48] [--opens 1|unlimited] [--expires 24h]   # privacy check: types and locations only
+obelisk share send <draft-id> --redact all          # preview (or --redact 1,3 / --redact none)
+obelisk share send <draft-id> --confirm             # encrypt, upload, write the share on chain
+```
+
+Message numbers are positions in the session detail as the App shows it. The
+recipient must have activated their wallet. Drafts and sent-share records live
+in `<data dir>/shares/`; once a share is sent, only its redacted copy is kept.
