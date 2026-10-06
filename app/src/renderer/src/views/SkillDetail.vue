@@ -186,7 +186,7 @@ onUnmounted(() => {
                     <span>{{ entry.source }}</span>
                     <template v-if="entry.date"><span class="dot"></span><span>{{ entry.date }}</span></template>
                   </template>
-                  <span v-else class="evidence-missing">本机索引中没有这个 session · {{ entry.sessionId }}</span>
+                  <span v-else class="evidence-missing">本机索引中没有这个 session</span>
                 </div>
                 <div v-if="entry.excerpts.length" class="evidence-excerpts">
                   <button
