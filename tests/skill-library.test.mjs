@@ -16,6 +16,7 @@ import {
   skillBodyFromMarkdown,
   skillFingerprint,
 } from '../packages/core/src/skills.ts';
+import { SCENE_DIMENSIONS, SCENES, findScene } from '../packages/core/src/scenes.ts';
 import { makeTempDir } from './temp-dirs.mjs';
 
 const fixtureDir = new URL('./fixtures/claude/', import.meta.url);
@@ -59,7 +60,7 @@ function draft(overrides = {}) {
     name: 'ai-capability-resume',
     description: 'Draft an evidence-backed AI capability resume: "use when" job hunting.',
     body: '# AI capability resume\n\nCollect evidence from real sessions before writing claims.\n',
-    birthScenes: ['求职材料', 'writing/resume'],
+    birthScenes: ['domain/career', 'artifact/resume'],
     parent: null,
     provenance: [
       { sessionId: 'session-a', reason: 'User rejected unsupported claims', excerpts: [{ messageUuid: 'm-1', text: '不要写没有证据的能力' }] },
@@ -74,7 +75,7 @@ test('a saved draft keeps provenance, birth scenes, and parent under the data di
   const saved = await saveSkillDraft(skillsDir, draft({ parent: { name: 'resume-base', chainId: 968, skillId: '3' } }), { now: () => '2026-10-07T01:00:00.000Z' });
   assert.equal(saved.dir, join(skillsDir, 'ai-capability-resume'));
   assert.equal(saved.status, 'draft');
-  assert.deepEqual(saved.birthScenes, ['求职材料', 'writing/resume']);
+  assert.deepEqual(saved.birthScenes, ['domain/career', 'artifact/resume']);
   assert.deepEqual(saved.parent, { name: 'resume-base', chainId: 968, skillId: '3' });
   assert.equal(saved.provenance[0].excerpts[0].text, '不要写没有证据的能力');
   assert.equal(saved.draft.fingerprint, sha256('# AI capability resume\n\nCollect evidence from real sessions before writing claims.'));
@@ -126,6 +127,34 @@ test('drafts whose loaded text Claude Code would rewrite are refused', async () 
   for (const body of ['Fix issue $ARGUMENTS', 'Use $0 first', 'Run ${CLAUDE_SKILL_DIR}/x.sh', '## Diff\n\n!`git diff`']) {
     await assert.rejects(saveSkillDraft(skillsDir, draft({ body })), /Claude Code rewrites when loading a Skill/, body);
   }
+});
+
+test('出生场景从固定的场景列表中选取: unknown ids are refused, duplicates collapse', async () => {
+  const skillsDir = join(makeTempDir('obelisk-skills-'), 'skills');
+  for (const birthScenes of [['求职材料'], ['writing/resume'], ['domain/career', 'domain/nope'], 'domain/career', [42]]) {
+    await assert.rejects(saveSkillDraft(skillsDir, draft({ birthScenes })), /birthScenes/, JSON.stringify(birthScenes));
+  }
+  await assert.rejects(
+    saveSkillDraft(skillsDir, draft({ birthScenes: ['domain/career', '求职材料'] })),
+    /birthScenes\[1\] "求职材料" is not in the fixed scene list; pick ids from `obelisk skill scenes`/,
+  );
+  const saved = await saveSkillDraft(skillsDir, draft({ birthScenes: ['task/writing', ' artifact/resume ', 'task/writing'] }));
+  assert.deepEqual(saved.birthScenes, ['task/writing', 'artifact/resume']);
+});
+
+test('the scene list is chain-compatible and every id is unique', () => {
+  const ids = SCENES.map((scene) => scene.id);
+  assert.equal(new Set(ids).size, ids.length);
+  for (const scene of SCENES) {
+    assert.match(scene.id, /^(domain|task|artifact)\/[a-z0-9]+(?:-[a-z0-9]+)*$/);
+    assert.ok(Buffer.byteLength(scene.id) <= 64, scene.id);
+    assert.ok(scene.label && scene.labelEn, scene.id);
+    assert.equal(findScene(scene.id), scene);
+  }
+  for (const dimension of SCENE_DIMENSIONS) {
+    assert.ok(SCENES.some((scene) => scene.dimension === dimension.id), dimension.id);
+  }
+  assert.equal(findScene('writing/resume'), null);
 });
 
 test('Skill names cannot escape the library directory', async () => {

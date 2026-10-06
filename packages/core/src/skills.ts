@@ -23,6 +23,8 @@ import { createHash, randomUUID } from 'node:crypto';
 import { mkdir, readdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
+import { normalizeBirthScenes } from './scenes.ts';
+
 export const SKILL_RECORD_SCHEMA = 1;
 
 const NAME_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -173,14 +175,6 @@ function assertSkillName(name: unknown): asserts name is string {
   }
 }
 
-function stringArray(value: unknown, field: string): string[] {
-  if (value === undefined || value === null) return [];
-  if (!Array.isArray(value) || value.some((item) => typeof item !== 'string' || item.trim() === '')) {
-    fail(`${field} must be an array of non-empty strings`);
-  }
-  return value.map((item: string) => item.trim());
-}
-
 function parseParent(value: unknown): SkillParent | null {
   if (value === undefined || value === null) return null;
   if (typeof value !== 'object' || Array.isArray(value)) fail('parent must be an object or null');
@@ -248,7 +242,7 @@ export function parseSkillDraft(value: unknown): SkillDraftInput {
     name: raw['name'],
     description: description.trim(),
     body,
-    birthScenes: stringArray(raw['birthScenes'], 'birthScenes'),
+    birthScenes: normalizeBirthScenes(raw['birthScenes']),
     parent: parseParent(raw['parent']),
     provenance: parseProvenance(raw['provenance']),
   };

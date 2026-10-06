@@ -1701,7 +1701,7 @@ test('the app reads the Skill library of its data directory and announces change
     name: 'resume-helper',
     description: 'Helps write resumes.',
     body: '# Resume helper\n\nUse evidence.',
-    birthScenes: ['writing/resume'],
+    birthScenes: ['artifact/resume'],
     provenance: [{ sessionId: 'session-a', reason: 'origin' }],
   });
 

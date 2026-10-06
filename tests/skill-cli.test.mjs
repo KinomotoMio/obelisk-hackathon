@@ -15,7 +15,7 @@ const probeSkillMd = readFileSync(new URL('./fixtures/claude/skills/fingerprint-
 const draft = {
   name: 'fingerprint-probe',
   description: 'probe',
-  birthScenes: ['testing/fixtures'],
+  birthScenes: ['task/testing'],
   provenance: [
     { sessionId: 'session-a', reason: 'Probe skill captured here' },
     { sessionId: 'session-b', reason: 'Fingerprint rule checked here' },
