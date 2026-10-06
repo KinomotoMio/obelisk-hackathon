@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { acquireWriterLease } from '../packages/core/src/writer-lease.ts';
@@ -1606,6 +1606,82 @@ test('main process watches OBELISK_DIR as a tree target and debounces recap noti
     mock.timers.reset();
     restoreEnvVar('HOME', originalHome);
     restoreEnvVar('USERPROFILE', originalProfile);
+    rmSync(home, { recursive: true, force: true });
+  }
+});
+
+test('OBELISK_HOME gives the app its own database, settings, and recaps', async () => {
+  const originalHome = process.env.HOME;
+  const originalProfile = process.env.USERPROFILE;
+  const originalObeliskHome = process.env.OBELISK_HOME;
+  const home = makeTempDir(`obelisk-main-obelisk-home-${Date.now()}`);
+  const dataDir = join(home, 'roles', 'alice');
+  const claudeDir = join(home, 'roles', 'alice-claude');
+  mkdirSync(join(claudeDir, 'projects'), { recursive: true });
+  mkdirSync(dataDir, { recursive: true });
+  writeFileSync(join(dataDir, 'settings.json'), JSON.stringify({ providerRoots: { claude: claudeDir } }));
+  // The user's real legacy index must not be copied into an isolated role.
+  mkdirSync(join(home, '.claude'), { recursive: true });
+  writeFileSync(join(home, '.claude', 'obelisk.sqlite'), 'legacy');
+  process.env.HOME = home;
+  process.env.USERPROFILE = home; // os.homedir() reads USERPROFILE on Windows
+  process.env.OBELISK_HOME = dataDir;
+
+  const ipcHandlers = new Map();
+  const openedDbPaths = [];
+
+  class FakeDatabase {
+    constructor(dbPath) { openedDbPaths.push(dbPath); }
+    pragma() {}
+    exec() {}
+    close() {}
+    prepare() {
+      return { get: () => null, all: () => [], run: () => ({}) };
+    }
+  }
+
+  class FakeBrowserWindow {
+    constructor() {
+      this.webContents = { on() {}, setWindowOpenHandler() {}, getURL() { return ''; }, setZoomLevel() {}, openDevTools() {}, send() {} };
+    }
+    loadFile() {}
+    loadURL() {}
+    close() {}
+    static getAllWindows() { return []; }
+    static fromWebContents() { return null; }
+  }
+
+  const appHandlers = new Map();
+  const restore = registerMocks([
+    [ELECTRON_URL, {
+      namedExports: electronNamespace({
+        app: { ...captureAppHandlers(appHandlers), getVersion: () => '0.0.0-test' },
+        BrowserWindow: FakeBrowserWindow,
+        ipcMain: { handle(channel, handler) { ipcHandlers.set(channel, handler); } },
+      }),
+    }],
+    [DATABASE_URL, { defaultExport: FakeDatabase }],
+    [WATCHER_URL, { namedExports: noopWatcher() }],
+    [INDEXER_URL, { namedExports: { writeHeartbeat() {} } }],
+    [INDEXER_SERVICE_URL, { namedExports: defaultIndexerService() }],
+    [INDEXER_WORKER_URL, { namedExports: defaultIndexerWorkerClient() }],
+  ]);
+
+  try {
+    await importMain();
+    const settings = await ipcHandlers.get('settings:get')();
+    assert.equal(settings.dbPath, join(dataDir, 'obelisk.sqlite'));
+    assert.equal(settings.recapDir, join(dataDir, 'recap'));
+    assert.equal(settings.claudeDir, claudeDir, 'settings come from the OBELISK_HOME settings.json');
+    assert.ok(openedDbPaths.every(p => !p.startsWith(join(home, '.obelisk'))), `opened: ${openedDbPaths}`);
+    assert.equal(readFileSync(join(home, '.claude', 'obelisk.sqlite'), 'utf8'), 'legacy');
+    assert.ok(!existsSync(join(dataDir, 'obelisk.sqlite')) || readFileSync(join(dataDir, 'obelisk.sqlite'), 'utf8') !== 'legacy');
+  } finally {
+    await closeMainProcessDb(appHandlers);
+    restore();
+    restoreEnvVar('HOME', originalHome);
+    restoreEnvVar('USERPROFILE', originalProfile);
+    restoreEnvVar('OBELISK_HOME', originalObeliskHome);
     rmSync(home, { recursive: true, force: true });
   }
 });

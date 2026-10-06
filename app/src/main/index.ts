@@ -15,6 +15,7 @@ import { buildRecapExportQuery } from './recap-capture-query.ts';
 import { buildEditorUrl, DEFAULT_EDITOR_SCHEME, EDITOR_SCHEMES, resolveFileReference } from './file-reference.ts';
 import { acquireWriterLease, writerLockPathFor } from '../../../packages/core/src/writer-lease.ts';
 import { migrateCoreSchemaColumns } from '../../../packages/core/src/schema-migrations.ts';
+import { resolveObeliskPaths } from '../../../packages/core/src/paths.ts';
 import { storedSessionCursor } from '../../../packages/core/src/provider-indexing.ts';
 import { createBuiltinProviderRegistry } from '../../../packages/core/src/providers/builtins.ts';
 import {
@@ -45,6 +46,10 @@ import { createSessionPatch } from '../shared/session-patch.mjs';
 import { assembleSessionDetail } from '../shared/session-detail-assembly.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const OBELISK_PATHS = resolveObeliskPaths();
+const OBELISK_DIR = OBELISK_PATHS.dataDir;
+const RECAP_DIR = OBELISK_PATHS.recapDir;
+const SETTINGS_PATH = OBELISK_PATHS.settingsPath;
 
 function detectClaudeDir() {
   // macOS / Linux: ~/.claude
@@ -104,7 +109,7 @@ function getRuntimePaths(persisted = loadPersistedSettings()) {
     providerRegistry,
     claudeDir,
     codexDir,
-    dbPath: path.join(OBELISK_DIR, 'obelisk.sqlite'),
+    dbPath: OBELISK_PATHS.dbPath,
     projectsDir: path.join(claudeDir, 'projects'),
   };
 }
@@ -113,6 +118,9 @@ function migrateLegacyDbIfNeeded(
   paths = getRuntimePaths(),
   { writerLeaseMode = 'acquire' }: { writerLeaseMode?: WriterLeaseMode } = {},
 ) {
+  // A custom OBELISK_HOME is an isolated store (e.g. a Playground role); it
+  // must never inherit the user's real legacy index.
+  if (OBELISK_PATHS.layout !== 'legacy') return;
   if (fs.existsSync(paths.dbPath)) return;
   const legacyDbPath = path.join(paths.claudeDir, 'obelisk.sqlite');
   if (!fs.existsSync(legacyDbPath)) return;
@@ -429,8 +437,6 @@ function createWindow() {
   }
 }
 
-const OBELISK_DIR = path.join(os.homedir(), '.obelisk');
-const RECAP_DIR = path.join(OBELISK_DIR, 'recap');
 let obeliskWatcher: ReturnType<typeof createAdaptiveWatcher> | null = null;
 let obeliskNotifyTimer: ReturnType<typeof setTimeout> | null = null;
 const pendingObeliskChanges = new Set<string>();
@@ -930,8 +936,6 @@ ipcMain.handle('recap:read', (_, filename) => {
 });
 
 // --- Settings ---
-
-const SETTINGS_PATH = path.join(OBELISK_DIR, 'settings.json');
 
 function loadPersistedSettings() {
   const result = readPersistedProviderSettings(SETTINGS_PATH);
