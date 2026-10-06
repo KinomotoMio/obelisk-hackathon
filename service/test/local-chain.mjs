@@ -70,7 +70,22 @@ async function deploy(wallet, name, args = []) {
   return receipt.contractAddress;
 }
 
-export function makeApp({ relayerKey = RELAYER_KEY, limits = {} } = {}) {
+/** In-memory stand-in for the R2/KV share store in src/index.ts. */
+export function memoryShareStore() {
+  const content = new Map();
+  const transactions = new Map();
+  return {
+    content,
+    async putContent(id, ciphertext, keyPackage) { content.set(id, { ciphertext, keyPackage }); },
+    async getContent(id) { return content.get(id) ?? null; },
+    async hasContent(id) { return content.has(id); },
+    async deleteContent(id) { content.delete(id); },
+    async getTransactions(id) { return structuredClone(transactions.get(id) ?? {}); },
+    async putTransactions(id, value) { transactions.set(id, structuredClone(value)); },
+  };
+}
+
+export function makeApp({ relayerKey = RELAYER_KEY, limits = {}, shares = memoryShareStore() } = {}) {
   const config = resolveChainConfig(env);
   const transport = http(config.rpcUrl);
   const account = relayerKey ? privateKeyToAccount(relayerKey) : null;
@@ -90,10 +105,12 @@ export function makeApp({ relayerKey = RELAYER_KEY, limits = {} } = {}) {
     relayerAddress: account?.address ?? null,
     txIndex: { get: async (hash) => txRecords.get(hash) ?? null, put: async (hash, record) => { txRecords.set(hash, record); } },
     storage: { kv: true, r2: true },
+    shares,
     relay: (request) => relayResponse(relayer, request),
   };
   return {
     config,
+    shares,
     async call(method, path, body) {
       const response = await handleRequest(new Request(`http://service.test${path}`, {
         method,

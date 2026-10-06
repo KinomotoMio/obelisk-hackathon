@@ -10,6 +10,8 @@
 //   GET  /v1/nonces/:contract/:address  next signature nonce on any Obelisk contract
 //   GET  /v1/tx/:hash                   status of a relayed transaction
 //   POST /v1/relay                      { action, message, signature } -> submitted on chain
+//   POST /v1/shares                     upload a share's ciphertext + key package, relay CreateShare
+//   GET  /v1/shares/:id                 a share's on-chain rules, status, and receipts
 //
 // The service never sees plaintext content and does nothing that needs AI.
 
@@ -19,6 +21,7 @@ import { RequestError } from './actions.ts';
 import type { ServiceChainConfig } from './chains.ts';
 import { parseAddressParam, parseContractParam, readKey, readNonce, readTransaction } from './reads.ts';
 import type { Relayer, RelayRecord } from './relayer.ts';
+import { createShare, MAX_SHARE_BODY_BYTES, parseShareId, readShare, type ShareDeps, type ShareStore } from './shares.ts';
 
 export const MAX_BODY_BYTES = 64 * 1024;
 
@@ -55,15 +58,17 @@ export interface AppDeps {
   relayerAddress: Address | null;
   txIndex: TxIndex | null;
   storage: { kv: boolean; r2: boolean };
+  /** Share ciphertext, key packages, and share transaction records; null when unbound. */
+  shares: ShareStore | null;
   /** Forward a relay request to the single serialized relay queue. */
   relay(request: Request): Promise<Response>;
 }
 
-export async function readJsonBody(request: Request): Promise<unknown> {
+export async function readJsonBody(request: Request, maxBytes = MAX_BODY_BYTES): Promise<unknown> {
   const declared = Number(request.headers.get('content-length') ?? '0');
-  if (declared > MAX_BODY_BYTES) throw new RequestError(413, 'body_too_large', `Request body exceeds ${MAX_BODY_BYTES} bytes`);
+  if (declared > maxBytes) throw new RequestError(413, 'body_too_large', `Request body exceeds ${maxBytes} bytes`);
   const text = await request.text();
-  if (text.length > MAX_BODY_BYTES) throw new RequestError(413, 'body_too_large', `Request body exceeds ${MAX_BODY_BYTES} bytes`);
+  if (text.length > maxBytes) throw new RequestError(413, 'body_too_large', `Request body exceeds ${maxBytes} bytes`);
   try {
     return JSON.parse(text);
   } catch {
@@ -82,6 +87,19 @@ export async function relayResponse(relayer: Relayer | (() => Relayer), request:
   }
 }
 
+function shareDeps(request: Request, deps: AppDeps): ShareDeps {
+  return {
+    config: deps.config,
+    publicClient: deps.publicClient,
+    store: deps.shares,
+    relay: (body) => deps.relay(new Request(new URL('/v1/relay', request.url), {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+    })),
+  };
+}
+
 export async function handleRequest(request: Request, deps: AppDeps): Promise<Response> {
   if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS_HEADERS });
   const { pathname } = new URL(request.url);
@@ -93,6 +111,9 @@ export async function handleRequest(request: Request, deps: AppDeps): Promise<Re
 
     if (request.method === 'POST' && route.length === 1 && route[0] === 'relay') {
       return await deps.relay(request);
+    }
+    if (request.method === 'POST' && route.length === 1 && route[0] === 'shares') {
+      return await createShare(shareDeps(request, deps), await readJsonBody(request, MAX_SHARE_BODY_BYTES));
     }
     if (request.method !== 'GET') throw new RequestError(405, 'method_not_allowed', `${request.method} is not supported on ${pathname}`);
 
@@ -122,6 +143,9 @@ export async function handleRequest(request: Request, deps: AppDeps): Promise<Re
     }
     if (route.length === 3 && route[0] === 'nonces') {
       return json(await readNonce(publicClient, config, parseContractParam(route[1]!), parseAddressParam(route[2]!)));
+    }
+    if (route.length === 2 && route[0] === 'shares') {
+      return json(await readShare(shareDeps(request, deps), parseShareId(route[1]!)));
     }
     if (route.length === 2 && route[0] === 'tx') {
       const record = deps.txIndex ? await deps.txIndex.get(route[1]!.toLowerCase()) : null;

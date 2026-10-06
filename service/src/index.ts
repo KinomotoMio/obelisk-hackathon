@@ -4,7 +4,7 @@
 // Cloudflare Worker entry point. Bindings (see wrangler.jsonc):
 //   RELAY_QUEUE  Durable Object; the one place relayed transactions are sent from
 //   INDEX        KV; small indexes (relayed transaction records today)
-//   BLOBS        R2; ciphertext and Skill bodies (endpoints arrive with #8 and #16)
+//   BLOBS        R2; share ciphertext and key packages (#8), Skill bodies (#16)
 //   RELAYER_PRIVATE_KEY  secret; the relay wallet that pays gas
 
 import { createPublicClient, createWalletClient, http, type Hex } from 'viem';
@@ -15,6 +15,7 @@ import { errorResponse, handleRequest, relayResponse, type TxIndex } from './app
 import { resolveChainConfig, type ChainEnv, type ServiceChainConfig } from './chains.ts';
 import { HourlyRateLimiter, parseLimit } from './limits.ts';
 import { Relayer, type RelayRecord } from './relayer.ts';
+import type { KeyPackage, ShareStore, ShareTransactions } from './shares.ts';
 
 export interface Env extends ChainEnv {
   RELAYER_PRIVATE_KEY?: string;
@@ -58,6 +59,37 @@ function kvTxIndex(kv: KVNamespace | undefined): TxIndex | null {
   };
 }
 
+/** Share content in R2 (`shares/<id>/…`); transaction records in KV (`share:<id>`). */
+function cloudflareShareStore(r2: R2Bucket | undefined, kv: KVNamespace | undefined): ShareStore | null {
+  if (!r2 || !kv) return null;
+  const content = (id: string) => `shares/${id}/content`;
+  const keyPackage = (id: string) => `shares/${id}/key-package.json`;
+  return {
+    async putContent(id, ciphertext, pkg) {
+      await r2.put(content(id), ciphertext, { httpMetadata: { contentType: 'application/octet-stream' } });
+      await r2.put(keyPackage(id), JSON.stringify(pkg), { httpMetadata: { contentType: 'application/json' } });
+    },
+    async getContent(id) {
+      const [blob, pkg] = await Promise.all([r2.get(content(id)), r2.get(keyPackage(id))]);
+      if (!blob || !pkg) return null;
+      return { ciphertext: new Uint8Array(await blob.arrayBuffer()), keyPackage: await pkg.json<KeyPackage>() };
+    },
+    async hasContent(id) {
+      const [blob, pkg] = await Promise.all([r2.head(content(id)), r2.head(keyPackage(id))]);
+      return Boolean(blob && pkg);
+    },
+    async deleteContent(id) {
+      await r2.delete([content(id), keyPackage(id)]);
+    },
+    async getTransactions(id) {
+      return (await kv.get<ShareTransactions>(`share:${id}`, 'json')) ?? {};
+    },
+    async putTransactions(id, transactions) {
+      await kv.put(`share:${id}`, JSON.stringify(transactions));
+    },
+  };
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     try {
@@ -68,6 +100,7 @@ export default {
         relayerAddress: account?.address ?? null,
         txIndex: kvTxIndex(env.INDEX),
         storage: { kv: Boolean(env.INDEX), r2: Boolean(env.BLOBS) },
+        shares: cloudflareShareStore(env.BLOBS, env.INDEX),
         relay: (forwarded) => env.RELAY_QUEUE.get(env.RELAY_QUEUE.idFromName('relay')).fetch(forwarded),
       });
     } catch (error) {
