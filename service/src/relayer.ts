@@ -93,6 +93,26 @@ function isNonceConflict(error: unknown): boolean {
   return /nonce too low|already known|replacement transaction underpriced|nonce has already been used/i.test(text);
 }
 
+/** Reject a signature not made by the action's named signer (401). */
+export async function verifyActionSignature(publicClient: PublicClient, config: ServiceChainConfig, request: ParsedRelayRequest): Promise<void> {
+  const contract = request.definition.contract;
+  const address = config.contracts[contract];
+  const recovered = await recoverTypedDataAddress({
+    domain: obeliskDomain(contract, config.chain.id, address),
+    types: request.definition.types as Record<string, { name: string; type: string }[]>,
+    primaryType: request.action,
+    message: request.message,
+    signature: request.signature,
+  }).catch(() => null);
+  if (recovered === request.signer) return;
+  // A contract wallet (ERC-1271) signs without an ECDSA key; the contract
+  // checks those itself, so only plain accounts are rejected here.
+  const code = await publicClient.getCode({ address: request.signer });
+  if (!code || code === '0x') {
+    throw new RequestError(401, 'invalid_signature', `The signature was not made by ${request.signer}`);
+  }
+}
+
 export class Relayer {
   readonly #deps: RelayerDeps;
   #tail: Promise<unknown> = Promise.resolve();
@@ -128,21 +148,7 @@ export class Relayer {
       );
     }
 
-    const recovered = await recoverTypedDataAddress({
-      domain: obeliskDomain(contract, config.chain.id, address),
-      types: request.definition.types as Record<string, { name: string; type: string }[]>,
-      primaryType: request.action,
-      message: request.message,
-      signature: request.signature,
-    }).catch(() => null);
-    if (recovered !== request.signer) {
-      // A contract wallet (ERC-1271) signs without an ECDSA key; the contract
-      // checks those itself, so only plain accounts are rejected here.
-      const code = await publicClient.getCode({ address: request.signer });
-      if (!code || code === '0x') {
-        throw new RequestError(401, 'invalid_signature', `The signature was not made by ${request.signer}`);
-      }
-    }
+    await verifyActionSignature(publicClient, config, request);
 
     const txHash = await this.#serialized(() => this.#submit(request, address, abi));
     const explorerUrl = explorerTxUrl(config, txHash);
