@@ -5,6 +5,7 @@
 //   RELAY_QUEUE  Durable Object; the one place relayed transactions are sent from
 //   INDEX        KV; small indexes (relayed transaction records today)
 //   BLOBS        R2; share ciphertext and key packages (#8), minted Skill bodies (#16)
+//   ASSETS       static files from public/: the web reader (#10)
 //   RELAYER_PRIVATE_KEY  secret; the relay wallet that pays gas
 
 import { createPublicClient, createWalletClient, http, type Hex } from 'viem';
@@ -26,6 +27,7 @@ export interface Env extends ChainEnv {
   RELAY_QUEUE: DurableObjectNamespace;
   INDEX?: KVNamespace;
   BLOBS?: R2Bucket;
+  ASSETS?: Fetcher;
 }
 
 const TX_RECORD_TTL_SECONDS = 30 * 24 * 3600;
@@ -145,6 +147,7 @@ export default {
         skillContent: r2SkillContent(env.BLOBS),
         usageTrend: kvUsageTrend(env.INDEX),
         relay: (forwarded) => env.RELAY_QUEUE.get(env.RELAY_QUEUE.idFromName('relay')).fetch(forwarded),
+        readerPage: env.ASSETS ? () => env.ASSETS!.fetch(new URL('/reader/index.html', request.url)) : undefined,
       });
     } catch (error) {
       return errorResponse(error);

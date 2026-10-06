@@ -14,6 +14,7 @@
 //   GET  /v1/shares/:id                 a share's on-chain rules, status, and receipts
 //   POST /v1/shares/:id/open            recipient-signed RecordOpen -> receipt on chain, then the key package
 //   POST /v1/shares/:id/revoke          sender-signed RevokeShare -> relayed, transaction kept with the share
+//   GET  /s/:shareId, /activate         the web reader page (public/reader, #10)
 //   GET  /v1/skills/:ref                minted Skill version + stored body (skills.ts)
 //   POST /v1/skills/:fingerprint/content store a minted version's body (skills.ts)
 //   GET  /v1/skills/:id/lineage         the family tree a Skill belongs to (skills.ts)
@@ -82,6 +83,44 @@ export interface AppDeps {
   skillContent?: SkillContentStore | null;
   /** What relayed usage reports added, for trends (KV); null when unbound. */
   usageTrend?: UsageTrendStore | null;
+  /** The web reader's HTML (public/reader/index.html); absent when assets are not bound. */
+  readerPage?: () => Promise<Response>;
+}
+
+/**
+ * The reader handles shared content and wallet signatures, so it gets a
+ * strict policy: only its own scripts and styles, requests only to this
+ * service, never framed, and no referrer, so a share link does not leak to
+ * the block explorer it links to.
+ */
+export const READER_HEADERS = {
+  'content-type': 'text/html; charset=utf-8',
+  'cache-control': 'no-store',
+  'content-security-policy': [
+    "default-src 'none'",
+    "script-src 'self'",
+    "style-src 'self'",
+    "img-src 'self' data:",
+    "connect-src 'self'",
+    "base-uri 'none'",
+    "form-action 'none'",
+    "frame-ancestors 'none'",
+  ].join('; '),
+  'referrer-policy': 'no-referrer',
+  'x-content-type-options': 'nosniff',
+  'x-frame-options': 'DENY',
+  'permissions-policy': 'camera=(), microphone=(), geolocation=()',
+};
+
+function isReaderPath(parts: string[]): boolean {
+  return (parts.length === 2 && parts[0] === 's') || (parts.length === 1 && parts[0] === 'activate');
+}
+
+async function readerResponse(deps: AppDeps): Promise<Response> {
+  if (!deps.readerPage) throw new RequestError(503, 'reader_unavailable', 'This service has no web reader assets bound (ASSETS)');
+  const page = await deps.readerPage();
+  if (!page.ok) throw new RequestError(502, 'reader_unavailable', `The web reader page could not be loaded (HTTP ${page.status})`);
+  return new Response(page.body, { status: 200, headers: READER_HEADERS });
 }
 
 export async function readJsonBody(request: Request, maxBytes = MAX_BODY_BYTES): Promise<unknown> {
@@ -129,6 +168,7 @@ export async function handleRequest(request: Request, deps: AppDeps): Promise<Re
   const parts = pathname.split('/').filter(Boolean);
   const { config, publicClient } = deps;
   try {
+    if ((request.method === 'GET' || request.method === 'HEAD') && isReaderPath(parts)) return await readerResponse(deps);
     if (parts[0] !== 'v1') throw new RequestError(404, 'not_found', `No route for ${request.method} ${pathname}`);
     const route = parts.slice(1);
 

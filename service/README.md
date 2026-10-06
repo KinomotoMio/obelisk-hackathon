@@ -128,6 +128,44 @@ The web reader (#10) implements these with WebCrypto:
 | `keyPackage` | `{ version: 1, algorithm: "x25519-hkdf-sha256-aes-256-gcm", recipientKey, ephemeralPublicKey, nonce, wrappedKey }`. The X25519 shared secret of the ephemeral key and the recipient's registered key (`0x01` ‖ public key, derived as in `packages/core/src/wallet.ts`) goes through HKDF-SHA256 with salt = ephemeral public key ‖ recipient public key and info `obelisk/share-key/x25519/v1` to 32 bytes; `wrappedKey` is AES-256-GCM of the content key under it, AAD = share id bytes, tag appended |
 | snapshot | UTF-8 JSON, `format: "obelisk.share.snapshot/v1"` (`packages/core/src/share-snapshot.ts`) |
 
+## Web reader
+
+The share link the CLI prints, `<service>/s/<shareId>`, is a page this same
+Worker serves (#10, docs/vision/02 S4/S5). The recipient needs only a browser
+wallet, not Obelisk. Its files are in `public/reader/`, deployed as Workers
+static assets with the Worker, so `npm run deploy` publishes both and the page
+calls the API on its own origin.
+
+| Path | Page |
+| --- | --- |
+| `/s/<shareId>` | Connect a wallet, sign twice, read the share. Refusal pages for a forwarded link, a revoked or expired share, and one with no opens left |
+| `/activate` | Activate a browser wallet so others can share with it: derive the encryption key, then register it through the relay |
+
+What happens in the browser (`public/reader/core.js`, plain JavaScript with
+WebCrypto only):
+
+1. The wallet signs the fixed encryption-key message (`personal_sign`, free,
+   nothing on chain). The page derives the X25519 key exactly as `obelisk
+   wallet activate` does and checks it against the key registered in
+   `KeyRegistry` before anything is spent.
+2. The wallet signs `RecordOpen` (`eth_signTypedData_v4`; the page asks the
+   wallet to switch to, or add, the chain from `/v1/chain`). The page posts it
+   to `/v1/shares/:id/open` and gets the key package once the receipt is on
+   chain.
+3. The page opens the key package and decrypts the snapshot in memory, then
+   renders it with a watermark (recipient address, share number, open time)
+   over the whole page.
+
+The page never asks for a private key or seed phrase, and renders snapshot
+content only as text nodes. It is served with a strict
+`Content-Security-Policy` (own scripts, styles, and API only; no framing)
+and `Referrer-Policy: no-referrer`, so a share link does not leak to the
+block explorer it links to. The signed `RecordOpen` is kept in
+`sessionStorage`, so reloading the tab within the signature's 10 minutes shows
+the share again without spending another open. Needs a browser with X25519
+in WebCrypto (Chrome 133+, Safari 17+, Firefox 130+); the page checks first
+and refuses before spending an open.
+
 ## Minted Skills
 
 | Route | Returns |
@@ -278,7 +316,7 @@ cd service
 npm ci
 npx wrangler login                          # once, in a browser
 npx wrangler secret put RELAYER_PRIVATE_KEY # paste the relay wallet key
-npm run deploy                              # prints https://obelisk-service.<subdomain>.workers.dev
+npm run deploy                              # Worker + web reader; prints https://obelisk-service.<subdomain>.workers.dev
 curl https://obelisk-service.<subdomain>.workers.dev/v1/health
 ```
 

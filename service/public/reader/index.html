@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#0a0b14">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Obelisk 私密分享</title>
+  <link rel="icon" href="/reader/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/reader/style.css">
+  <script type="module" src="/reader/app.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <span class="brand">
+      <svg class="logo" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 15 7v14.5H9V7z" fill="currentColor" opacity=".9"/><path d="M6.5 21.5h11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <span>Obelisk</span>
+    </span>
+    <span class="topbar-title" id="topbar-title">私密分享</span>
+    <span class="topbar-wallet" id="topbar-wallet" hidden></span>
+  </header>
+
+  <main id="app" class="page" aria-live="polite">
+    <section class="panel center loading" id="boot">
+      <div class="spinner" aria-hidden="true"></div>
+      <p class="muted">正在读取分享…</p>
+      <noscript><p>这个页面需要启用 JavaScript 才能在浏览器里解密内容。</p></noscript>
+    </section>
+  </main>
+
+  <div class="watermark" id="watermark" aria-hidden="true" hidden></div>
+
+  <footer class="footer">
+    <p>内容在你的浏览器里解密，Obelisk 在线服务看不到原文。打开规则与回执记录在 BOT Chain 上，任何人都可以核对。</p>
+    <p class="muted">Obelisk 不会向你索要私钥或助记词。签名只在你的钱包里完成。</p>
+  </footer>
+</body>
+</html>

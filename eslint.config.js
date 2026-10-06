@@ -48,6 +48,11 @@ export default tseslint.config(
     },
   },
   {
+    // The web reader (#10) runs in the browser, not Node.
+    files: ['service/public/**/*.js'],
+    languageOptions: { globals: { ...globals.browser } },
+  },
+  {
     files: ['**/*.ts'],
     extends: [...tseslint.configs.recommended],
     languageOptions: {

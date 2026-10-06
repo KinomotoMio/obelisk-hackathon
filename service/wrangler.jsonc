@@ -19,5 +19,9 @@
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["RelayQueue"] }],
   // Provisioned by the first deploy; ids pinned so later deploys reuse them.
   "kv_namespaces": [{ "binding": "INDEX", "id": "33e64093414b4c5a9177986f5c54a63b" }],
-  "r2_buckets": [{ "binding": "BLOBS", "bucket_name": "obelisk-service-blobs" }]
+  "r2_buckets": [{ "binding": "BLOBS", "bucket_name": "obelisk-service-blobs" }],
+  // The web reader (#10). Files under public/ are served as is; /s/<shareId>
+  // and /activate match no file, so they reach the Worker, which returns
+  // public/reader/index.html with the reader's security headers.
+  "assets": { "directory": "./public", "binding": "ASSETS", "html_handling": "none", "not_found_handling": "none" }
 }
