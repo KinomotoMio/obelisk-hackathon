@@ -1,10 +1,11 @@
 // Copyright (C) 2026 tommy0103 and contributors.
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// Client for the Obelisk online service (service/, #3): chain reads and the
-// fee relay. The service decides which chain it serves; this client checks
-// that the contract addresses it reports match the deployments pinned in
-// chain-protocol.ts before anything is signed for them.
+// Client for the Obelisk online service (service/, #3): chain reads, the fee
+// relay, private shares (#8), and minted Skill bodies (#16). The service
+// decides which chain it serves; this client checks that the contract
+// addresses it reports match the deployments pinned in chain-protocol.ts
+// before anything is signed for them.
 
 import { getAddress, type Address, type Hex } from 'viem';
 
@@ -71,6 +72,21 @@ export interface KeyInfo {
   updatedAt: string | null;
   nonce: string;
   explorerUrl: string | null;
+}
+
+/** `GET /v1/skills/:ref`: a minted Skill version and its stored content. */
+export interface MintedSkillInfo {
+  chainId: number;
+  contract: Address;
+  skillId: string;
+  author: Address;
+  parentSkillId: string | null;
+  createdAt: string;
+  birthScenes: string[];
+  versionCount: number;
+  version: { index: number; fingerprint: Hex; publishedAt: string };
+  content: { name: string; description: string; body: string } | null;
+  explorer: { author: string | null };
 }
 
 export type RelayOutcome =
@@ -191,6 +207,24 @@ export class ObeliskServiceClient {
   /** Where a share is opened; the web reader (#10) serves it. */
   shareLink(shareId: Hex): string {
     return `${this.baseUrl}/s/${shareId}`;
+  }
+
+  /** A minted Skill by id (latest version, or `versionIndex`) or by 0x fingerprint. */
+  skill(ref: string, { versionIndex }: { versionIndex?: number } = {}): Promise<MintedSkillInfo> {
+    const query = versionIndex === undefined ? '' : `?versionIndex=${versionIndex}`;
+    return this.#request<MintedSkillInfo>(`/v1/skills/${encodeURIComponent(ref)}${query}`);
+  }
+
+  storeSkillContent(
+    fingerprint: Hex,
+    content: { author: Address; name: string; description: string; body: string; signature: Hex },
+  ): Promise<{ stored: true; created: boolean; skillId: string; versionIndex: number }> {
+    return this.#request(`/v1/skills/${fingerprint}/content`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(content),
+      timeoutMs: 30_000,
+    });
   }
 
   relay(body: { action: string; message: Record<string, unknown>; signature: Hex }): Promise<RelayOutcome> {
