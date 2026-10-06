@@ -17,6 +17,7 @@ import { acquireWriterLease, writerLockPathFor } from '../../../packages/core/sr
 import { migrateCoreSchemaColumns } from '../../../packages/core/src/schema-migrations.ts';
 import { resolveObeliskPaths } from '../../../packages/core/src/paths.ts';
 import { listSkills, readSkill } from '../../../packages/core/src/skills.ts';
+import { describeSceneTag, SCENE_DIMENSIONS } from '../../../packages/core/src/scenes.ts';
 import { storedSessionCursor } from '../../../packages/core/src/provider-indexing.ts';
 import { createBuiltinProviderRegistry } from '../../../packages/core/src/providers/builtins.ts';
 import {
@@ -633,6 +634,15 @@ ipcMain.handle('db:getSessions', (_, opts = {}) => {
   return db.prepare(sql).all(...params);
 });
 
+// Skill provenance names its sessions by id, and they can be older than the
+// newest-first catalogue the renderer loads, so they are read one by one.
+const MAX_SESSIONS_BY_ID = 200;
+ipcMain.handle('db:getSessionsByIds', (_, ids) => {
+  if (!db || !Array.isArray(ids)) return [];
+  const unique = [...new Set(ids.filter((id): id is string => typeof id === 'string'))].slice(0, MAX_SESSIONS_BY_ID);
+  return unique.map(querySessionMetadata).filter((session) => session !== null);
+});
+
 ipcMain.handle('db:getSessionMessages', (_, sessionId) => {
   return querySessionMessages(sessionId);
 });
@@ -937,6 +947,22 @@ ipcMain.handle('capture:copy', async (event, { cardIdx, archetype, filename } = 
 
 ipcMain.handle('skills:list', () => listSkills(SKILLS_DIR));
 ipcMain.handle('skills:get', (_, name) => readSkill(SKILLS_DIR, String(name)));
+
+// Birth scenes are stored as tags ("v1:artifact/resume", "user:artifact/…").
+// The vocabulary and its parsing live in core (scenes.ts), so the renderer asks
+// for display labels here instead of keeping a copy of the vocabulary.
+const MAX_DESCRIBED_SCENES = 256;
+ipcMain.handle('skills:describe-scenes', (_, tags) => {
+  if (!Array.isArray(tags)) return [];
+  return tags
+    .slice(0, MAX_DESCRIBED_SCENES)
+    .filter((tag): tag is string => typeof tag === 'string')
+    .map((tag) => {
+      const described = describeSceneTag(tag);
+      const dimension = SCENE_DIMENSIONS.find((entry) => entry.id === described.dimension);
+      return { ...described, dimensionLabel: dimension?.label ?? null };
+    });
+});
 
 // --- Recap files ---
 

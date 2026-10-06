@@ -1697,6 +1697,8 @@ test('the app reads the Skill library of its data directory and announces change
   const home = makeTempDir(`obelisk-main-skills-${Date.now()}`);
   const dataDir = join(home, 'roles', 'alice');
   mkdirSync(dataDir, { recursive: true });
+  // An index file makes the main process open its (fake) database.
+  writeFileSync(join(dataDir, 'obelisk.sqlite'), '');
   process.env.HOME = home;
   process.env.USERPROFILE = home; // os.homedir() reads USERPROFILE on Windows
   process.env.OBELISK_HOME = dataDir;
@@ -1716,8 +1718,13 @@ test('the app reads the Skill library of its data directory and announces change
     pragma() {}
     exec() {}
     close() {}
-    prepare() {
-      return { get: () => null, all: () => [], run: () => ({}) };
+    prepare(sql) {
+      const sessionById = /FROM sessions WHERE id = \?/.test(sql);
+      return {
+        get: (id) => (sessionById && id === 'session-a' ? { id, title: 'Origin session' } : null),
+        all: () => [],
+        run: () => ({}),
+      };
     }
   }
 
@@ -1768,6 +1775,23 @@ test('the app reads the Skill library of its data directory and announces change
     assert.equal(detail.draft.fingerprint, saved.draft.fingerprint);
     assert.equal(detail.provenance[0].sessionId, 'session-a');
     await assert.rejects(ipcHandlers.get('skills:get')(null, '../escape'), /Skill name must be/);
+
+    // Birth scenes are shown with their vocabulary labels, user-created tags by
+    // their own label, and anything unparseable as written.
+    const scenes = await ipcHandlers.get('skills:describe-scenes')(null, ['v1:artifact/resume', 'user:artifact/插画作品集', 'free text', 42]);
+    assert.deepEqual(
+      scenes.map(scene => [scene.tag, scene.kind, scene.label, scene.dimensionLabel]),
+      [
+        ['v1:artifact/resume', 'vocabulary', '简历与履历', '产出物'],
+        ['user:artifact/插画作品集', 'user', '插画作品集', '产出物'],
+        ['free text', 'unknown', 'free text', null],
+      ],
+    );
+    assert.deepEqual(await ipcHandlers.get('skills:describe-scenes')(null, 'v1:artifact/resume'), []);
+
+    // Provenance sessions are looked up by id, whatever their age.
+    const sessions = await ipcHandlers.get('db:getSessionsByIds')(null, ['session-a', 'session-a', 'missing', 7]);
+    assert.deepEqual(sessions, [{ id: 'session-a', title: 'Origin session' }]);
 
     assert.ok(watcherOptions, 'the data directory is watched');
     const changed = join(dataDir, 'skills', 'resume-helper', 'skill.json');

@@ -10,6 +10,7 @@ import type {
 
 contextBridge.exposeInMainWorld('obelisk', {
   getSessions: (opts?: unknown) => ipcRenderer.invoke('db:getSessions', opts),
+  getSessionsByIds: (ids: string[]) => ipcRenderer.invoke('db:getSessionsByIds', ids),
   getSessionMessages: (id: string) => ipcRenderer.invoke('db:getSessionMessages', id),
   getSessionToolCalls: (id: string) => ipcRenderer.invoke('db:getSessionToolCalls', id),
   getSessionToolResults: (id: string) => ipcRenderer.invoke('db:getSessionToolResults', id),
@@ -53,6 +54,7 @@ contextBridge.exposeInMainWorld('obelisk', {
   },
   skillsList: () => ipcRenderer.invoke('skills:list'),
   skillsGet: (name: string) => ipcRenderer.invoke('skills:get', name),
+  skillsDescribeScenes: (tags: string[]) => ipcRenderer.invoke('skills:describe-scenes', tags),
   onSkillsUpdated: (callback: (filePath: unknown) => void) => {
     const listener = (_: IpcRendererEvent, filePath: unknown) => callback(filePath);
     ipcRenderer.on('obelisk:skills-updated', listener);
