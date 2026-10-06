@@ -46,7 +46,10 @@ function chainClients(env: Env) {
   } catch (error) {
     throw new RequestError(500, 'service_misconfigured', error instanceof Error ? error.message : String(error));
   }
-  const transport = http(config.rpcUrl, { timeout: 15_000, retryCount: 2 });
+  // Concurrent reads go out as one JSON-RPC batch: a usage or lineage read
+  // makes dozens of view calls, and each HTTP request counts against the
+  // Worker's subrequest limit. BOT Chain's RPC accepts batches.
+  const transport = http(config.rpcUrl, { timeout: 15_000, retryCount: 2, batch: { batchSize: 100, wait: 0 } });
   const publicClient = createPublicClient({ chain: config.chain, transport });
   const walletClient = account ? createWalletClient({ account, chain: config.chain, transport }) : null;
   return { config, publicClient, account, walletClient };
