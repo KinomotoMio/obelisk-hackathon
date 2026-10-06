@@ -238,12 +238,30 @@ evidence; do not widen it to scenes the sessions never covered.
   personal data.
 - `pitfalls` and `corrections`: short lines, only what this session shows.
 
-## Step 5 — Pick birth scenes
+## Step 5 — Tag the birth scenes
 
-Run `obelisk skill scenes` and pick ids from that list only. Birth scenes
-describe where the Skill was **born** (the source sessions), not everywhere it
-might be useful: usually one `domain/…`, one `task/…`, and one `artifact/…`, at
-most 6. Skip a dimension when nothing fits; never invent an id.
+Birth scenes describe where the Skill was **born** (the source sessions), not
+everywhere it might be useful. They decide which Skills people compare it with,
+so prefer the shared vocabulary.
+
+1. Run `obelisk skill scenes`. It prints the current vocabulary version, the
+   tags of each dimension in the form to write (`v1:<dimension>/<slug>`), and
+   `userTags` that this library already created.
+2. Go through the dimensions one by one and ask whether the source sessions
+   show it: the technical `domain`, the `task`, the `artifact` produced, the
+   `context` (industry, occasion, or purpose), and the `role` it is for. Skip a
+   dimension only when the sessions do not show it. 3-6 tags in total is usual.
+3. When a dimension is shown and a vocabulary tag describes it, use that tag.
+   When it is shown but the closest vocabulary tag would misdescribe the Skill
+   to someone browsing that tag (a podcast script is not 文章与帖子), reuse a
+   matching entry from `userTags`, or else create
+   `user:<dimension>/<short label>` in the user's language (for example
+   `user:context/播客`; at most 64 bytes, no `:` or `/` in the label). Being
+   merely more specific is not a reason to create one: React work is
+   `v1:domain/frontend`.
+4. In the report, list the tags with their labels and give the reason for every
+   new tag in one line. The user can change tags any time:
+   `obelisk skill tag <name> --add <tag> --remove <tag>`.
 
 ## Step 6 — Save the draft
 
@@ -259,7 +277,7 @@ most 6. Skip a dimension when nothing fits; never invent an id.
      "name": "job-application-materials",
      "description": "…",
      "bodyFile": "SKILL.md",
-     "birthScenes": ["domain/career", "task/writing", "artifact/resume"],
+     "birthScenes": ["v1:context/job-search", "v1:task/writing", "v1:artifact/resume"],
      "parent": null,
      "provenance": [
        {
@@ -274,8 +292,9 @@ most 6. Skip a dimension when nothing fits; never invent an id.
    ```
 
 4. Run `obelisk skill save <scratch>/draft.json`. It prints the saved name,
-   fingerprint, path, and status. If it reports an error, fix that cause (an
-   unknown scene id, a pattern from Step 4) and save again.
+   fingerprint, path, and status. If it reports an error, fix that cause (a tag
+   outside the vocabulary written without `user:`, a pattern from Step 4) and
+   save again.
 
 ## Step 7 — Report
 
@@ -285,12 +304,14 @@ Keep it short so the user sees at a glance what happened and what to do next:
 已沉淀 Skill 草稿「job-application-materials」（未铸造）
 - 证据：4 个 session（Claude Code 3 · Codex 1），跨度 3 周
 - 出处卡：踩过的坑 2 条 · 被纠正 3 条
-- 出生场景：求职与职业发展 · 写作与改写 · 简历与履历
+- 出生场景：求职与实习 · 文档写作与沟通 · 简历与履历
 - 指纹：9c41…e07a
 
 下一步：打开 Obelisk App 的 Skill tab 审阅草稿、证据和出处卡。
-要修改，直接告诉我；确认无误后再铸造，铸造前会先给你看预览。
+要修改正文或场景标签，直接告诉我；确认无误后再铸造，铸造前会先给你看预览。
 ```
+
+When a tag was created, add it to the scenes line as `新建 user:<dimension>/<label>（<一句理由>）`.
 
 If the App is not open, `obelisk skill show <name>` prints the same draft.
 
@@ -299,6 +320,8 @@ If the App is not open, `obelisk skill show <name>` prints the same draft.
 - **继续修改** ("用「沉淀 Skill」继续修改草稿 X：…"): `obelisk skill show X`,
   apply the change to the body, keep the provenance unless the change needs new
   evidence (then search for it as in Step 2), and save under the same name.
+- **改场景标签** ("把 X 的场景改成…"): `obelisk skill tag X --add <tag> --remove <tag>`;
+  this does not change the body or its fingerprint.
 - **去掉一个 session** ("从草稿 X 的证据中去掉 session Y，重新起草"): remove its
   provenance entry, drop or rewrite rules only that session supported, recheck
   the birth scenes, and save under the same name.
