@@ -16,6 +16,7 @@
 //   POST /v1/shares/:id/revoke          sender-signed RevokeShare -> relayed, transaction kept with the share
 //   GET  /v1/skills/:ref                minted Skill version + stored body (skills.ts)
 //   POST /v1/skills/:fingerprint/content store a minted version's body (skills.ts)
+//   GET  /v1/skills/:id/lineage         the family tree a Skill belongs to (skills.ts)
 //   GET  /v1/skills/:id/usage           a Skill's usage across its versions (usage.ts)
 //   GET  /v1/usage/:fingerprint         one version's usage; ?wallet= adds that wallet's report (usage.ts)
 //

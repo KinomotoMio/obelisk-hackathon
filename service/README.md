@@ -134,6 +134,7 @@ The web reader (#10) implements these with WebCrypto:
 | --- | --- |
 | `GET /v1/skills/:ref` | a minted Skill version: `skillId`, `author`, `parentSkillId`, `birthScenes`, `versionCount`, `version { index, fingerprint, publishedAt }`, and `content { name, description, body }` (or `null` if no body is stored) |
 | `POST /v1/skills/:fingerprint/content` | stores that version's body: `{ author, name, description, body, signature }` |
+| `GET /v1/skills/:skillId/lineage` | the family tree the Skill belongs to (族谱), from its root ancestor down |
 
 `:ref` is a Skill id (decimal) or a version fingerprint (`0x` + 64 hex). With
 a Skill id, `?versionIndex=N` picks a version; the default is the latest.
@@ -154,6 +155,30 @@ A Skill is minted with `MintSkill` (or a new version published with
 Content is written once per fingerprint: storing the same content again
 returns `created: false`, and different content returns `409 content_exists`.
 Requests are limited to 256 KiB.
+
+`GET /v1/skills/:skillId/lineage` walks up the `parentSkillId` chain to the
+root, then lists the root's descendants breadth first through
+`SkillRegistry.childAt`:
+
+```jsonc
+{
+  "chainId": 968,
+  "contract": "0x…",                       // SkillRegistry
+  "skillId": "12",                         // the Skill asked about
+  "rootSkillId": "1",
+  "path": ["1", "3", "12"],                // root -> … -> skillId
+  "nodes": [                               // root first, then each level in mint order
+    {
+      "skillId": "1", "parentSkillId": null, "depth": 0,
+      "author": "0x…",
+      "name": "ai-resume",                 // from the stored body of its latest version; null if none is stored
+      "versionCount": 2, "latestFingerprint": "0x…", "createdAt": "…",
+      "childSkillIds": ["3", "7"]
+    }
+  ],
+  "truncated": false                       // true past 64 nodes or 32 ancestors
+}
+```
 
 ## Skill usage
 

@@ -7,6 +7,7 @@
 //        ref = Skill id (decimal) or version fingerprint (0x + 64 hex);
 //        ?versionIndex=N picks a version of a Skill id (default: latest)
 //   POST /v1/skills/:fingerprint/content  { author, name, description, body, signature }
+//   GET  /v1/skills/:skillId/lineage      the family tree the Skill belongs to
 //
 // Minting itself goes through POST /v1/relay (MintSkill / PublishVersion);
 // the body is stored afterwards, so the service only ever keeps bodies of
@@ -246,6 +247,89 @@ export async function readSkillContentPayload(request: Request): Promise<unknown
   }
 }
 
+/** Ancestors walked up and Skills listed per lineage read. */
+const MAX_LINEAGE_DEPTH = 32;
+const MAX_LINEAGE_NODES = 64;
+
+const registryCall = (deps: SkillRouteDeps, functionName: string, args: readonly unknown[]) => deps.publicClient.readContract({
+  address: deps.config.contracts.SkillRegistry,
+  abi: CONTRACT_ABIS.SkillRegistry,
+  functionName,
+  args,
+});
+
+/**
+ * GET /v1/skills/:skillId/lineage: the family tree a Skill belongs to, from
+ * its root ancestor down, read through SkillRegistry's parent and children
+ * views (K3).
+ */
+export async function readSkillLineage(deps: SkillRouteDeps, skillIdParam: string) {
+  const match = SKILL_ID_RE.exec(skillIdParam);
+  if (!match) throw new RequestError(400, 'invalid_skill_ref', `Not a Skill id: ${skillIdParam}`);
+  const skillId = BigInt(match[1]!);
+  const records = new Map<bigint, NonNullable<Awaited<ReturnType<typeof readSkillRecord>>>>();
+  const record = async (id: bigint) => {
+    const cached = records.get(id);
+    if (cached) return cached;
+    const found = await readSkillRecord(deps, id);
+    if (!found) throw new RequestError(404, 'unknown_skill', `Skill ${id} is not minted on chain ${deps.config.chain.id}`);
+    records.set(id, found);
+    return found;
+  };
+
+  const path = [skillId];
+  let truncated = false;
+  for (let parent = (await record(skillId)).parentSkillId; parent !== 0n; parent = (await record(parent)).parentSkillId) {
+    if (path.length > MAX_LINEAGE_DEPTH) { truncated = true; break; }
+    path.unshift(parent);
+  }
+
+  // Breadth first, one level of the tree per round of (batched) reads.
+  const order: { id: bigint; depth: number }[] = [{ id: path[0]!, depth: 0 }];
+  const children = new Map<bigint, bigint[]>();
+  for (let level = order.slice(); level.length > 0;) {
+    const counts = await Promise.all(level.map(({ id }) => registryCall(deps, 'childrenCount', [id]) as Promise<bigint>));
+    const next: typeof order = [];
+    for (const [index, { id, depth }] of level.entries()) {
+      const room = MAX_LINEAGE_NODES - order.length - next.length;
+      const take = Math.min(Number(counts[index]), Math.max(room, 0));
+      if (take < Number(counts[index])) truncated = true;
+      const ids = await Promise.all(Array.from({ length: take }, (_, at) =>
+        registryCall(deps, 'childAt', [id, BigInt(at)]) as Promise<bigint>));
+      children.set(id, ids);
+      next.push(...ids.map((child) => ({ id: child, depth: depth + 1 })));
+    }
+    order.push(...next);
+    level = next;
+  }
+
+  const nodes = await Promise.all(order.map(async ({ id, depth }) => {
+    const skill = await record(id);
+    const latest = await readVersion(deps, id, skill.versionCount - 1);
+    const stored = await readStored(deps, latest.fingerprint);
+    return {
+      skillId: id.toString(),
+      parentSkillId: skill.parentSkillId === 0n ? null : skill.parentSkillId.toString(),
+      depth,
+      author: skill.author,
+      name: stored?.name ?? null,
+      versionCount: skill.versionCount,
+      latestFingerprint: latest.fingerprint,
+      createdAt: iso(skill.createdAt),
+      childSkillIds: (children.get(id) ?? []).map(String),
+    };
+  }));
+  return {
+    chainId: deps.config.chain.id,
+    contract: deps.config.contracts.SkillRegistry,
+    skillId: skillId.toString(),
+    rootSkillId: path[0]!.toString(),
+    path: path.map(String),
+    nodes,
+    truncated,
+  };
+}
+
 /**
  * The /v1/skills routes; `route` is the path after /v1. Returns null for any
  * other route so app.ts can keep dispatching.
@@ -255,6 +339,7 @@ export async function handleSkillRoute(request: Request, route: string[], deps: 
   if (request.method === 'GET' && route.length === 2) {
     return readMintedSkill(deps, route[1]!, new URL(request.url).searchParams.get('versionIndex'));
   }
+  if (request.method === 'GET' && route.length === 3 && route[2] === 'lineage') return readSkillLineage(deps, route[1]!);
   if (request.method === 'POST' && route.length === 3 && route[2] === 'content') {
     return storeSkillContent(deps, route[1]!, await readSkillContentPayload(request));
   }

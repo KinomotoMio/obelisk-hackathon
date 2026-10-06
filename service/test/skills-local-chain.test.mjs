@@ -83,3 +83,36 @@ test('mint through the relay, store the body, and read both back; derived Skills
   const refused = await storeContent(stranger, child, 'not-mine');
   assert.equal(refused.status, 403);
 });
+
+test('lineage: from any Skill in a family, the tree from its root down, with stored names', { skip: !ready && 'chain/ not built' }, async () => {
+  const author = privateKeyToAccount(generatePrivateKey());
+  const other = privateKeyToAccount(generatePrivateKey());
+  const nonce = async (account) => (await app.call('GET', `/v1/nonces/SkillRegistry/${account.address}`)).body.nonce;
+  const mint = async (account, body, parentSkillId = '0') => {
+    await relay(account, 'MintSkill', {
+      author: account.address, fingerprint: fingerprintOf(body), birthScenes: [], parentSkillId, nonce: await nonce(account), deadline: deadline(),
+    });
+    return (await app.call('GET', `/v1/skills/${fingerprintOf(body)}`)).body.skillId;
+  };
+  const root = await mint(author, '# lineage root');
+  assert.equal((await storeContent(author, '# lineage root', 'lineage-root')).status, 200);
+  const designer = await mint(other, '# lineage designer', root);
+  const yearEnd = await mint(author, '# lineage year end', root);
+  const illustrator = await mint(other, '# lineage illustrator', designer);
+
+  const lineage = await app.call('GET', `/v1/skills/${illustrator}/lineage`);
+  assert.equal(lineage.status, 200, JSON.stringify(lineage.body));
+  assert.deepEqual(lineage.body.path, [root, designer, illustrator]);
+  assert.equal(lineage.body.rootSkillId, root);
+  assert.equal(lineage.body.truncated, false);
+  assert.deepEqual(
+    lineage.body.nodes.map(({ skillId, parentSkillId, depth, name, childSkillIds }) => ({ skillId, parentSkillId, depth, name, childSkillIds })),
+    [
+      { skillId: root, parentSkillId: null, depth: 0, name: 'lineage-root', childSkillIds: [designer, yearEnd] },
+      { skillId: designer, parentSkillId: root, depth: 1, name: null, childSkillIds: [illustrator] },
+      { skillId: yearEnd, parentSkillId: root, depth: 1, name: null, childSkillIds: [] },
+      { skillId: illustrator, parentSkillId: designer, depth: 2, name: null, childSkillIds: [] },
+    ],
+  );
+  assert.equal((await app.call('GET', '/v1/skills/999/lineage')).status, 404);
+});
