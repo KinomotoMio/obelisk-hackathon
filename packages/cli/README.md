@@ -75,6 +75,28 @@ chain again. Fetched Skills go to `~/.claude/skills/<name>/SKILL.md` (or
 `<data dir>/skills/fetched-skills.json`, so `obelisk skill invocations` counts
 their uses as uses of the minted version (`state: "fetched"`).
 
+## Usage reporting
+
+`obelisk usage` reports how often this data directory's history invoked
+minted Skill versions (#23), the user's own and the ones they fetched, to
+`UsageStats` on BOT Chain. It is off until the user turns it on after a
+preview. Reports are running totals signed by the wallet and relayed by the
+online service, which pays the fee; the contract counts each wallet once per
+version and rejects decreases, so re-sending never double counts.
+
+```bash
+obelisk usage status             # on or off; per version: invocations, already reported, would add
+obelisk usage enable             # preview: what is sent, what never is, that it is public
+obelisk usage enable --confirm   # turn on and send the first reports
+obelisk usage report [--if-due]  # send what grew (--if-due: at most once a day)
+obelisk usage disable            # stop; reported totals stay on chain
+```
+
+Scene and outcome buckets (`sceneBucketKey` in `scenes.ts`, `outcome/…` and
+`signal/…` ids in `usage-buckets.ts`) travel in the same report once #25
+judges invocations; until then they are empty. The last reported totals are
+kept in `<data dir>/usage-reporting.json`.
+
 ## Wallet
 
 `obelisk wallet` manages the data directory's BOT Chain wallet (#4). The private

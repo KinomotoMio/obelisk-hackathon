@@ -193,6 +193,13 @@ Requests to mint a Skill from the local library ("铸造 Skill", "确认并铸�
 first: `obelisk skill mint <name>` and `obelisk skill fetch <id | fingerprint>`
 change nothing, and the `--confirm` step runs only after the user agrees.
 
+## Usage reporting
+
+Requests to turn on, check, send, or turn off Skill usage reporting ("开启上报",
+"上报 Skill 使用情况", "turn on usage reporting") belong to the `obelisk-usage`
+skill. Turning it on writes on chain from then on: preview with
+`obelisk usage enable` and add `--confirm` only after the user agrees.
+
 ## Query Routing
 
 Before writing a query, classify the task. Progressive disclosure is useful, but

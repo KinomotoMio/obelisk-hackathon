@@ -45,6 +45,9 @@ them when the installer asks which skills to install:
 - `obelisk-skill-assets`: mint a Skill from your library on BOT Chain, or fetch
   someone's minted Skill into Claude Code, previewing both first, e.g.
   "用 Obelisk 铸造 Skill 草稿「AI 能力履历」" or "取用 Skill #12".
+- `obelisk-usage`: report how often you really used minted Skills, counted
+  once per wallet on BOT Chain; off until you turn it on after a preview,
+  e.g. "开启上报".
 
 ## Source
 

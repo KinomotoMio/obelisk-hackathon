@@ -157,3 +157,22 @@ test('build:skill ships the standalone Skill mint and fetch skill, which preview
   assert.match(skill, /Do not add `--confirm` on your own/);
   assert.deepEqual(findDynamicSkillContent(skill), []);
 });
+
+test('build:skill ships the standalone usage reporting skill, which previews before turning reporting on', () => {
+  execFileSync(npmCommand, ['run', 'build:skill'], {
+    cwd: repoRoot,
+    encoding: 'utf8',
+    shell: process.platform === 'win32',
+    stdio: 'pipe',
+  });
+
+  const usage = join(repoRoot, 'dist', 'agent-skills', 'obelisk-usage');
+  assert.equal(existsSync(join(usage, 'scripts')), false, 'skill must not ship a second runtime');
+  const skill = readFileSync(join(usage, 'SKILL.md'), 'utf8');
+  assert.match(skill, /^---\nname: obelisk-usage\n/);
+  assert.match(skill, /开启上报/);
+  assert.match(skill, /Bash\(obelisk:\*\)/);
+  assert.match(skill, /obelisk usage enable --confirm/);
+  assert.match(skill, /Do not add `--confirm` on your own/);
+  assert.deepEqual(findDynamicSkillContent(skill), []);
+});
