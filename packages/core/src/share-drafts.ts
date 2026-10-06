@@ -16,7 +16,7 @@
 // Files are written atomically with owner-only permissions.
 
 import { randomBytes } from 'node:crypto';
-import { mkdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
+import { mkdir, readdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import type { Address, Hex } from 'viem';
@@ -138,6 +138,19 @@ export class ShareDrafts {
 
   sent(draftId: string): Promise<SentShare | null> {
     return readJson<SentShare>(join(shareDraftDir(this.sharesDir, draftId), 'sent.json'));
+  }
+
+  /** Every share sent from this data directory, newest first. */
+  async listSent(): Promise<SentShare[]> {
+    let names: string[];
+    try {
+      names = await readdir(this.sharesDir);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') return [];
+      throw error;
+    }
+    const sent = await Promise.all(names.filter((name) => DRAFT_ID.test(name)).map((name) => this.sent(name)));
+    return sent.filter((record): record is SentShare => record !== null).sort((a, b) => b.sentAt.localeCompare(a.sentAt));
   }
 
   /** Record a share as sent. Re-running after an interruption completes it. */
