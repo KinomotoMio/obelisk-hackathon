@@ -22,6 +22,8 @@ import {
 } from './provider-settings.ts';
 import type { ProviderRegistry } from './providers/registry.ts';
 import { createQueryApi, createAttuneApi } from './query.ts';
+import { recognizeSkillInvocations } from './skill-invocations.ts';
+import type { SkillInvocation, SkillInvocationFilter } from './skill-invocations.ts';
 import type { SqliteDb } from './sqlite-types.ts';
 import { nodeSqliteTransactionAdapter } from './tx.ts';
 import { runRetryableWriteTransaction } from './write-coordinator.ts';
@@ -407,6 +409,22 @@ export async function executeQuery(scriptContent: string, invocation?: Invocatio
   try {
     try {
       return await runInSandbox(createQueryApi(db, { providerRegistry, invokingSessionId }), scriptContent);
+    } catch (error) {
+      return rethrowUnlessSchemaBlocked(error);
+    }
+  } finally {
+    db.close();
+  }
+}
+
+// Skill loads recognized in the freshly refreshed index (#22). Read-only, like
+// a query: truncated loads are re-read from provider source records.
+export function findSkillInvocations(filter?: SkillInvocationFilter): SkillInvocation[] {
+  const providerRegistry = refreshQueryIndex();
+  const db = openReadDb();
+  try {
+    try {
+      return recognizeSkillInvocations(db, providerRegistry, filter);
     } catch (error) {
       return rethrowUnlessSchemaBlocked(error);
     }

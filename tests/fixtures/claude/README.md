@@ -27,3 +27,10 @@ with arguments (Claude Code appends `ARGUMENTS: alpha beta`). Only the
 capture directory was rewritten to `/tmp/fp-probe`; everything else is
 byte-for-byte. They pin the Skill version fingerprint contract
 (`packages/core/src/skills.ts`).
+
+`long-skill-load-session.jsonl` is the record Claude Code 2.1.289 wrote when
+`claude -p --model haiku "/long-probe"` loaded `skills/long-probe/SKILL.md`
+(copied here unchanged), captured on 2026-10-07. The body is longer than the
+10,000 characters the index keeps, so it pins recovering truncated Skill loads
+from the source record (#22). Only the capture directory was rewritten to
+`/tmp/long-probe`.

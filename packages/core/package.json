@@ -15,6 +15,7 @@
     "./provider-indexing": "./dist/provider-indexing.js",
     "./session-detail": "./dist/session-detail.js",
     "./skills": "./dist/skills.js",
+    "./skill-invocations": "./dist/skill-invocations.js",
     "./providers/claude": "./dist/providers/claude.js",
     "./providers/codex": "./dist/providers/codex.js",
     "./providers/deepseek": "./dist/providers/deepseek.js",
