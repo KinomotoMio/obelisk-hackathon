@@ -265,6 +265,10 @@ Every PR:
 - Use commit messages to preserve why a change was made, with any key tradeoff
   needed to understand the decision. Keep the explanation brief and self-contained;
   reference a commit, issue, or PR when useful, without repeating its discussion.
+- Keep commits small and orthogonal. Each commit should carry one intent that its
+  message states plainly, so a reviewer can audit it on its own and revert it
+  without undoing unrelated work. Split mechanical changes (renames, moves,
+  formatting) from behavior changes.
 
 ### Clarify the need for new concepts
 

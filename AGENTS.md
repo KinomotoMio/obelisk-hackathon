@@ -40,6 +40,8 @@ final change and use the applicable sections of the
 [PR template](.github/pull_request_template.md). Resolve commands from the current
 [root scripts](package.json) and [App scripts](app/package.json), and check the
 actual [CI workflows](.github/workflows/) before reporting what is covered.
+Commit granularity and message rules live in
+[scope and review](CONTRIBUTING.md#scope-and-review).
 
 ## Keep one home for each kind of guidance
 
