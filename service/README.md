@@ -84,7 +84,7 @@ curl https://obelisk-service.<subdomain>.workers.dev/v1/health
 
 Fund the relay wallet address shown by `/v1/health` from the faucet
 (<https://faucet.botchain.ai/basic> for the testnet). One `RegisterKey` costs
-about 0.002 BOT at 20 gwei.
+about 0.004 BOT at 20 gwei (about 190k gas for a first registration).
 
 ## Develop and test
 
