@@ -31,13 +31,14 @@ are involved.
 | `POST /v1/relay` | submits `{ action, message, signature }` and returns `200 confirmed` with the explorer link, or `202 pending` if the receipt took longer than about 25 s (poll `/v1/tx/:hash`) |
 | `POST /v1/shares` | stores a private share's ciphertext and key package, then relays its `CreateShare`; see [Private shares](#private-shares) |
 | `GET /v1/shares/:id` | a share's on-chain rules and `status` (`active`, `exhausted`, `expired`, `revoked`), open receipts, transaction links, and whether its content is stored |
+| `POST /v1/shares/:id/open` | the recipient's signed `RecordOpen`: checks the rules, puts the open receipt on chain, then returns the key package and ciphertext; see [Opening](#opening) |
 
 `action` is the EIP-712 primary type: `RegisterKey`, `CreateShare`,
 `RevokeShare`, `MintSkill`, `PublishVersion`, or `ReportUsage`. `message` is
 exactly the signed typed-data message from [`chain/eip712.ts`](../chain/eip712.ts),
 including `nonce` and `deadline`. Integers may be JSON numbers or decimal
-strings, and bytes are `0x` hex. `RecordOpen` is not relayed here. The
-key-release flow (#9) submits it after checking the share's rules.
+strings, and bytes are `0x` hex. `RecordOpen` is not relayed here: only
+`POST /v1/shares/:id/open` submits it, after checking the share's rules.
 
 Before any gas is spent, the relay rejects:
 
@@ -75,7 +76,37 @@ has registered now (`409 recipient_key_changed`), that the share id is new
 stores the upload and relays `CreateShare` like `/v1/relay`, answering with
 the relay result plus `shareId`. If the relay refuses, the upload is deleted.
 
-Formats, which the web reader (#10) implements with WebCrypto:
+### Opening
+
+The recipient opens a share by signing `RecordOpen { recipient, shareId,
+nonce, deadline }` (nonce from `GET /v1/nonces/ShareRegistry/:address`,
+deadline at most one hour away) and posting `{ message, signature }` to
+`POST /v1/shares/:id/open`. The signature proves who is opening. The service
+then reads `ShareRegistry.checkOpen` and refuses, without spending gas:
+
+| Status | `code` | When |
+| --- | --- | --- |
+| 403 | `not_recipient` | the signer is not the share's recipient (a forwarded link); this takes precedence over the share's state, so a forwarded link always reads "not yours" |
+| 410 | `share_revoked` / `share_expired` / `opens_exhausted` | the sender revoked it, it expired, or every allowed open is used |
+| 404 | `unknown_share` | no such share on chain |
+| 401 | `invalid_signature` | the signature is not the named recipient's |
+
+Refusals carry `details: { recipient, opener, explorerUrl }` for the
+reader's refusal page (`explorerUrl` links the share's on-chain record).
+
+Otherwise the service relays the same `RecordOpen`; the contract checks the
+rules again and appends the receipt. Only when that receipt is confirmed does
+the service answer `200` with `status: "opened"`, `openCount`, `maxOpens` and
+`remainingOpens` (`null` when unlimited), `openedAt` (block time, for the
+watermark), `receipt: { txHash, blockNumber, explorerUrl }`, `keyPackage`,
+and `ciphertext` (base64). Every release is therefore counted on chain. If
+the receipt takes longer than about 25 s, the answer is `202` with `status:
+"pending"`; posting the same signed request again resumes that open (it
+never counts twice) and returns the key package once confirmed.
+
+### Formats
+
+The web reader (#10) implements these with WebCrypto:
 
 | Item | Format |
 | --- | --- |

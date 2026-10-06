@@ -6,8 +6,13 @@
 // key (#8); this service stores both and relays the sender-signed CreateShare.
 // It never holds a key that opens either.
 //
-//   POST /v1/shares        { message: CreateShare, signature, keyPackage, ciphertext (base64) }
-//   GET  /v1/shares/:id    the on-chain rules, status, open receipts, and transactions
+// Opening (#9): the recipient signs RecordOpen. The service checks the share's
+// on-chain rules, relays that RecordOpen (the contract checks the same rules
+// again), and hands out the key package only once the receipt is on chain.
+//
+//   POST /v1/shares             { message: CreateShare, signature, keyPackage, ciphertext (base64) }
+//   GET  /v1/shares/:id         the on-chain rules, status, open receipts, and transactions
+//   POST /v1/shares/:id/open    { message: RecordOpen, signature } -> receipt, key package, ciphertext
 //
 // Formats (the CLI writes them in packages/core/src/share-crypto.ts; the web
 // reader, #10, reads them):
@@ -16,9 +21,10 @@
 //   keyPackage   { version: 1, algorithm: "x25519-hkdf-sha256-aes-256-gcm",
 //                  recipientKey, ephemeralPublicKey, nonce, wrappedKey }
 
-import { bytesToHex, getAddress, isHex, size, zeroAddress, type Address, type Hex, type PublicClient } from 'viem';
+import { bytesToHex, getAddress, isAddressEqual, isHex, keccak256, parseEventLogs, size, zeroAddress, type Address, type Hex, type PublicClient } from 'viem';
 
 import { keyRegistryAbi, shareRegistryAbi } from '../../chain/abi/index.ts';
+import { OpenStatus } from '../../chain/eip712.ts';
 import { parseRelayRequest, RequestError, type ParsedRelayRequest } from './actions.ts';
 import { explorerAddressUrl, explorerTxUrl, type ServiceChainConfig } from './chains.ts';
 import { verifyActionSignature } from './relayer.ts';
@@ -31,6 +37,11 @@ export const MAX_SHARE_BODY_BYTES = Math.ceil(MAX_SHARE_CIPHERTEXT_BYTES / 3) * 
 /** `maxOpens` meaning "no limit". */
 export const UNLIMITED_OPENS = 0xffffffff;
 const MAX_RECEIPTS_LISTED = 100;
+/**
+ * Longest a RecordOpen signature may stay valid. It asks for one open, now;
+ * a long-lived one would let its key package be fetched again much later.
+ */
+export const MAX_OPEN_SIGNATURE_SECONDS = 3600n;
 
 export interface KeyPackage {
   version: 1;
@@ -41,10 +52,19 @@ export interface KeyPackage {
   wrappedKey: Hex;
 }
 
+/** One RecordOpen this service relayed. */
+export interface ShareOpenRecord {
+  txHash: Hex;
+  /** The share's open count after this open; null until the receipt is confirmed. */
+  openCount: number | null;
+  /** keccak256 of the recipient's signature, so the same request can be resumed. */
+  request: Hex;
+}
+
 /** Transactions this service sent for a share, for explorer links. */
 export interface ShareTransactions {
   create?: Hex;
-  opens?: { txHash: Hex; openCount: number }[];
+  opens?: ShareOpenRecord[];
   revoke?: Hex;
 }
 
@@ -63,6 +83,14 @@ export interface ShareDeps {
   store: ShareStore | null;
   /** Forward `{ action, message, signature }` to the serialized relay queue. */
   relay(body: unknown): Promise<Response>;
+  /** Same queue, for the service's own actions (RecordOpen). */
+  relayInternal(body: unknown): Promise<Response>;
+}
+
+/** A JSON answer; the router adds the headers. */
+export interface ShareReply {
+  status: number;
+  body: Record<string, unknown>;
 }
 
 export function requireStore(deps: ShareDeps): ShareStore {
@@ -239,4 +267,141 @@ export async function readShare(deps: ShareDeps, shareId: Hex) {
       contract: explorerAddressUrl(config, address),
     },
   };
+}
+
+function shareRecordUrl(deps: ShareDeps, transactions: ShareTransactions): string | null {
+  return transactions.create
+    ? explorerTxUrl(deps.config, transactions.create)
+    : explorerAddressUrl(deps.config, deps.config.contracts.ShareRegistry);
+}
+
+/** Turn a `checkOpen` result other than Ok into the refusal the reader shows. */
+function openRefusal(deps: ShareDeps, share: OnChainShare, opener: Address, status: number, transactions: ShareTransactions): RequestError {
+  const details = { recipient: getAddress(share.recipient), opener, explorerUrl: shareRecordUrl(deps, transactions) };
+  switch (status) {
+    case OpenStatus.NotRecipient:
+      return new RequestError(403, 'not_recipient', `This share belongs to ${details.recipient}; ${opener} cannot open it`, details);
+    case OpenStatus.Revoked:
+      return new RequestError(410, 'share_revoked', `The sender revoked this share at ${iso(share.revokedAt)}`, details);
+    case OpenStatus.Expired:
+      return new RequestError(410, 'share_expired', `This share expired at ${iso(share.expiresAt)}`, details);
+    case OpenStatus.Exhausted:
+      return new RequestError(410, 'opens_exhausted', `This share has been opened ${share.openCount} of ${share.maxOpens} times; no opens are left`, details);
+    default:
+      return new RequestError(404, 'unknown_share', `No share ${share.shareId} on ${deps.config.chain.name}`);
+  }
+}
+
+async function relayFailure(relayed: Response): Promise<ShareReply> {
+  return { status: relayed.status, body: await relayed.json() as Record<string, unknown> };
+}
+
+/**
+ * Finish an open whose RecordOpen is out: once its receipt is confirmed,
+ * hand over the key package and ciphertext; until then, answer 202.
+ */
+async function finishOpen(deps: ShareDeps, store: ShareStore, share: OnChainShare, txHash: Hex): Promise<ShareReply> {
+  const { publicClient, config } = deps;
+  const explorerUrl = explorerTxUrl(config, txHash);
+  const receipt = await publicClient.getTransactionReceipt({ hash: txHash }).catch(() => null);
+  if (!receipt) {
+    return {
+      status: 202,
+      body: {
+        status: 'pending',
+        shareId: share.shareId,
+        txHash,
+        explorerUrl,
+        message: 'The open receipt is not confirmed yet; send the same request again to receive the key package',
+      },
+    };
+  }
+  if (receipt.status !== 'success') {
+    throw new RequestError(502, 'transaction_reverted', `The open receipt transaction ${txHash} reverted; sign a new open request`, { txHash, explorerUrl });
+  }
+  const [opened] = parseEventLogs({ abi: shareRegistryAbi, eventName: 'ShareOpened', logs: receipt.logs })
+    .filter((log) => isAddressEqual(log.address, config.contracts.ShareRegistry) && log.args.shareId.toLowerCase() === share.shareId);
+  if (!opened) throw new RequestError(502, 'upstream_error', `Transaction ${txHash} did not record an open of share ${share.shareId}`);
+  const openCount = opened.args.openCount;
+
+  const transactions = await store.getTransactions(share.shareId);
+  const opens = (transactions.opens ?? []).map((open) => (open.txHash === txHash ? { ...open, openCount } : open));
+  await store.putTransactions(share.shareId, { ...transactions, opens }).catch(() => undefined);
+
+  const [content, block] = await Promise.all([
+    store.getContent(share.shareId),
+    publicClient.getBlock({ blockNumber: receipt.blockNumber }),
+  ]);
+  if (!content) throw new RequestError(410, 'content_unavailable', `The encrypted content of share ${share.shareId} is no longer stored on this service`);
+  const unlimited = share.maxOpens === UNLIMITED_OPENS;
+  return {
+    status: 200,
+    body: {
+      status: 'opened',
+      shareId: share.shareId,
+      sender: getAddress(share.sender),
+      recipient: getAddress(share.recipient),
+      openCount,
+      maxOpens: unlimited ? null : share.maxOpens,
+      remainingOpens: unlimited ? null : Math.max(share.maxOpens - openCount, 0),
+      expiresAt: iso(share.expiresAt),
+      openedAt: iso(block.timestamp),
+      receipt: { txHash, blockNumber: receipt.blockNumber.toString(), explorerUrl },
+      contentHash: share.contentHash,
+      keyPackage: content.keyPackage,
+      ciphertext: bytesToBase64(content.ciphertext),
+    },
+  };
+}
+
+/**
+ * POST /v1/shares/:id/open: the recipient's signed RecordOpen proves who is
+ * opening. Refusals (not the recipient, revoked, expired, no opens left) cost
+ * no gas. Otherwise the open receipt goes on chain first, and only a confirmed
+ * receipt releases the key package, so every release is counted.
+ */
+export async function openShare(deps: ShareDeps, shareId: Hex, body: unknown): Promise<ShareReply> {
+  const store = requireStore(deps);
+  if (typeof body !== 'object' || body === null) throw new RequestError(400, 'invalid_request', 'Request body must be a JSON object');
+  const { message, signature } = body as Record<string, unknown>;
+  const request = parseRelayRequest({ action: 'RecordOpen', message, signature }, { internal: true });
+  if (request.message['shareId'] !== shareId) {
+    throw new RequestError(400, 'share_id_mismatch', `message.shareId is ${String(request.message['shareId'])}, but the URL names share ${shareId}`);
+  }
+  const nowSeconds = BigInt(Math.floor(Date.now() / 1000));
+  if (request.deadline > nowSeconds + MAX_OPEN_SIGNATURE_SECONDS) {
+    throw new RequestError(400, 'deadline_too_far', `An open request may be valid for at most ${MAX_OPEN_SIGNATURE_SECONDS} s; sign again with an earlier deadline`);
+  }
+  const share = await readOnChainShare(deps, shareId);
+  if (!share) throw new RequestError(404, 'unknown_share', `No share ${shareId} on ${deps.config.chain.name}`);
+  await verifyActionSignature(deps.publicClient, deps.config, request);
+  const opener = request.signer;
+
+  // The same signed request again (after a 202, or a dropped connection):
+  // resume that open instead of counting a new one.
+  const requestId = keccak256(request.signature);
+  const transactions = await store.getTransactions(shareId);
+  const earlier = transactions.opens?.find((open) => open.request === requestId);
+  if (earlier) {
+    if (request.deadline <= nowSeconds) throw new RequestError(400, 'deadline_passed', 'This open request has expired; sign a new one');
+    return finishOpen(deps, store, share, earlier.txHash);
+  }
+
+  const status = await deps.publicClient.readContract({
+    address: deps.config.contracts.ShareRegistry,
+    abi: shareRegistryAbi,
+    functionName: 'checkOpen',
+    args: [shareId, opener],
+  });
+  if (status !== OpenStatus.Ok) throw openRefusal(deps, share, opener, status, transactions);
+  if (!(await store.hasContent(shareId))) {
+    throw new RequestError(410, 'content_unavailable', `The encrypted content of share ${shareId} is no longer stored on this service`);
+  }
+
+  const relayed = await deps.relayInternal({ action: 'RecordOpen', message, signature });
+  if (relayed.status >= 400) return relayFailure(relayed);
+  const { txHash } = await relayed.json() as { txHash: Hex };
+  const latest = await store.getTransactions(shareId);
+  await store.putTransactions(shareId, { ...latest, opens: [...(latest.opens ?? []), { txHash, openCount: null, request: requestId }] });
+  return finishOpen(deps, store, share, txHash);
 }
