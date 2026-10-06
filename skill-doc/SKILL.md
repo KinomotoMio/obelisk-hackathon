@@ -175,6 +175,15 @@ retrieval. They belong to the `obelisk-wallet` skill, which ships next to this
 one. Activation writes on chain, so preview it with `obelisk wallet activate`
 and add `--confirm` only after the user agrees.
 
+## Sharing
+
+Requests to share a session with a wallet address ("把这段 session 分享给 0x…",
+"share this session with 0x…") belong to the `obelisk-share` skill. Sending
+encrypts content for someone else and writes on chain: preview with
+`obelisk share send <draft-id> --redact …` and add `--confirm` only after the
+user agrees. Report privacy findings by type and location only; never look up
+or quote their values.
+
 ## Query Routing
 
 Before writing a query, classify the task. Progressive disclosure is useful, but

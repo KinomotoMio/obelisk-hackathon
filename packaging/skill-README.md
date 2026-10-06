@@ -38,6 +38,9 @@ them when the installer asks which skills to install:
   card from your own session history, e.g. "把我最近准备求职材料的做法沉淀成一个 Skill".
 - `obelisk-wallet`: create and activate your Obelisk wallet (your BOT Chain
   identity), e.g. "帮我创建 Obelisk 钱包".
+- `obelisk-share`: privately share part of a session with one wallet, with a
+  privacy check before anything leaves your computer, e.g. "把这段 session
+  分享给 0x…，只能打开 1 次".
 
 ## Source
 

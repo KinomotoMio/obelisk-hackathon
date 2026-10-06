@@ -76,3 +76,23 @@ test('build:skill ships the standalone wallet skill, which previews before writi
   assert.match(skill, /Do not add `--confirm` on your own/);
   assert.deepEqual(findDynamicSkillContent(skill), []);
 });
+
+test('build:skill ships the standalone share skill, which keeps privacy findings out of the conversation', () => {
+  execFileSync(npmCommand, ['run', 'build:skill'], {
+    cwd: repoRoot,
+    encoding: 'utf8',
+    shell: process.platform === 'win32',
+    stdio: 'pipe',
+  });
+
+  const share = join(repoRoot, 'dist', 'agent-skills', 'obelisk-share');
+  assert.equal(existsSync(join(share, 'scripts')), false, 'skill must not ship a second runtime');
+  const skill = readFileSync(join(share, 'SKILL.md'), 'utf8');
+  assert.match(skill, /^---\nname: obelisk-share\n/);
+  assert.match(skill, /分享 session/);
+  assert.match(skill, /Bash\(obelisk:\*\)/);
+  assert.match(skill, /obelisk share send <draft-id> --confirm/);
+  assert.match(skill, /Do not add `--confirm` on your own/);
+  assert.match(skill, /never print or look up the values/);
+  assert.deepEqual(findDynamicSkillContent(skill), []);
+});
