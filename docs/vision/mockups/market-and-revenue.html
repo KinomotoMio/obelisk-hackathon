@@ -154,10 +154,34 @@ tr:last-child td { border-bottom: none; }
   .split:last-child { border-bottom: none; }
   .phase { margin-left: auto; }
 </style>
+<style>
+  /* 复制成 prompt：按钮带复制图标，画面底部列出按钮复制的 prompt */
+  .btn .ic, .rm .ic { width: 13px; height: 13px; flex: none; opacity: 0.85; }
+  .rm { display: inline-flex; align-items: center; gap: 4px; }
+  .rm .ic { width: 11px; height: 11px; }
+  .banner .legend { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--fg-2); }
+  .banner .legend .ic { width: 13px; height: 13px; color: var(--accent-2); }
+  .prompts { margin-top: 16px; border: 1px dashed rgba(167,139,250,0.35); border-radius: 10px; padding: 10px 14px; background: rgba(167,139,250,0.05); }
+  .prompts-h { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--accent-2); font-weight: 600; margin-bottom: 4px; }
+  .prompts-h .ic { width: 13px; height: 13px; }
+  .pr { display: grid; grid-template-columns: 120px 1fr; gap: 12px; padding: 7px 0; border-top: 1px solid var(--hairline); font-size: 12.5px; align-items: baseline; }
+  .prompts-h + .pr { border-top: none; }
+  .pr-b { color: var(--fg-2); font-weight: 600; }
+  .pr code { font-family: var(--font-mono); font-size: 12px; color: var(--fg); line-height: 1.6; }
+  .term { background: #0b0c14; border: 1px solid var(--hairline); border-radius: 10px; padding: 14px 16px; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.75; color: var(--fg-2); }
+  .term .you { color: var(--fg); }
+  .term .you::before { content: "> "; color: var(--accent-2); }
+  .term .ai::before { content: "⏺ "; color: var(--ok); }
+  .term .dim { color: var(--muted); }
+  .term .hl { color: var(--accent-2); }
+  .term .ind { padding-left: 2.2em; white-space: pre-wrap; }
+  @media (max-width: 860px) { .pr { grid-template-columns: 1fr; gap: 2px; } }
+</style>
 </head>
 <body>
 <div class="banner">
   <span class="tag">界面示意 · 数据为演示样例</span>
+  <span class="legend"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="9" height="9" rx="1.5"/><path d="M6 4V3a1 1 0 0 1 1-1h5.5A1.5 1.5 0 0 1 14 3.5V9a1 1 0 0 1-1 1h-1"/></svg>带这个图标的按钮会复制一段 prompt，粘贴到 AI 编程助手里执行</span>
   <nav>
     <a href="private-sharing.html">私密分享</a>
     <a href="skill-detail.html">Skill 详情</a>
@@ -190,7 +214,8 @@ tr:last-child td { border-bottom: none; }
           <p class="note" style="margin-top:8px">上游比例在各自铸造时设定，写在链上，不能单方面修改。</p>
         </div>
       </div>
-      <div class="row" style="justify-content:flex-end;margin-top:16px"><span class="btn primary">上架（写入 BOT Chain）</span></div>
+      <div class="row" style="justify-content:flex-end;margin-top:16px"><span class="btn primary"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="9" height="9" rx="1.5"/><path d="M6 4V3a1 1 0 0 1 1-1h5.5A1.5 1.5 0 0 1 14 3.5V9a1 1 0 0 1-1 1h-1"/></svg>上架（写入 BOT Chain）</span></div>
+      <div class="prompts"><div class="prompts-h"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="9" height="9" rx="1.5"/><path d="M6 4V3a1 1 0 0 1 1-1h5.5A1.5 1.5 0 0 1 14 3.5V9a1 1 0 0 1-1 1h-1"/></svg>这些按钮复制的 prompt · 粘贴到 Claude Code 执行</div><div class="pr"><span class="pr-b">上架</span><code>用 Obelisk 上架 Skill「插画师作品集版」：按次 0.5 BOT，个人使用许可，上游分成按族谱带出。先给我看上架预览</code></div></div>
     </div></div>
   </section>
 
@@ -269,6 +294,7 @@ tr:last-child td { border-bottom: none; }
             <div class="row between"><span>修复支付回调重复扣款</span><span class="note">第 12–48 条 · 4 处已打码</span></div>
             <div class="field"><label>价格</label><div class="input">2 BOT</div></div>
             <div class="field"><label>付款后规则</label><div class="fg2">只能打开 1 次 · 24 小时内有效 · 带水印</div></div>
+            <span class="btn" style="align-self:flex-start"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="9" height="9" rx="1.5"/><path d="M6 4V3a1 1 0 0 1 1-1h5.5A1.5 1.5 0 0 1 14 3.5V9a1 1 0 0 1-1 1h-1"/></svg>分享并定价</span>
           </div>
         </div>
         <div class="card">
@@ -276,10 +302,11 @@ tr:last-child td { border-bottom: none; }
           <div class="stack">
             <div class="fg2">这段 session 记录了一次线上重复扣款问题从定位到修复、补回归测试的完整过程。</div>
             <div class="row"><span class="pill chain">卖家 0xA1c9…3be2</span><span class="pill dim">37 条消息</span></div>
-            <span class="btn primary" style="align-self:flex-start">支付 2 BOT 并解锁</span>
+            <span class="btn primary" style="align-self:flex-start"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="9" height="9" rx="1.5"/><path d="M6 4V3a1 1 0 0 1 1-1h5.5A1.5 1.5 0 0 1 14 3.5V9a1 1 0 0 1-1 1h-1"/></svg>支付 2 BOT 并解锁</span>
           </div>
         </div>
       </div>
+      <div class="prompts"><div class="prompts-h"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="9" height="9" rx="1.5"/><path d="M6 4V3a1 1 0 0 1 1-1h5.5A1.5 1.5 0 0 1 14 3.5V9a1 1 0 0 1-1 1h-1"/></svg>这些按钮复制的 prompt · 粘贴到 Claude Code 执行</div><div class="pr"><span class="pr-b">发送方 · 分享并定价</span><code>用 Obelisk 分享 session「修复支付回调重复扣款」第 12–48 条，价格 2 BOT；付款后只能打开 1 次、24 小时内有效、带水印</code></div><div class="pr"><span class="pr-b">买家 · 支付并解锁</span><code>用 Obelisk 购买 0xA1c9…3be2 分享的 session「修复支付回调重复扣款」，价格 2 BOT，付款前先让我确认</code></div></div>
       <div class="callout" style="margin-top:14px">大家都在卖 Skill（方法），我们还能卖上下文（经验）。两者不是谁取代谁，我们都支持。</div>
     </div></div>
   </section>

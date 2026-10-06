@@ -155,17 +155,40 @@ tr:last-child td { border-bottom: none; }
   .step { padding: 14px 20px; border-bottom: 1px solid var(--hairline); }
   .step-t { font-size: 12px; color: var(--muted); margin-bottom: 8px; font-weight: 600; letter-spacing: 0.04em; }
   .modal-foot { padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-  .finding { display: grid; grid-template-columns: 18px 110px 1fr auto; gap: 10px; align-items: center; padding: 6px 0; font-size: 13px; }
   .reader { position: relative; overflow: hidden; }
   .wm { position: absolute; inset: -40%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 70px 40px; transform: rotate(-22deg); pointer-events: none; }
   .wm span { font-family: var(--font-mono); font-size: 12px; color: rgba(255,255,255,0.07); white-space: nowrap; }
   .denied { text-align: center; padding: 56px 20px; }
   .denied svg { margin-bottom: 14px; }
 </style>
+<style>
+  /* 复制成 prompt：按钮带复制图标，画面底部列出按钮复制的 prompt */
+  .btn .ic, .rm .ic { width: 13px; height: 13px; flex: none; opacity: 0.85; }
+  .rm { display: inline-flex; align-items: center; gap: 4px; }
+  .rm .ic { width: 11px; height: 11px; }
+  .banner .legend { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--fg-2); }
+  .banner .legend .ic { width: 13px; height: 13px; color: var(--accent-2); }
+  .prompts { margin-top: 16px; border: 1px dashed rgba(167,139,250,0.35); border-radius: 10px; padding: 10px 14px; background: rgba(167,139,250,0.05); }
+  .prompts-h { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--accent-2); font-weight: 600; margin-bottom: 4px; }
+  .prompts-h .ic { width: 13px; height: 13px; }
+  .pr { display: grid; grid-template-columns: 120px 1fr; gap: 12px; padding: 7px 0; border-top: 1px solid var(--hairline); font-size: 12.5px; align-items: baseline; }
+  .prompts-h + .pr { border-top: none; }
+  .pr-b { color: var(--fg-2); font-weight: 600; }
+  .pr code { font-family: var(--font-mono); font-size: 12px; color: var(--fg); line-height: 1.6; }
+  .term { background: #0b0c14; border: 1px solid var(--hairline); border-radius: 10px; padding: 14px 16px; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.75; color: var(--fg-2); }
+  .term .you { color: var(--fg); }
+  .term .you::before { content: "> "; color: var(--accent-2); }
+  .term .ai::before { content: "⏺ "; color: var(--ok); }
+  .term .dim { color: var(--muted); }
+  .term .hl { color: var(--accent-2); }
+  .term .ind { padding-left: 2.2em; white-space: pre-wrap; }
+  @media (max-width: 860px) { .pr { grid-template-columns: 1fr; gap: 2px; } }
+</style>
 </head>
 <body>
 <div class="banner">
   <span class="tag">界面示意 · 数据为演示样例</span>
+  <span class="legend"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="9" height="9" rx="1.5"/><path d="M6 4V3a1 1 0 0 1 1-1h5.5A1.5 1.5 0 0 1 14 3.5V9a1 1 0 0 1-1 1h-1"/></svg>带这个图标的按钮会复制一段 prompt，粘贴到 AI 编程助手里执行</span>
   <nav>
     <a href="private-sharing.html" class="on">私密分享</a>
     <a href="skill-detail.html">Skill 详情</a>
@@ -178,11 +201,11 @@ tr:last-child td { border-bottom: none; }
 </div>
 <div class="page">
   <h1>私密分享：只给 TA 看</h1>
-  <p class="lead">发送方在 App 里打码、指定接收者和规则；接收方用钱包在网页上打开；拿到被转发链接的人打不开。对应文档 02 的 S1–S6。</p>
+  <p class="lead">发送方在 App 里选好片段、接收者和规则，复制成 prompt；在 AI 编程助手里完成隐私体检并确认分享。接收方用钱包在网页上打开；拿到被转发链接的人打不开。对应文档 02 的 S1–S6。</p>
 
   <!-- 画面 1 -->
   <section class="screen">
-    <div class="screen-label"><span class="n">1</span><h2>发起分享</h2><span class="where">发送方 · Obelisk App · Session 详情页 → 分享</span></div>
+    <div class="screen-label"><span class="n">1a</span><h2>发起分享</h2><span class="where">发送方 · Obelisk App · Session 详情页 → 分享 · 选好后复制成 prompt</span></div>
     <div class="frame">
       <div class="frame-bar"><div class="dots"><i></i><i></i><i></i></div><span>Obelisk</span></div>
       <div class="app">
@@ -201,18 +224,11 @@ tr:last-child td { border-bottom: none; }
               <div class="row between"><span>第 12–48 条消息</span><span class="note">37 条消息 · 9 次工具调用</span></div>
             </div>
             <div class="step">
-              <div class="step-t">2 · 隐私体检 · 检出 4 处敏感信息</div>
-              <div class="finding"><span class="check">✓</span><span class="fg2">API 密钥</span><span class="mono">sk-live-••••••••</span><span class="pill warn">已打码</span></div>
-              <div class="finding"><span class="check">✓</span><span class="fg2">本地路径</span><span class="mono">/Users/••••/work/pay-gateway</span><span class="pill warn">已打码</span></div>
-              <div class="finding"><span class="check">✓</span><span class="fg2">数据库连接串</span><span class="mono">postgres://••••@••••</span><span class="pill warn">已打码</span></div>
-              <div class="finding"><span class="check">✓</span><span class="fg2">邮箱</span><span class="mono">••••@••••.com</span><span class="pill warn">已打码</span></div>
-            </div>
-            <div class="step">
-              <div class="step-t">3 · 接收者</div>
+              <div class="step-t">2 · 接收者</div>
               <div class="row"><div class="input" style="flex:1">0x7a3f…c21e</div><span class="pill ok">已激活，可加密发送</span></div>
             </div>
             <div class="step">
-              <div class="step-t">4 · 打开规则</div>
+              <div class="step-t">3 · 打开规则</div>
               <div class="grid g2">
                 <div class="field"><label>打开次数</label><div class="seg"><span class="on">1 次</span><span>3 次</span><span>不限</span></div></div>
                 <div class="field"><label>有效期</label><div class="seg"><span>1 小时</span><span class="on">24 小时</span><span>7 天</span></div></div>
@@ -221,11 +237,36 @@ tr:last-child td { border-bottom: none; }
               </div>
             </div>
             <div class="modal-foot">
-              <span class="note">内容在本机加密后才上传，Obelisk 在线服务无法读取。规则将写入 BOT Chain。</span>
-              <span class="btn primary">生成分享链接</span>
+              <span class="note">隐私体检和最终确认在 AI 编程助手里完成。</span>
+              <span class="btn primary"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="9" height="9" rx="1.5"/><path d="M6 4V3a1 1 0 0 1 1-1h5.5A1.5 1.5 0 0 1 14 3.5V9a1 1 0 0 1-1 1h-1"/></svg>生成分享链接</span>
             </div>
           </div>
+          <div class="prompts"><div class="prompts-h"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="9" height="9" rx="1.5"/><path d="M6 4V3a1 1 0 0 1 1-1h5.5A1.5 1.5 0 0 1 14 3.5V9a1 1 0 0 1-1 1h-1"/></svg>这些按钮复制的 prompt · 粘贴到 Claude Code 执行</div><div class="pr"><span class="pr-b">生成分享链接</span><code>用 Obelisk 分享 session「修复支付回调重复扣款」第 12–48 条给 0x7a3f…c21e：只能打开 1 次，24 小时内有效，带水印。分享前先做隐私体检</code></div></div>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen">
+    <div class="screen-label"><span class="n">1b</span><h2>隐私体检与确认</h2><span class="where">发送方 · 本机的 Claude Code · 由 Obelisk CLI 完成打包、打码、加密和上链</span></div>
+    <div class="frame">
+      <div class="frame-bar"><div class="dots"><i></i><i></i><i></i></div><span>Claude Code · 终端</span></div>
+      <div class="frame-body">
+        <div class="term">
+          <div class="you">用 Obelisk 分享 session「修复支付回调重复扣款」第 12–48 条给 0x7a3f…c21e：只能打开 1 次，24 小时内有效，带水印。分享前先做隐私体检</div>
+          <div class="ai">隐私体检 · 检出 4 处敏感信息 <span class="dim">· 只显示类型和位置，不显示原值</span></div>
+          <div class="ind">1  API 密钥      <span class="dim">第 31 条 · 工具输出</span></div>
+          <div class="ind">2  本地路径      <span class="dim">第 12、19、40 条</span></div>
+          <div class="ind">3  数据库连接串  <span class="dim">第 27 条</span></div>
+          <div class="ind">4  邮箱          <span class="dim">第 44 条</span></div>
+          <div class="ai">要全部打码，还是逐条决定？</div>
+          <div class="you">全部打码</div>
+          <div class="ai">分享预览 <span class="dim">· 接收者 0x7a3f…c21e（已激活）· 只能打开 1 次 · 24 小时内有效 · 水印 · 4 处已打码</span></div>
+          <div class="ind dim">确认后在本机加密、上传密文，并把规则写入 BOT Chain。确认吗？</div>
+          <div class="you">确认</div>
+          <div class="ai">分享链接已生成 <span class="hl">#S-0142</span> <span class="dim">· 分享授权已写入 BOT Chain · Share tab 会显示状态</span></div>
+        </div>
+        <p class="note" style="margin-top:10px">内容在本机加密后才上传，Obelisk 在线服务无法读取。会把内容发给别人的命令，都先预览、再确认。</p>
       </div>
     </div>
   </section>
@@ -245,11 +286,12 @@ tr:last-child td { border-bottom: none; }
           <table>
             <tr><th>内容</th><th>接收者</th><th>规则</th><th>状态</th><th>链上记录</th><th></th></tr>
             <tr><td>修复支付回调重复扣款</td><td class="mono">0x7a3f…c21e</td><td class="fg2">1 次 · 24 小时</td><td><span class="pill ok">已读 · 10-07 21:03</span></td><td><a href="#">打开回执 ↗</a></td><td></td></tr>
-            <tr><td>迁移到新版鉴权中间件</td><td class="mono">0x19be…44d0</td><td class="fg2">3 次 · 7 天</td><td><span class="pill dim">未读</span></td><td><a href="#">分享授权 ↗</a></td><td><span class="btn ghost">撤回</span></td></tr>
+            <tr><td>迁移到新版鉴权中间件</td><td class="mono">0x19be…44d0</td><td class="fg2">3 次 · 7 天</td><td><span class="pill dim">未读</span></td><td><a href="#">分享授权 ↗</a></td><td><span class="btn ghost"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="9" height="9" rx="1.5"/><path d="M6 4V3a1 1 0 0 1 1-1h5.5A1.5 1.5 0 0 1 14 3.5V9a1 1 0 0 1-1 1h-1"/></svg>撤回</span></td></tr>
             <tr><td>首页性能排查</td><td class="mono">0x5c02…9a17</td><td class="fg2">1 次 · 1 小时</td><td><span class="pill warn">已过期</span></td><td><a href="#">分享授权 ↗</a></td><td></td></tr>
             <tr><td>部署脚本整理</td><td class="mono">0xe4d1…07bb</td><td class="fg2">不限 · 7 天</td><td><span class="pill danger">已撤回</span></td><td><a href="#">撤回记录 ↗</a></td><td></td></tr>
           </table>
           <p class="note" style="margin-top:12px">"已读""已撤回"等状态来自 BOT Chain 上的记录，任何人可在区块浏览器核对。</p>
+          <div class="prompts"><div class="prompts-h"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="9" height="9" rx="1.5"/><path d="M6 4V3a1 1 0 0 1 1-1h5.5A1.5 1.5 0 0 1 14 3.5V9a1 1 0 0 1-1 1h-1"/></svg>这些按钮复制的 prompt · 粘贴到 Claude Code 执行</div><div class="pr"><span class="pr-b">撤回</span><code>用 Obelisk 撤回我发给 0x19be…44d0 的分享「迁移到新版鉴权中间件」</code></div></div>
         </div>
       </div>
     </div>

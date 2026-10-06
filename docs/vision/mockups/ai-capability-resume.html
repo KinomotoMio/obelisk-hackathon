@@ -155,10 +155,34 @@ tr:last-child td { border-bottom: none; }
   .ev { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--hairline); font-size: 13px; }
   .ev:last-child { border-bottom: none; }
 </style>
+<style>
+  /* 复制成 prompt：按钮带复制图标，画面底部列出按钮复制的 prompt */
+  .btn .ic, .rm .ic { width: 13px; height: 13px; flex: none; opacity: 0.85; }
+  .rm { display: inline-flex; align-items: center; gap: 4px; }
+  .rm .ic { width: 11px; height: 11px; }
+  .banner .legend { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--fg-2); }
+  .banner .legend .ic { width: 13px; height: 13px; color: var(--accent-2); }
+  .prompts { margin-top: 16px; border: 1px dashed rgba(167,139,250,0.35); border-radius: 10px; padding: 10px 14px; background: rgba(167,139,250,0.05); }
+  .prompts-h { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--accent-2); font-weight: 600; margin-bottom: 4px; }
+  .prompts-h .ic { width: 13px; height: 13px; }
+  .pr { display: grid; grid-template-columns: 120px 1fr; gap: 12px; padding: 7px 0; border-top: 1px solid var(--hairline); font-size: 12.5px; align-items: baseline; }
+  .prompts-h + .pr { border-top: none; }
+  .pr-b { color: var(--fg-2); font-weight: 600; }
+  .pr code { font-family: var(--font-mono); font-size: 12px; color: var(--fg); line-height: 1.6; }
+  .term { background: #0b0c14; border: 1px solid var(--hairline); border-radius: 10px; padding: 14px 16px; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.75; color: var(--fg-2); }
+  .term .you { color: var(--fg); }
+  .term .you::before { content: "> "; color: var(--accent-2); }
+  .term .ai::before { content: "⏺ "; color: var(--ok); }
+  .term .dim { color: var(--muted); }
+  .term .hl { color: var(--accent-2); }
+  .term .ind { padding-left: 2.2em; white-space: pre-wrap; }
+  @media (max-width: 860px) { .pr { grid-template-columns: 1fr; gap: 2px; } }
+</style>
 </head>
 <body>
 <div class="banner">
   <span class="tag">界面示意 · 数据为演示样例</span>
+  <span class="legend"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="9" height="9" rx="1.5"/><path d="M6 4V3a1 1 0 0 1 1-1h5.5A1.5 1.5 0 0 1 14 3.5V9a1 1 0 0 1-1 1h-1"/></svg>带这个图标的按钮会复制一段 prompt，粘贴到 AI 编程助手里执行</span>
   <nav>
     <a href="private-sharing.html">私密分享</a>
     <a href="skill-detail.html">Skill 详情</a>
@@ -174,7 +198,7 @@ tr:last-child td { border-bottom: none; }
   <p class="lead">由「AI 能力履历」Skill 从持有人自己的 session 历史生成。展示的不是做过什么项目，而是解决过什么问题；数据可以在链上核对，证据可以私密出示。对应文档 06 的 R1–R3。</p>
 
   <section class="screen">
-    <div class="screen-label"><span class="n">1</span><h2>生成的履历</h2><span class="where">用户 U · 在任意 AI 编程助手中调用后生成</span></div>
+    <div class="screen-label"><span class="n">1</span><h2>生成的履历</h2><span class="where">用户 U · 在 Claude Code 中调用后生成</span></div>
     <div class="frame"><div class="frame-body">
       <div class="row between" style="margin-bottom:18px">
         <div>
@@ -210,9 +234,9 @@ tr:last-child td { border-bottom: none; }
         <div class="stack" style="gap:14px">
           <div class="card">
             <h3>解决过的代表性问题</h3>
-            <div class="ev"><div><div>线上重复扣款：定位支付回调重试导致的重复扣款，加入幂等去重并补回归测试</div><div class="note">调试与排障 · 后端与数据</div></div><span class="btn">私密出示佐证</span></div>
-            <div class="ev"><div><div>慢查询：从监控定位到索引调整，接口耗时恢复到基线</div><div class="note">后端与数据</div></div><span class="btn">私密出示佐证</span></div>
-            <div class="ev"><div><div>发布流程脚本化：把手工发布步骤整理成可重复执行的脚本与检查清单</div><div class="note">自动化与脚本</div></div><span class="btn">私密出示佐证</span></div>
+            <div class="ev"><div><div>线上重复扣款：定位支付回调重试导致的重复扣款，加入幂等去重并补回归测试</div><div class="note">调试与排障 · 后端与数据</div></div><span class="btn"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="9" height="9" rx="1.5"/><path d="M6 4V3a1 1 0 0 1 1-1h5.5A1.5 1.5 0 0 1 14 3.5V9a1 1 0 0 1-1 1h-1"/></svg>私密出示佐证</span></div>
+            <div class="ev"><div><div>慢查询：从监控定位到索引调整，接口耗时恢复到基线</div><div class="note">后端与数据</div></div><span class="btn"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="9" height="9" rx="1.5"/><path d="M6 4V3a1 1 0 0 1 1-1h5.5A1.5 1.5 0 0 1 14 3.5V9a1 1 0 0 1-1 1h-1"/></svg>私密出示佐证</span></div>
+            <div class="ev"><div><div>发布流程脚本化：把手工发布步骤整理成可重复执行的脚本与检查清单</div><div class="note">自动化与脚本</div></div><span class="btn"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="9" height="9" rx="1.5"/><path d="M6 4V3a1 1 0 0 1 1-1h5.5A1.5 1.5 0 0 1 14 3.5V9a1 1 0 0 1-1 1h-1"/></svg>私密出示佐证</span></div>
           </div>
           <div class="card">
             <h3>沉淀的 Skill · 链上可核对</h3>
@@ -222,7 +246,8 @@ tr:last-child td { border-bottom: none; }
               <tr><td>发布流程检查清单</td><td class="mono">520</td><td class="mono">115</td><td><span class="pill ok">85%</span></td><td><a href="#">链上记录 ↗</a></td></tr>
             </table>
           </div>
-          <div class="callout">招聘方点击"链上记录"即可在区块浏览器核对调用统计；点击"私密出示佐证"，持有人会把对应 session 只分享给招聘方的钱包：只能看一次，带水印，持有人收到已读回执。</div>
+          <div class="callout">招聘方点击"链上记录"即可在区块浏览器核对调用统计。持有人用"私密出示佐证"把对应 session 只分享给招聘方的钱包：只能看一次，带水印，持有人收到已读回执。</div>
+          <div class="prompts"><div class="prompts-h"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="9" height="9" rx="1.5"/><path d="M6 4V3a1 1 0 0 1 1-1h5.5A1.5 1.5 0 0 1 14 3.5V9a1 1 0 0 1-1 1h-1"/></svg>这些按钮复制的 prompt · 粘贴到 Claude Code 执行</div><div class="pr"><span class="pr-b">私密出示佐证</span><code>用 Obelisk 把「线上重复扣款」这段佐证 session 私密分享给招聘方：只能打开 1 次，带水印。招聘方钱包地址：</code></div></div>
         </div>
       </div>
     </div></div>

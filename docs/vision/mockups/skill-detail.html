@@ -153,22 +153,40 @@ tr:last-child td { border-bottom: none; }
   .sess { display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--hairline); font-size: 13px; }
   .sess .why { font-size: 12px; color: var(--muted); margin-top: 2px; }
   .sess .rm { font-size: 12px; color: var(--muted); }
-  .term { background: #0b0c14; border: 1px solid var(--hairline); border-radius: 10px; padding: 14px 16px; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.75; color: var(--fg-2); }
-  .term .you { color: var(--fg); }
-  .term .you::before { content: "> "; color: var(--accent-2); }
-  .term .step::before { content: "⏺ "; color: var(--ok); }
-  .term .dim { color: var(--muted); }
-  .term .hl { color: var(--accent-2); }
   .md { background: rgba(0,0,0,0.25); border: 1px solid var(--hairline); border-radius: 10px; padding: 14px; font-family: var(--font-mono); font-size: 12.5px; color: var(--fg-2); white-space: pre-wrap; line-height: 1.6; }
   .src li { margin: 4px 0 4px 18px; font-size: 13px; color: var(--fg-2); }
   .scn { display: grid; grid-template-columns: 100px 1fr 64px 190px; gap: 12px; align-items: center; padding: 8px 0; font-size: 13px; }
   .tags { display: flex; gap: 6px; flex-wrap: wrap; }
   .kpi .big { margin: 2px 0; }
 </style>
+<style>
+  /* 复制成 prompt：按钮带复制图标，画面底部列出按钮复制的 prompt */
+  .btn .ic, .rm .ic { width: 13px; height: 13px; flex: none; opacity: 0.85; }
+  .rm { display: inline-flex; align-items: center; gap: 4px; }
+  .rm .ic { width: 11px; height: 11px; }
+  .banner .legend { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--fg-2); }
+  .banner .legend .ic { width: 13px; height: 13px; color: var(--accent-2); }
+  .prompts { margin-top: 16px; border: 1px dashed rgba(167,139,250,0.35); border-radius: 10px; padding: 10px 14px; background: rgba(167,139,250,0.05); }
+  .prompts-h { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--accent-2); font-weight: 600; margin-bottom: 4px; }
+  .prompts-h .ic { width: 13px; height: 13px; }
+  .pr { display: grid; grid-template-columns: 120px 1fr; gap: 12px; padding: 7px 0; border-top: 1px solid var(--hairline); font-size: 12.5px; align-items: baseline; }
+  .prompts-h + .pr { border-top: none; }
+  .pr-b { color: var(--fg-2); font-weight: 600; }
+  .pr code { font-family: var(--font-mono); font-size: 12px; color: var(--fg); line-height: 1.6; }
+  .term { background: #0b0c14; border: 1px solid var(--hairline); border-radius: 10px; padding: 14px 16px; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.75; color: var(--fg-2); }
+  .term .you { color: var(--fg); }
+  .term .you::before { content: "> "; color: var(--accent-2); }
+  .term .ai::before { content: "⏺ "; color: var(--ok); }
+  .term .dim { color: var(--muted); }
+  .term .hl { color: var(--accent-2); }
+  .term .ind { padding-left: 2.2em; white-space: pre-wrap; }
+  @media (max-width: 860px) { .pr { grid-template-columns: 1fr; gap: 2px; } }
+</style>
 </head>
 <body>
 <div class="banner">
   <span class="tag">界面示意 · 数据为演示样例</span>
+  <span class="legend"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="9" height="9" rx="1.5"/><path d="M6 4V3a1 1 0 0 1 1-1h5.5A1.5 1.5 0 0 1 14 3.5V9a1 1 0 0 1-1 1h-1"/></svg>带这个图标的按钮会复制一段 prompt，粘贴到 AI 编程助手里执行</span>
   <nav>
     <a href="private-sharing.html">私密分享</a>
     <a href="skill-detail.html" class="on">Skill 详情</a>
@@ -191,10 +209,10 @@ tr:last-child td { border-bottom: none; }
       <div class="frame-body">
         <div class="term">
           <div class="you">把我最近准备求职材料的做法，沉淀成一个 Skill</div>
-          <div class="step">使用 skill <span class="hl">「沉淀 Skill」</span></div>
-          <div class="step">通过 Obelisk 检索全部历史 session <span class="dim">· 找到 4 个直接相关的 session</span></div>
-          <div class="step">起草正文、出处卡和出生场景</div>
-          <div class="step">草稿已存入 Obelisk 的 Skill 库 <span class="dim">· 请在 Obelisk App 的 Skill tab 审阅并确认</span></div>
+          <div class="ai">使用 skill <span class="hl">「沉淀 Skill」</span></div>
+          <div class="ai">通过 Obelisk 检索全部历史 session <span class="dim">· 找到 4 个直接相关的 session</span></div>
+          <div class="ai">起草正文、出处卡和出生场景</div>
+          <div class="ai">草稿已存入 Obelisk 的 Skill 库 <span class="dim">· 请在 Obelisk App 的 Skill tab 审阅并确认</span></div>
         </div>
         <p class="note" style="margin-top:10px">需要 AI 的工作在你自己的 AI 编程助手里完成，费用走你自己的订阅。阶段 1 先支持 Claude Code。</p>
       </div>
@@ -218,10 +236,10 @@ tr:last-child td { border-bottom: none; }
           <div class="grid g2">
             <div class="card">
               <h3>Obelisk 找到的直接证据 · 4 个 session</h3>
-              <div class="sess"><div><div>根据提交历史整理项目经历</div><div class="why">命中：按"解决了什么问题"而不是按提交归纳经历</div></div><span class="note">Claude Code · 09-12</span><span class="rm">去掉</span></div>
-              <div class="sess"><div><div>把排障过程改写成技术复盘</div><div class="why">命中：按"现象、原因、修复、验证"整理一次排障</div></div><span class="note">Codex · 09-19</span><span class="rm">去掉</span></div>
-              <div class="sess"><div><div>为面试准备系统设计案例</div><div class="why">命中：用真实案例说明设计取舍</div></div><span class="note">Claude Code · 09-26</span><span class="rm">去掉</span></div>
-              <div class="sess"><div><div>按岗位要求改写履历要点</div><div class="why">命中：被纠正"不要夸大个人在团队项目中的职责"</div></div><span class="note">Claude Code · 10-02</span><span class="rm">去掉</span></div>
+              <div class="sess"><div><div>根据提交历史整理项目经历</div><div class="why">命中：按"解决了什么问题"而不是按提交归纳经历</div></div><span class="note">Claude Code · 09-12</span><span class="rm"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="9" height="9" rx="1.5"/><path d="M6 4V3a1 1 0 0 1 1-1h5.5A1.5 1.5 0 0 1 14 3.5V9a1 1 0 0 1-1 1h-1"/></svg>去掉</span></div>
+              <div class="sess"><div><div>把排障过程改写成技术复盘</div><div class="why">命中：按"现象、原因、修复、验证"整理一次排障</div></div><span class="note">Codex · 09-19</span><span class="rm"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="9" height="9" rx="1.5"/><path d="M6 4V3a1 1 0 0 1 1-1h5.5A1.5 1.5 0 0 1 14 3.5V9a1 1 0 0 1-1 1h-1"/></svg>去掉</span></div>
+              <div class="sess"><div><div>为面试准备系统设计案例</div><div class="why">命中：用真实案例说明设计取舍</div></div><span class="note">Claude Code · 09-26</span><span class="rm"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="9" height="9" rx="1.5"/><path d="M6 4V3a1 1 0 0 1 1-1h5.5A1.5 1.5 0 0 1 14 3.5V9a1 1 0 0 1-1 1h-1"/></svg>去掉</span></div>
+              <div class="sess"><div><div>按岗位要求改写履历要点</div><div class="why">命中：被纠正"不要夸大个人在团队项目中的职责"</div></div><span class="note">Claude Code · 10-02</span><span class="rm"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="9" height="9" rx="1.5"/><path d="M6 4V3a1 1 0 0 1 1-1h5.5A1.5 1.5 0 0 1 14 3.5V9a1 1 0 0 1-1 1h-1"/></svg>去掉</span></div>
               <p class="note" style="margin-top:10px">这些 session 会作为出处写进出处卡。Obelisk 检索的是完整的 session 原文，而不是摘要过的记忆，所以能直接找到证据。</p>
             </div>
             <div class="stack">
@@ -240,9 +258,10 @@ tr:last-child td { border-bottom: none; }
                 </ul>
                 <div class="row" style="margin-top:10px"><span class="note">出生场景</span><div class="tags"><span class="pill acc">求职材料</span><span class="pill acc">工程师</span><span class="pill acc">文档写作</span></div></div>
               </div>
-              <div class="row" style="justify-content:flex-end"><span class="btn">继续修改</span><span class="btn primary">确认并铸造</span></div>
+              <div class="row" style="justify-content:flex-end"><span class="btn"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="9" height="9" rx="1.5"/><path d="M6 4V3a1 1 0 0 1 1-1h5.5A1.5 1.5 0 0 1 14 3.5V9a1 1 0 0 1-1 1h-1"/></svg>继续修改</span><span class="btn primary"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="9" height="9" rx="1.5"/><path d="M6 4V3a1 1 0 0 1 1-1h5.5A1.5 1.5 0 0 1 14 3.5V9a1 1 0 0 1-1 1h-1"/></svg>确认并铸造</span></div>
             </div>
           </div>
+          <div class="prompts"><div class="prompts-h"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="9" height="9" rx="1.5"/><path d="M6 4V3a1 1 0 0 1 1-1h5.5A1.5 1.5 0 0 1 14 3.5V9a1 1 0 0 1-1 1h-1"/></svg>这些按钮复制的 prompt · 粘贴到 Claude Code 执行</div><div class="pr"><span class="pr-b">去掉</span><code>用「沉淀 Skill」从草稿「AI 能力履历」的证据中去掉 session「为面试准备系统设计案例」，重新起草</code></div><div class="pr"><span class="pr-b">继续修改</span><code>用「沉淀 Skill」继续修改草稿「AI 能力履历」：（接着写你想改的地方）</code></div><div class="pr"><span class="pr-b">确认并铸造</span><code>用 Obelisk 铸造 Skill 草稿「AI 能力履历」，先给我看铸造预览</code></div></div>
         </div>
       </div>
     </div>
@@ -264,7 +283,7 @@ tr:last-child td { border-bottom: none; }
               <div class="row"><span style="font-size:20px;font-weight:700">AI 能力履历</span><span class="pill dim">v1.2</span><span class="pill chain">已铸造 · BOT Chain</span><span class="pill warn">来源：Playground 运行 #3–#12</span></div>
               <div class="note" style="margin-top:4px">作者 <span class="mono">0xA1c9…3be2</span> · 指纹 <span class="mono">9c41…e07a</span> · 由 4 个 session 沉淀 · <a href="#">链上记录 ↗</a></div>
             </div>
-            <div class="row"><span class="btn">在此基础上修改</span><span class="btn primary">取用</span></div>
+            <div class="row"><span class="btn"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="9" height="9" rx="1.5"/><path d="M6 4V3a1 1 0 0 1 1-1h5.5A1.5 1.5 0 0 1 14 3.5V9a1 1 0 0 1-1 1h-1"/></svg>在此基础上修改</span><span class="btn primary"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="9" height="9" rx="1.5"/><path d="M6 4V3a1 1 0 0 1 1-1h5.5A1.5 1.5 0 0 1 14 3.5V9a1 1 0 0 1-1 1h-1"/></svg>取用</span></div>
           </div>
 
           <div class="grid g4">
@@ -323,6 +342,7 @@ tr:last-child td { border-bottom: none; }
               </svg>
             </div>
           </div>
+          <div class="prompts"><div class="prompts-h"><svg class="ic" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="9" height="9" rx="1.5"/><path d="M6 4V3a1 1 0 0 1 1-1h5.5A1.5 1.5 0 0 1 14 3.5V9a1 1 0 0 1-1 1h-1"/></svg>这些按钮复制的 prompt · 粘贴到 Claude Code 执行</div><div class="pr"><span class="pr-b">在此基础上修改</span><code>用「沉淀 Skill」在「AI 能力履历」v1.2（指纹 9c41…e07a）的基础上改出一个新版本，铸造时记录父 Skill。我想改成：</code></div><div class="pr"><span class="pr-b">取用</span><code>用 Obelisk 取用 Skill「AI 能力履历」v1.2（指纹 9c41…e07a），帮我：</code></div></div>
         </div>
       </div>
     </div>
