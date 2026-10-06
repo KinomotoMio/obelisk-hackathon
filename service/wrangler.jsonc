@@ -6,6 +6,9 @@
   "main": "src/index.ts",
   "compatibility_date": "2026-10-01",
   "observability": { "enabled": true },
+  // Serve only the workers.dev URL; per-version preview URLs stay off.
+  "workers_dev": true,
+  "preview_urls": false,
   "vars": {
     // 968 = BOT Chain testnet, 677 = mainnet (once chain/deployments/677.json exists).
     "CHAIN_ID": "968"
