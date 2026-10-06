@@ -5,7 +5,6 @@ description: >
   Reactive: when the user asks "how did I fix X", "what did we do last time", "find the session where", "上次怎么修的", "之前的session", "历史记录".
   Proactive: when the user references past work you lack context for, when you're about to modify a file with complex edit history, when the user says "继续之前的" or "continue where we left off", or when understanding prior decisions would improve your current response.
   Memory: when the user says "记住这个", "remember this", "写入记忆", "save this conclusion", or when you determine a retrieval result contains a conclusion worth persisting.
-  Wallet: when the user says "帮我创建 Obelisk 钱包", "create my Obelisk wallet", "激活钱包", "activate my wallet", "我的钱包地址", or asks about their Obelisk wallet or on-chain identity.
 allowed-tools:
   - Read
   - Bash(obelisk:*)
@@ -168,15 +167,13 @@ Use references by job, not by habit:
 | `references/api-reference.md` | Helper signatures, option names, return fields, or exact `remember()` / `forget()` parameter details are unclear. |
 | `references/pitfalls.md` | Error recovery, FTS syntax, aliases, ordering, row-shape surprises, or compact/raw tradeoffs. |
 | `references/recap/overview.md` | Explicit `/obelisk recap ...` requests only. |
-| `references/wallet.md` | Creating, showing, or activating the user's Obelisk wallet (`obelisk wallet ...`). |
 
 ## Wallet
 
-Wallet requests ("帮我创建 Obelisk 钱包", "activate my wallet", "what is my
-Obelisk address") are not history retrieval. Read `references/wallet.md` and
-use `obelisk wallet create | show | activate`. Activation writes on chain:
-run `obelisk wallet activate` to preview it, show the preview, and add
-`--confirm` only after the user agrees. Never ask for or print a private key.
+Wallet requests ("帮我创建 Obelisk 钱包", "activate my wallet") are not history
+retrieval. They belong to the `obelisk-wallet` skill, which ships next to this
+one. Activation writes on chain, so preview it with `obelisk wallet activate`
+and add `--confirm` only after the user agrees.
 
 ## Query Routing
 

@@ -262,7 +262,8 @@ skill-doc/                    # Source for the docs-only obelisk agent skill
     └── recap/                # Per-card recap retrieval + writing references
 
 agent-skills/                 # Standalone docs-only skills shipped with obelisk
-└── obelisk-distill/          # 「沉淀 Skill」: distill a Skill draft from history
+├── obelisk-distill/          # 「沉淀 Skill」: distill a Skill draft from history
+└── obelisk-wallet/           # Create and activate the BOT Chain wallet
 
 app/                          # Electron desktop app (electron-vite + Vue)
 ├── src/main/                 # TypeScript main process (consumes shared core)

@@ -36,6 +36,8 @@ them when the installer asks which skills to install:
 
 - `obelisk-distill` (「沉淀 Skill」): distill a Skill draft with a provenance
   card from your own session history, e.g. "把我最近准备求职材料的做法沉淀成一个 Skill".
+- `obelisk-wallet`: create and activate your Obelisk wallet (your BOT Chain
+  identity), e.g. "帮我创建 Obelisk 钱包".
 
 ## Source
 

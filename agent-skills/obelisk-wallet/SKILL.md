@@ -1,4 +1,16 @@
-# Wallet and Activation
+---
+name: obelisk-wallet
+description: >
+  Create, show, or activate the user's Obelisk wallet, their identity on BOT Chain, with the
+  `obelisk wallet` CLI. Use when the user says "帮我创建 Obelisk 钱包", "创建钱包", "激活钱包",
+  "我的 Obelisk 地址", "create my Obelisk wallet", "activate my wallet", or asks whether their
+  wallet is activated. Never scaffold a wallet project, never ask for or print a private key, and
+  never import an existing wallet in conversation (that happens in the Obelisk App).
+allowed-tools:
+  - Bash(obelisk:*)
+---
+
+# Obelisk wallet
 
 Obelisk gives each user a wallet address as their identity on BOT Chain. Shares,
 Skills, and usage reports are signed with it. The Obelisk online service submits

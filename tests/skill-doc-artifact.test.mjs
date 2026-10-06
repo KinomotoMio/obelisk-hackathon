@@ -57,3 +57,22 @@ test('build:skill ships the standalone 沉淀 Skill as a docs-only skill that de
   // Claude Code rewrites these on load; the skill must load exactly as written.
   assert.deepEqual(findDynamicSkillContent(skill), []);
 });
+
+test('build:skill ships the standalone wallet skill, which previews before writing on chain', () => {
+  execFileSync(npmCommand, ['run', 'build:skill'], {
+    cwd: repoRoot,
+    encoding: 'utf8',
+    shell: process.platform === 'win32',
+    stdio: 'pipe',
+  });
+
+  const wallet = join(repoRoot, 'dist', 'agent-skills', 'obelisk-wallet');
+  assert.equal(existsSync(join(wallet, 'scripts')), false, 'skill must not ship a second runtime');
+  const skill = readFileSync(join(wallet, 'SKILL.md'), 'utf8');
+  assert.match(skill, /^---\nname: obelisk-wallet\n/);
+  assert.match(skill, /帮我创建 Obelisk 钱包/);
+  assert.match(skill, /Bash\(obelisk:\*\)/);
+  assert.match(skill, /obelisk wallet activate --confirm/);
+  assert.match(skill, /Do not add `--confirm` on your own/);
+  assert.deepEqual(findDynamicSkillContent(skill), []);
+});
