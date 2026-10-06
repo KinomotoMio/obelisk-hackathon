@@ -8,7 +8,7 @@
   "scripts": {
     "build": "hardhat build",
     "test": "hardhat test",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "hardhat build && tsc --noEmit"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox-viem": "^5.0.7",
