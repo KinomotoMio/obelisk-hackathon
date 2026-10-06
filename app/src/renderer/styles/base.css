@@ -23,6 +23,8 @@
   --danger-soft: rgba(248,113,113,0.12);
   --warn: #fbbf24;
   --warn-soft: rgba(251,191,36,0.14);
+  --chain: #38bdf8;
+  --chain-soft: rgba(56,189,248,0.12);
   --workflow: #f59e0b;
   --workflow-soft: rgba(245,158,11,0.12);
   --workflow-strong: rgba(245,158,11,0.28);

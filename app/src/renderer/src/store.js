@@ -13,6 +13,9 @@ export const state = reactive({
   projects: [],
   sources: [],
   stats: {},
+  skills: [],              // Skill library summaries (skills:list)
+  skillsLoaded: false,
+  skillsError: null,
   view: 'active',          // 'active' | 'archived'
   query: '',
   projectFilter: 'all',

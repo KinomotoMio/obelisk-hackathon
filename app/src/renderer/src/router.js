@@ -16,6 +16,8 @@ const Recap = () => import('./views/RecapList.vue');
 const RecapDetail = () => import('./views/RecapDetail.vue');
 const RecapExport = () => import('./views/RecapExport.vue');
 const Settings = () => import('./views/Settings.vue');
+const SkillList = () => import('./views/SkillList.vue');
+const SkillDetail = () => import('./views/SkillDetail.vue');
 
 const routes = [
   {
@@ -66,6 +68,17 @@ const routes = [
     path: '/recap-export',
     name: 'RecapExport',
     component: RecapExport
+  },
+  {
+    path: '/skills',
+    name: 'SkillList',
+    component: SkillList
+  },
+  {
+    path: '/skills/:name',
+    name: 'SkillDetail',
+    component: SkillDetail,
+    props: true
   },
   {
     path: '/settings',

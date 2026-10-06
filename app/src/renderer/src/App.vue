@@ -21,11 +21,16 @@ import { formatProjectLabel } from './utils.js';
 import { buildSidebarProjects } from './sidebar-projects.mjs';
 import { resolveGlobalShortcut } from './keyboard-shortcuts.mjs';
 import { sourceLabel } from './source-catalog.mjs';
+import { loadSkills } from './skill-data.js';
+import { DISTILL_EXAMPLE_PROMPT } from './skill-prompts.mjs';
+import PromptCopyButton from './components/PromptCopyButton.vue';
+import PromptCopyToast from './components/PromptCopyToast.vue';
 
 const router = useRouter();
 const route = useRoute();
 let searchTimer = null;
 let stopSourceUpdates = null;
+let stopSkillUpdates = null;
 
 const routeSession = computed(() => {
   return getSessionSummary(route.params.id);
@@ -37,6 +42,7 @@ const activeCount = computed(() => state.memories.filter(m => !m.archived).lengt
 const archivedCount = computed(() => state.memories.filter(m => m.archived).length);
 const totalMemoryCount = computed(() => state.memories.length);
 const sessionCount = computed(() => state.sessions.length);
+const skillCount = computed(() => state.skills.length);
 
 const currentRouteType = computed(() => {
   const name = route.name;
@@ -44,6 +50,7 @@ const currentRouteType = computed(() => {
   if (name === 'Activity') return 'activity';
   if (name === 'Recap' || name === 'RecapDetail') return 'recap';
   if (name === 'Settings') return 'settings';
+  if (name === 'SkillList' || name === 'SkillDetail') return 'skills';
   return 'memory';
 });
 
@@ -92,6 +99,10 @@ const windowTitle = computed(() => {
     scopeText = `Recap · ${route.params.id}`;
   } else if (route.name === 'Settings') {
     scopeText = 'Settings';
+  } else if (route.name === 'SkillList') {
+    scopeText = 'Skill';
+  } else if (route.name === 'SkillDetail') {
+    scopeText = `Skill · ${route.params.name}`;
   } else if (route.name?.startsWith('Session')) {
     if (route.name === 'SessionDetail' || route.name === 'SubagentDetail') {
       const s = routeSession.value;
@@ -128,6 +139,8 @@ function handleSidebarRoute(routeName) {
     router.push('/activity');
   } else if (routeName === 'recap') {
     router.push('/recap');
+  } else if (routeName === 'skills') {
+    router.push('/skills');
   } else {
     router.push('/memory');
   }
@@ -201,12 +214,16 @@ onMounted(() => {
   window.addEventListener('keydown', handleGlobalKeydown);
   document.addEventListener('pointerdown', handleDocumentPointerDown);
   stopSourceUpdates = window.obelisk?.onIndexUpdated?.(() => loadSourceDots()) ?? null;
+  loadSkills();
+  stopSkillUpdates = window.obelisk?.onSkillsUpdated?.(() => loadSkills()) ?? null;
 });
 onUnmounted(() => {
   window.removeEventListener('keydown', handleGlobalKeydown);
   document.removeEventListener('pointerdown', handleDocumentPointerDown);
   stopSourceUpdates?.();
   stopSourceUpdates = null;
+  stopSkillUpdates?.();
+  stopSkillUpdates = null;
   clearTimeout(searchTimer);
 });
 
@@ -356,6 +373,18 @@ provide('recapGenerateOpen', recapGenerateOpen);
             </svg>
             <span class="label">Archived</span>
             <span class="badge">{{ archivedCount }}</span>
+          </button>
+          <button
+            class="sidebar-item"
+            :class="{ active: currentRouteType === 'skills' }"
+            @click="handleSidebarRoute('skills')"
+          >
+            <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round">
+              <path d="M4.5 2.5h7L14 6l-6 7.5L2 6z"/>
+              <path d="M2 6h12M6.5 2.5L5.5 6 8 13.5 10.5 6l-1-3.5"/>
+            </svg>
+            <span class="label">Skill</span>
+            <span class="badge">{{ skillCount }}</span>
           </button>
         </div>
 
@@ -521,6 +550,12 @@ provide('recapGenerateOpen', recapGenerateOpen);
               <span v-if="route.name === 'Activity'" class="crumb terminal">Activity</span>
               <span v-if="route.name === 'Recap'" class="crumb terminal">Recap</span>
               <span v-if="route.name === 'Settings'" class="crumb terminal">Settings</span>
+              <span v-if="route.name === 'SkillList'" class="crumb terminal">Skill</span>
+              <router-link v-if="route.name === 'SkillDetail'" class="crumb" to="/skills">Skill</router-link>
+              <template v-if="route.name === 'SkillDetail'">
+                <span class="crumb-sep">/</span>
+                <span class="crumb terminal">{{ route.params.name }}</span>
+              </template>
               <router-link v-if="route.name === 'RecapDetail'" class="crumb" to="/recap">Recap</router-link>
               <template v-if="route.name === 'RecapDetail'">
                 <span class="crumb-sep">/</span>
@@ -541,6 +576,14 @@ provide('recapGenerateOpen', recapGenerateOpen);
               <span>Generate</span>
             </button>
           </template>
+
+          <!-- Skill toolbar action: drafting happens in the AI coding assistant -->
+          <PromptCopyButton
+            v-if="route.name === 'SkillList'"
+            label="沉淀新 Skill"
+            variant="toolbar"
+            :prompt="DISTILL_EXAMPLE_PROMPT"
+          />
 
           <!-- Source filter (session list only, multi-source) -->
           <div
@@ -613,6 +656,7 @@ provide('recapGenerateOpen', recapGenerateOpen);
             :key="route.name === 'SessionDetail' ? `session:${route.params.id}` : undefined"
           />
         </router-view>
+        <PromptCopyToast />
       </main>
     </div>
   </div>
