@@ -13,3 +13,8 @@ HANDOFF.md
 app/build/
 app/scripts/
 app/*.html
+chain/artifacts/
+chain/cache/
+chain/types/
+chain/coverage/
+chain/deployments/31337.json

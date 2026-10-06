@@ -20,6 +20,12 @@ export default tseslint.config(
       '.dev.docs/**',
       '.obelisk/**',
       '.claude/**',
+      // chain/ is a standalone Hardhat project; lint its sources, not its
+      // generated build output.
+      'chain/artifacts/**',
+      'chain/cache/**',
+      'chain/types/**',
+      'chain/coverage/**',
     ],
   },
   js.configs.recommended,

@@ -1,0 +1,21 @@
+{
+  "name": "@obelisk/chain",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Obelisk on-chain records on BOT Chain: key registry, share authorization, Skill assets, and usage statistics.",
+  "license": "AGPL-3.0",
+  "scripts": {
+    "build": "hardhat build",
+    "test": "hardhat test",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox-viem": "^5.0.7",
+    "@openzeppelin/contracts": "^5.6.1",
+    "@types/node": "^24.19.1",
+    "hardhat": "^3.18.1",
+    "typescript": "~6.0.3",
+    "viem": "^2.57.3"
+  }
+}
