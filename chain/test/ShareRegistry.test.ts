@@ -9,7 +9,7 @@ import { getAddress, type Hex } from "viem";
 import type { PrivateKeyAccount } from "viem/accounts";
 
 import { OpenStatus, obeliskDomain, shareRegistryTypes } from "../eip712.js";
-import { b32, deadlineAfter, offchainUser } from "./helpers.js";
+import { b32, deadlineAfter, offchainUser } from "../test-support/helpers.js";
 
 const { viem, networkHelpers } = await network.create();
 const publicClient = await viem.getPublicClient();
