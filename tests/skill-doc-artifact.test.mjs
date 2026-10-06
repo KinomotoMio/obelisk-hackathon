@@ -96,3 +96,24 @@ test('build:skill ships the standalone share skill, which keeps privacy findings
   assert.match(skill, /never print or look up the values/);
   assert.deepEqual(findDynamicSkillContent(skill), []);
 });
+
+test('build:skill ships the standalone Skill mint and fetch skill, which previews before writing', () => {
+  execFileSync(npmCommand, ['run', 'build:skill'], {
+    cwd: repoRoot,
+    encoding: 'utf8',
+    shell: process.platform === 'win32',
+    stdio: 'pipe',
+  });
+
+  const assets = join(repoRoot, 'dist', 'agent-skills', 'obelisk-skill-assets');
+  assert.equal(existsSync(join(assets, 'scripts')), false, 'skill must not ship a second runtime');
+  const skill = readFileSync(join(assets, 'SKILL.md'), 'utf8');
+  assert.match(skill, /^---\nname: obelisk-skill-assets\n/);
+  assert.match(skill, /铸造 Skill/);
+  assert.match(skill, /取用 Skill/);
+  assert.match(skill, /Bash\(obelisk:\*\)/);
+  assert.match(skill, /obelisk skill mint <name> --confirm <fingerprint>/);
+  assert.match(skill, /obelisk skill fetch <fingerprint> --confirm/);
+  assert.match(skill, /Do not add `--confirm` on your own/);
+  assert.deepEqual(findDynamicSkillContent(skill), []);
+});

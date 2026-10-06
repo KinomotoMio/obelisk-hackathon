@@ -184,6 +184,14 @@ encrypts content for someone else and writes on chain: preview with
 user agrees. Report privacy findings by type and location only; never look up
 or quote their values.
 
+## Minting and fetching Skills
+
+Requests to mint a Skill from the local library ("铸造 Skill", "确认并铸造",
+"mint this Skill") or to fetch a minted Skill into Claude Code ("取用 Skill「…」",
+"fetch Skill #12") belong to the `obelisk-skill-assets` skill. Both preview
+first: `obelisk skill mint <name>` and `obelisk skill fetch <id | fingerprint>`
+change nothing, and the `--confirm` step runs only after the user agrees.
+
 ## Query Routing
 
 Before writing a query, classify the task. Progressive disclosure is useful, but

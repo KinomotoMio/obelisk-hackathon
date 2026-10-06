@@ -51,6 +51,30 @@ text could no longer be read (the index keeps 10,000 characters; longer loads
 are re-read from the transcript). With a name it prints that Skill's versions,
 including ones never invoked, and every load.
 
+## Minting and fetching Skills
+
+`obelisk skill mint` writes a library Skill on BOT Chain (#16): author,
+fingerprint, birth scenes (in the current vocabulary version), and parent
+Skill. The online service relays the signed `MintSkill` (or `PublishVersion`
+for a Skill minted before), pays the fee, and stores the body publicly.
+`obelisk skill fetch` installs a minted version into Claude Code (#17) after
+checking the served body against its on-chain fingerprint.
+
+```bash
+obelisk skill mint <name>                             # preview: what goes on chain
+obelisk skill mint <name> --confirm <fingerprint>     # sign the previewed version; the service pays
+obelisk skill fetch <skill id | fingerprint> [--version <n>]   # preview, with the full body
+obelisk skill fetch <fingerprint> --confirm [--name <name>] [--project <dir>]
+```
+
+Both need a confirmation that names the previewed fingerprint, so a draft or
+Skill that changed after the preview is never what gets signed or installed.
+Re-running a mint confirmation finishes an interrupted mint without writing on
+chain again. Fetched Skills go to `~/.claude/skills/<name>/SKILL.md` (or
+`<dir>/.claude/skills` with `--project`), and each install is recorded in
+`<data dir>/skills/fetched-skills.json`, so `obelisk skill invocations` counts
+their uses as uses of the minted version (`state: "fetched"`).
+
 ## Wallet
 
 `obelisk wallet` manages the data directory's BOT Chain wallet (#4). The private
