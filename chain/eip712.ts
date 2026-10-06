@@ -15,6 +15,7 @@ export const EIP712_VERSION = "1";
 export const domainNames = {
   KeyRegistry: "ObeliskKeyRegistry",
   ShareRegistry: "ObeliskShareRegistry",
+  SkillRegistry: "ObeliskSkillRegistry",
 } as const;
 
 export type ObeliskContractName = keyof typeof domainNames;
@@ -69,4 +70,22 @@ export const OpenStatus = {
   Exhausted: 3,
   Expired: 4,
   Revoked: 5,
+} as const;
+
+export const skillRegistryTypes = {
+  MintSkill: [
+    { name: "author", type: "address" },
+    { name: "fingerprint", type: "bytes32" },
+    { name: "birthScenes", type: "string[]" },
+    { name: "parentSkillId", type: "uint256" },
+    { name: "nonce", type: "uint256" },
+    { name: "deadline", type: "uint256" },
+  ],
+  PublishVersion: [
+    { name: "author", type: "address" },
+    { name: "skillId", type: "uint256" },
+    { name: "fingerprint", type: "bytes32" },
+    { name: "nonce", type: "uint256" },
+    { name: "deadline", type: "uint256" },
+  ],
 } as const;
