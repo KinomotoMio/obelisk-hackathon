@@ -63,6 +63,7 @@ obelisk wallet activate            # preview registering the encryption key
 obelisk wallet activate --confirm  # sign it; the online service submits and pays
 ```
 
-Activation goes through the Obelisk online service (`service/`); set
-`OBELISK_SERVICE_URL` to its URL. The CLI signs only for the contract addresses
+Activation goes through the Obelisk online service (`service/`). The CLI uses
+the deployed service by default; set `OBELISK_SERVICE_URL` to point it at
+another one, such as `http://127.0.0.1:8787` under `wrangler dev`. The CLI signs only for the contract addresses
 pinned from `chain/deployments/` (`npm run sync:chain` refreshes them).

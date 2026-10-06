@@ -11,7 +11,7 @@ import { getAddress, type Address, type Hex } from 'viem';
 import { pinnedDeployments, type ObeliskContractName } from './chain-protocol.ts';
 
 /** The deployed service. Override with OBELISK_SERVICE_URL. */
-export const DEFAULT_SERVICE_URL: string | null = null;
+export const DEFAULT_SERVICE_URL: string | null = 'https://obelisk-service.kinomotomiovo.workers.dev';
 
 /** Hardhat's local chain; accepted without pinning for development. */
 export const LOCAL_DEV_CHAIN_ID = 31337;

@@ -17,6 +17,7 @@ import { delimiter, join } from 'node:path';
 import { getAddress, recoverTypedDataAddress } from 'viem';
 
 import { keyRegistryTypes, obeliskDomain, pinnedDeployments } from '../packages/core/src/chain-protocol.ts';
+import { DEFAULT_SERVICE_URL, resolveServiceUrl } from '../packages/core/src/obelisk-service.ts';
 import { cliEntry, repoRoot } from './cli-test-helpers.mjs';
 import { makeTempDir } from './temp-dirs.mjs';
 
@@ -149,7 +150,8 @@ function cliEnv(root, keychain, home, serviceUrl) {
     FAKE_KEYCHAIN_FILE: keychain.store,
     FAKE_KEYCHAIN_LOG: keychain.log,
   };
-  if (serviceUrl) env.OBELISK_SERVICE_URL = serviceUrl; else delete env.OBELISK_SERVICE_URL;
+  // Never fall through to the deployed service from a test.
+  env.OBELISK_SERVICE_URL = serviceUrl ?? 'http://127.0.0.1:9';
   return env;
 }
 
@@ -234,9 +236,8 @@ test('wallet commands explain what is missing', { skip: !supported && 'system ke
   assert.equal(existsSync(join(root, 'nobody', 'wallet.json')), false);
 
   await runCliAsync(['wallet', 'create'], cliEnv(root, keychain, join(root, 'dave')));
-  const noService = await runCliAsync(['wallet', 'activate'], cliEnv(root, keychain, join(root, 'dave')));
-  assert.equal(noService.status, 1);
-  assert.match(noService.json.error, /OBELISK_SERVICE_URL/);
+  assert.equal(resolveServiceUrl({}), DEFAULT_SERVICE_URL);
+  assert.equal(resolveServiceUrl({ OBELISK_SERVICE_URL: 'http://127.0.0.1:8787/' }), 'http://127.0.0.1:8787');
 
   const hostile = await startFakeService({ contracts: { ...testnet.contracts, KeyRegistry: '0x000000000000000000000000000000000000dEaD' } });
   try {

@@ -58,8 +58,8 @@ not been confirmed yet. Run `obelisk wallet show` again a little later. Do
 ## Errors worth recognizing
 
 - `No Obelisk wallet for <dir>`: run `obelisk wallet create` first.
-- `OBELISK_SERVICE_URL`: the online service address is not configured. Tell
-  the user. Do not guess a URL.
+- `OBELISK_SERVICE_URL`: the online service address set in that variable is
+  not usable. Tell the user. Do not guess a URL.
 - `Activation was not submitted: … relay wallet … top it up` or `… no relay
   wallet configured`: the problem is on the online service's side, and nothing
   was signed on chain. Tell the user to try later or contact the service
