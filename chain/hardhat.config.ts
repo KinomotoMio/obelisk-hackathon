@@ -1,21 +1,31 @@
 import hardhatToolboxViem from "@nomicfoundation/hardhat-toolbox-viem";
 import { configVariable, defineConfig } from "hardhat/config";
 
-// BOT Chain documents Cancun as its EVM target; compile and simulate against
-// the same fork so local tests exercise the opcodes the real chain accepts.
+// BOT Chain targets Cancun (issue #2); compile and simulate against the same
+// fork so local tests exercise the opcodes the real chain accepts.
 const EVM = "cancun";
+
+const compiler = {
+  version: "0.8.28",
+  settings: {
+    evmVersion: EVM,
+    optimizer: { enabled: true, runs: 200 },
+    // The *BySig entry points take the user's fields plus deadline and
+    // signature, which exceeds the legacy pipeline's stack; the IR pipeline
+    // handles it without reshaping the public ABI.
+    viaIR: true,
+  },
+};
 
 export default defineConfig({
   plugins: [hardhatToolboxViem],
   solidity: {
-    version: "0.8.28",
-    settings: {
-      evmVersion: EVM,
-      optimizer: { enabled: true, runs: 200 },
-      // The *BySig entry points take the user's fields plus deadline and
-      // signature, which exceeds the legacy pipeline's stack; the IR pipeline
-      // handles it without reshaping the public ABI.
-      viaIR: true,
+    // Both profiles are spelled out: Hardhat's implicit `production` profile
+    // drops custom settings, which would deploy bytecode built differently
+    // (EVM version, IR pipeline) from what the tests ran against.
+    profiles: {
+      default: compiler,
+      production: { ...compiler, isolated: true },
     },
   },
   networks: {
