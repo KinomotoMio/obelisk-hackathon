@@ -120,89 +120,123 @@ mktemp -d /tmp/obelisk-distill.XXXXXX
 
 From the user's sentence, work out:
 
-- **What to distill**: the kind of work ("准备求职材料", "review PRs in this
-  repo"). If it is too vague to search for, ask one short question, then go on.
-- **Time window**: "最近" / "recently" means roughly the last 90 days; a named
-  period means that period; otherwise all history.
-- **Search terms**: 4-10 terms in English *and* in the user's own words and
-  language, including synonyms and the concrete artifacts involved (for job
-  materials: `resume`, `cover letter`, `interview`, `简历`, `求职`, `面试`, `作品集`).
+- **What to distill.** Either a kind of work ("准备求职材料", "review PRs") or
+  the way the user works with agents in general ("怎么用 AI building 的模式",
+  "我的方法论"). For the second, the topic *is* the collaboration: how they
+  plan, split work, review, verify, correct the agent, and decide when
+  something is done. If the request is too vague to search for, ask one short
+  question, then go on.
+- **Projects.** Note every project the user names ("Obelisk 还有
+  Obelisk-Hackathon 还有 Tandem"). No names means all projects.
+- **Time window.** "最近" / "recently" / "最近一段时间" means roughly the last
+  90 days; a named period means that period; otherwise all history.
+- **Terms.** 4-10 terms in English *and* in the user's own words and language:
+  synonyms and concrete artifacts for a kind of work (`resume`, `cover letter`,
+  `简历`, `求职`, `面试`), or process words for a methodology (`plan`,
+  `review`, `PR`, `test`, `验收`, `拆分`, `计划`).
 - **Revising an existing draft?** If the user names a draft ("继续修改草稿 X",
   "从草稿 X 中去掉 session Y"), run `obelisk skill show <name>`, start from its
-  body and provenance, and skip to the step the change needs.
+  body and provenance, and go to [Revising a draft](#revising-a-draft).
 
 ## Step 2 — Find the evidence
 
-Run the locate query below with `obelisk --query <file>`. Write the script with
-the Write tool into the scratch directory; give the file a unique name so
-Obelisk can recognize your own session. It runs read-only in Obelisk's sandbox:
-`search()`, `sql()` (SELECT/WITH only), `sessions()`, `overview()`, and
-`context()` are available; nothing can write.
+Write each query with the Write tool into the scratch directory and run it with
+`obelisk --query <file>`. Give each file a unique name so Obelisk can recognize
+your own session. Queries run read-only in Obelisk's sandbox: `search()`,
+`sql()` (SELECT/WITH only), `sessions()`, `overview()`, and `context()` are
+available; nothing can write.
 
-Latin-script terms go through full-text `search()`. CJK text is indexed without
-word boundaries, so CJK terms use a bounded `LIKE` scan instead; each scan can
-take a few seconds on a large history, so keep CJK terms to the 2-4 most
-specific ones and pass `after` whenever the user gave a time window.
+**Scope the projects** (skip when the user named none). Project names in
+Obelisk come from the working directory, so one project can appear as several
+rows (worktrees, sibling checkouts, provider-specific folders), and a short
+name like `obelisk` also matches `obelisk-hackathon`. One query shows them all:
 
 ```js
-// Locate: sessions where the user did this kind of work.
-const terms = ['resume', 'cover letter', 'interview', '简历', '求职']; // from Step 1
-const after = '2026-07-01T00:00:00Z'; // ISO lower bound, or null for all history
+const names = ['obelisk', 'tandem'];   // from Step 1, lowercase
+const after = '2026-07-01T00:00:00Z';  // ISO lower bound, or '' for all history
+return sql(
+  `SELECT project, source, count(*) AS sessions, max(started_at) AS last
+   FROM sessions
+   WHERE started_at > ? AND (${names.map(() => 'lower(project) LIKE ?').join(' OR ')})
+   GROUP BY project, source ORDER BY last DESC LIMIT 60`,
+  after, ...names.map((n) => `%${n}%`),
+);
+```
 
-const CJK = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u;
+Keep the rows that are the user's projects, including their worktrees; drop
+look-alikes such as the folder this run itself is in. Turn what you keep into
+`LIKE` patterns for the next query. The `source` column also shows how the
+work splits between Claude Code and Codex.
+
+**Locate** sessions where the user did this kind of work. The user's own turns
+are the best signal: they show what the user asked for, accepted and pushed
+back on, in every provider at once.
+
+```js
+// Locate: sessions in scope, ranked by the user's own turns on this topic.
+const projects = ['%obelisk%', '%tandem%']; // LIKE patterns from the scope query; [] = all projects
+const after = '2026-07-01T00:00:00Z';        // ISO lower bound, or '' for all history
+const terms = ['plan', 'review', 'PR', 'test', '验收', '计划']; // from Step 1
+const pushback = ['不要', '不是这样', '改成', '别再', "don't", 'instead', 'not like', 'wrong'];
+
 const me = overview({ limit: 1 }).current.session_id;
+const scope = projects.length
+  ? `(${projects.map(() => 'lower(s.project) LIKE lower(?)').join(' OR ')})` : '1=1';
+const turns = sql(
+  `SELECT m.uuid, m.session_id, substr(m.text, 1, 600) AS text
+   FROM messages m JOIN sessions s ON s.id = m.session_id
+   WHERE ${scope} AND m.type = 'user' AND m.content_type = 'text'
+     AND COALESCE(m.is_meta, 0) = 0 AND COALESCE(m.is_sidechain, 0) = 0
+     AND COALESCE(m.visibility, 'visible') = 'visible' AND m.timestamp > ?
+   ORDER BY m.timestamp DESC LIMIT 4000`,
+  ...projects, after,
+);
+// Latin-script terms match whole words ("PR" not inside "print"); CJK terms match as substrings.
+const matchers = (words) => words.map((w) => ({ w, re: /^[ -~]+$/.test(w) ? new RegExp(`\\b${w}\\b`, 'i') : null }));
+const has = (text, ms) => ms.filter(({ w, re }) => (re ? re.test(text) : text.includes(w))).map(({ w }) => w);
+const [termMs, pushMs] = [matchers(terms), matchers(pushback)];
 const bySession = new Map();
-for (const term of terms) {
-  let rows;
-  if (CJK.test(term)) {
-    rows = sql(
-      `SELECT m.uuid, m.session_id, m.role, m.timestamp,
-              substr(m.text, max(1, instr(m.text, ?) - 80), 220) AS snippet
-       FROM messages m
-       WHERE m.text LIKE ? AND m.content_type = 'text'
-         AND COALESCE(m.is_meta, 0) = 0 AND COALESCE(m.visibility, 'visible') = 'visible'
-         AND m.timestamp > ?
-       ORDER BY m.timestamp DESC LIMIT 40`,
-      term, `%${term}%`, after ?? '',
-    );
-  } else {
-    rows = search(`"${term.replace(/"/g, '')}"`, { limit: 40, after: after ?? undefined })
-      .map((h) => ({ uuid: h.message.uuid, session_id: h.session.id, role: h.message.role,
-        timestamp: h.message.timestamp, snippet: (h.message.text || '').slice(0, 220) }));
+for (const t of turns) {
+  if (t.session_id === me) continue;
+  const text = t.text || '';
+  const hit = has(text, termMs);
+  const push = has(text, pushMs).length > 0;
+  const s = bySession.get(t.session_id) ?? { turns: 0, terms: new Set(), pushback: 0, samples: [] };
+  s.turns += 1;
+  hit.forEach((w) => s.terms.add(w));
+  if (push) s.pushback += 1;
+  if ((hit.length || push) && s.samples.length < 2) {
+    s.samples.push({ uuid: t.uuid, pushback: push, text: t.text.slice(0, 160) });
   }
-  for (const row of rows) {
-    if (row.session_id === me) continue;
-    const s = bySession.get(row.session_id) ?? { terms: new Set(), uuids: new Set(), userHits: 0, hits: 0, samples: [] };
-    s.terms.add(term);
-    if (s.uuids.has(row.uuid)) continue;
-    s.uuids.add(row.uuid);
-    s.hits += 1;
-    if (row.role === 'user') s.userHits += 1;
-    if (s.samples.length < 3 && (row.role === 'user' || s.samples.length < 2)) {
-      s.samples.push({ uuid: row.uuid, role: row.role, snippet: row.snippet });
-    }
-    bySession.set(row.session_id, s);
-  }
+  bySession.set(t.session_id, s);
 }
 const ranked = [...bySession.entries()]
-  .sort(([, a], [, b]) => b.terms.size - a.terms.size || b.userHits - a.userHits || b.hits - a.hits)
+  .filter(([, s]) => s.terms.size || s.pushback)
+  .sort(([, a], [, b]) => (b.terms.size + b.pushback) - (a.terms.size + a.pushback) || b.turns - a.turns)
   .slice(0, 15);
 const meta = new Map(sessions({ sessions: ranked.map(([id]) => id), limit: 15 }).map((s) => [s.id, s]));
 return ranked.map(([id, s]) => {
   const m = meta.get(id) ?? {};
   return { session_id: id, title: m.title, source: m.source, project: m.project,
-    started_at: m.started_at, messages: m.message_count,
-    matched: [...s.terms], user_hits: s.userHits, samples: s.samples };
+    started_at: m.started_at, user_turns: s.turns, matched: [...s.terms],
+    pushback_turns: s.pushback, samples: s.samples };
 });
 ```
 
-Read the candidates and keep only sessions that **directly show the user doing
-this work** (drafting, revising, correcting the agent, accepting a result). Drop
-sessions that merely mention a term, belong to an unrelated task, or are your own
-current session. Aim for 2-8 sessions.
+When the topic shows up mostly in what the agent produced rather than in what
+the user typed (a résumé the agent drafted, a report it wrote), add a
+`search('"<term>"', { project, after, limit: 20 })` per Latin-script term.
+Full-text search does not split CJK text into words, which is why the locate
+query matches CJK terms as plain substrings.
 
-Then read what happened in the kept sessions, at most 4 per query, to find what
-worked and what the user corrected:
+Read the candidates and keep only sessions that **directly show the user doing
+this work**: asking for it, steering it, correcting the agent, accepting a
+result. Drop sessions that merely mention a term, belong to unrelated work,
+are automated runs with no user in the loop, are earlier attempts at this same
+distill request, or are your own current session. Aim for 2-8 sessions; for a
+methodology across several projects, try to cover each project.
+
+**Read** what happened in the kept sessions, at most 4 per query:
 
 ```js
 // Read: the user's own turns and the last answer in each kept session.
@@ -212,7 +246,8 @@ return ids.map((id) => ({
   user_turns: sql(
     `SELECT uuid, timestamp, substr(text, 1, 200) AS text FROM messages
      WHERE session_id = ? AND type = 'user' AND content_type = 'text'
-       AND COALESCE(is_meta, 0) = 0 AND COALESCE(visibility, 'visible') = 'visible'
+       AND COALESCE(is_meta, 0) = 0 AND COALESCE(is_sidechain, 0) = 0
+       AND COALESCE(visibility, 'visible') = 'visible'
      ORDER BY timestamp LIMIT 25`, id),
   last_answer: sql(
     `SELECT uuid, substr(text, 1, 400) AS text FROM messages
@@ -225,12 +260,14 @@ return ids.map((id) => ({
 A **correction** is a user turn that pushes back on what the agent did ("不要…",
 "不是这样", "改成…", "no, …", "don't …", "instead …"). When one looks important,
 `context(uuid)` shows what the agent did right before it. A **pitfall** is
-something that went wrong and had to be redone. Only record what the turns show.
+something that went wrong and had to be redone. Record only what the turns
+show.
 
-**If no session directly shows the work, stop**: say what you searched for and
-that no direct evidence was found, and suggest other wording or a wider time
-window. Do not draft a Skill from general knowledge. With only one direct
-session, say the evidence is thin and ask whether to continue.
+**If no session directly shows the work, stop**: say what you searched for
+(projects, window, terms) and that no direct evidence was found, and suggest
+other wording or a wider window. A Skill drafted from general knowledge would
+have nothing to cite. With only one direct session, say the evidence is thin
+and ask whether to continue.
 
 ## Step 3 — Show the evidence
 
@@ -239,9 +276,9 @@ waiting. One line per session: title, tool, date, and the hit reason in the
 user's language:
 
 ```text
-找到 4 个直接相关的 session：
-1. 根据提交历史整理项目经历 · Claude Code · 09-12 — 命中：按"解决了什么问题"归纳经历，而不是罗列提交
-2. 按岗位要求改写履历要点 · Claude Code · 10-02 — 命中：被纠正"不要夸大个人在团队项目中的职责"
+找到 5 个直接相关的 session（Claude Code 2 · Codex 3；项目 A、B、C）：
+1. 拆分重构计划 · Codex · 09-20 — 命中：先让 agent 列计划、确认后再动手，分批提交
+2. 设计评审 · Claude Code · 10-01 — 命中：被纠正"不要一次改太多，一个提交只做一件事"
 …
 不相关的可以告诉我去掉，也可以稍后在 App 的 Skill tab 里去掉。
 ```
