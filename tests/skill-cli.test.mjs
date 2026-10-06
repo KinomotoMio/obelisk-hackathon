@@ -53,3 +53,22 @@ test('CLI saves, lists, shows, and fingerprints Skills in its own data directory
   assert.equal(missing.status, 1);
   assert.match(JSON.parse(missing.stdout).error, /Skill not found in the local library: nope/);
 });
+
+test('CLI lists the fixed scene list by dimension and refuses scenes outside it', () => {
+  const home = makeTempDir('obelisk-skills-cli-');
+  const env = { OBELISK_HOME: join(home, 'data') };
+  const scenes = runCli(['skill', 'scenes'], { home, env });
+  assert.equal(scenes.status, 0, scenes.stderr || scenes.stdout);
+  const dimensions = JSON.parse(scenes.stdout);
+  assert.deepEqual(dimensions.map((d) => d.id), ['domain', 'task', 'artifact']);
+  const ids = dimensions.flatMap((d) => d.scenes.map((scene) => scene.id));
+  assert.ok(ids.includes('artifact/resume'));
+  assert.ok(dimensions.every((d) => d.scenes.every((scene) => scene.id.startsWith(`${d.id}/`) && scene.label)));
+
+  const work = join(home, 'work');
+  mkdirSync(work, { recursive: true });
+  writeFileSync(join(work, 'draft.json'), JSON.stringify({ ...draft, body: '# Probe', birthScenes: ['求职材料'] }));
+  const refused = runCli(['skill', 'save', join(work, 'draft.json')], { home, env });
+  assert.equal(refused.status, 1);
+  assert.match(JSON.parse(refused.stdout).error, /not in the fixed scene list; pick ids from `obelisk skill scenes`/);
+});

@@ -22,6 +22,7 @@ import {
   skillBodyFromMarkdown,
   skillFingerprint,
 } from '../../core/src/skills.ts';
+import { SCENE_DIMENSIONS, SCENES } from '../../core/src/scenes.ts';
 
 async function main() {
   const args = process.argv.slice(2);
@@ -127,10 +128,17 @@ async function main() {
         }
         const skill = await saveSkillDraft(skillsDir, draft);
         emit({ name: skill.name, fingerprint: skill.draft?.fingerprint ?? null, path: skill.draft?.path ?? null, status: skill.status });
+      } else if (action === 'scenes') {
+        // The fixed scene list birth scenes are picked from, grouped by dimension.
+        emit(SCENE_DIMENSIONS.map((dimension) => ({
+          ...dimension,
+          scenes: SCENES.filter((scene) => scene.dimension === dimension.id)
+            .map(({ id, label, labelEn }) => ({ id, label, labelEn })),
+        })));
       } else if (action === 'fingerprint' && target) {
         emit({ fingerprint: skillFingerprint(skillBodyFromMarkdown(readFileSync(resolve(target), 'utf8'))) });
       } else {
-        throw new Error('Usage: obelisk skill list | show <name> | save <draft.json> | fingerprint <SKILL.md>');
+        throw new Error('Usage: obelisk skill list | show <name> | save <draft.json> | scenes | fingerprint <SKILL.md>');
       }
     } catch (error) { fail(error); }
     return;
@@ -150,7 +158,7 @@ async function main() {
     }
     return;
   }
-  process.stderr.write('Usage:\n  obelisk install [skills options]\n  obelisk --build\n  obelisk --search "text" [--nonce <token>]\n  obelisk --query <file.js>\n  obelisk --attune <file.js>\n  obelisk skill list | show <name> | save <draft.json> | fingerprint <SKILL.md>\n');
+  process.stderr.write('Usage:\n  obelisk install [skills options]\n  obelisk --build\n  obelisk --search "text" [--nonce <token>]\n  obelisk --query <file.js>\n  obelisk --attune <file.js>\n  obelisk skill list | show <name> | save <draft.json> | scenes | fingerprint <SKILL.md>\n');
   process.exitCode = 1;
 }
 
