@@ -1,13 +1,19 @@
 ---
 name: obelisk-distill
 description: >
-  「沉淀 Skill」: distill a reusable agent Skill from the user's own past Claude Code and Codex sessions,
-  using Obelisk to find the evidence, and save it as a draft with a provenance card in the local Obelisk
-  Skill library for the user to review. Use when the user asks to turn how they did something into a Skill:
-  "把我最近准备求职材料的做法沉淀成一个 Skill", "沉淀成 Skill", "提炼成一个 skill", "把这套做法做成 skill",
-  "turn how I did X into a skill", "distill a skill from my history", or when a prompt starts with
-  "用「沉淀 Skill」" (continue editing a draft, drop a source session). Not for answering history questions
-  (use obelisk) and never for minting.
+  「沉淀 Skill」: turn how the user actually works into a reusable Skill, distilled from their own
+  Claude Code, Codex and other agent sessions through Obelisk: an evidence list with hit reasons, a
+  Skill draft with a provenance card, saved to the local Obelisk Skill library for review. Use it when
+  the user wants to 沉淀, 提炼, 总结 or 整理 their way of doing something (a method, workflow,
+  methodology, habit, lessons, 经验, 套路) into a Skill or something reusable, from one project or
+  several, over a recent period or all of their history, even when they only say "呈现出来" or "以后照着做",
+  and including limits on what to keep ("只沉淀方法论", "不要泄露产品设计"). Also for revising a draft it saved.
+when_to_use: >
+  Examples: "把我最近准备求职材料的做法沉淀成一个 Skill"; "把我们在 A、B 和 C 里最近怎么用 AI building
+  的模式沉淀成 Skill，呈现出来，只沉淀方法论"; "回顾我这几个项目里跟 AI 协作的方法论，总结成一套可复用的经验";
+  "提炼我做 code review 的套路，以后让 agent 照着做"; "turn how I debug flaky tests into a skill";
+  "capture my release workflow so others can reuse it"; "用「沉淀 Skill」继续修改草稿 X". The user can also
+  type /obelisk-distill followed by the request. For a single past fact ("上次怎么修的") use obelisk instead.
 allowed-tools:
   - Read
   - Write
