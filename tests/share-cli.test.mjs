@@ -72,7 +72,7 @@ test('分享 session 给 0x…：隐私体检只给类型和位置，预览后�
   assert.match(draft, /^[0-9a-f]{8}$/);
   assert.equal(drafted.json.from, sender);
   assert.deepEqual(drafted.json.recipient, { address: recipient.address, activated: true, network: 'BOT Chain testnet (968)' });
-  assert.deepEqual(drafted.json.rules, { opens: 1, expires: '1 day after sending' });
+  assert.deepEqual(drafted.json.rules, { opens: 1, expires: '24 hours after sending' });
   assert.deepEqual(drafted.json.messages, { from: 1, to: total, count: total, toolCalls: 1, sessionHas: total });
   assert.equal(drafted.json.privacyCheck.found, 5);
   assert.deepEqual(drafted.json.privacyCheck.findings.map((f) => f.label), [

@@ -143,7 +143,8 @@ function parseRedact(value: string, findings: ShareFinding[]): number[] {
 // --- presentation ----------------------------------------------------------
 
 function describeDuration(seconds: number): string {
-  if (seconds % 86400 === 0) return `${seconds / 86400} day${seconds === 86400 ? '' : 's'}`;
+  // Whole days from 2 days up; "24 hours" reads as the user usually says it.
+  if (seconds % 86400 === 0 && seconds > 86400) return `${seconds / 86400} days`;
   if (seconds % 3600 === 0) return `${seconds / 3600} hour${seconds === 3600 ? '' : 's'}`;
   return `${Math.round(seconds / 60)} minutes`;
 }
