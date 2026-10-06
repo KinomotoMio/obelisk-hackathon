@@ -53,6 +53,13 @@ const RECAP_DIR = OBELISK_PATHS.recapDir;
 const SETTINGS_PATH = OBELISK_PATHS.settingsPath;
 const SKILLS_DIR = OBELISK_PATHS.skillsDir;
 
+// A custom OBELISK_HOME is an isolated store (a Playground role, or a dev build
+// running beside the installed App), so its Electron profile lives there too
+// instead of sharing the installed App's window state, storage, and caches.
+if (OBELISK_PATHS.layout === 'custom') {
+  app.setPath('userData', path.join(OBELISK_DIR, 'electron'));
+}
+
 function detectClaudeDir() {
   // macOS / Linux: ~/.claude
   if (process.platform !== 'win32') {

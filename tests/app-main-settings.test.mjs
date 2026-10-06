@@ -87,7 +87,7 @@ async function importMain() {
 // 'dialog', 'nativeImage', 'shell') must be present, even if unused by a test.
 function electronNamespace({ app, BrowserWindow, ipcMain }) {
   return {
-    app: app ?? { whenReady: () => Promise.resolve(), on() {}, quit() {} },
+    app: app ?? { whenReady: () => Promise.resolve(), on() {}, quit() {}, setPath() {} },
     BrowserWindow,
     ipcMain: ipcMain ?? { handle() {} },
     clipboard: {},
@@ -111,6 +111,7 @@ function captureAppHandlers(map) {
     whenReady: () => Promise.resolve(),
     on(event, handler) { map.set(event, handler); },
     quit() {},
+    setPath() {},
   };
 }
 
@@ -1653,10 +1654,11 @@ test('OBELISK_HOME gives the app its own database, settings, and recaps', async 
   }
 
   const appHandlers = new Map();
+  const setPaths = [];
   const restore = registerMocks([
     [ELECTRON_URL, {
       namedExports: electronNamespace({
-        app: { ...captureAppHandlers(appHandlers), getVersion: () => '0.0.0-test' },
+        app: { ...captureAppHandlers(appHandlers), getVersion: () => '0.0.0-test', setPath(name, value) { setPaths.push([name, value]); } },
         BrowserWindow: FakeBrowserWindow,
         ipcMain: { handle(channel, handler) { ipcHandlers.set(channel, handler); } },
       }),
@@ -1672,6 +1674,7 @@ test('OBELISK_HOME gives the app its own database, settings, and recaps', async 
     await importMain();
     const settings = await ipcHandlers.get('settings:get')();
     assert.equal(settings.dbPath, join(dataDir, 'obelisk.sqlite'));
+    assert.deepEqual(setPaths, [['userData', join(dataDir, 'electron')]], 'the Electron profile lives in the data directory too');
     assert.equal(settings.recapDir, join(dataDir, 'recap'));
     assert.equal(settings.claudeDir, claudeDir, 'settings come from the OBELISK_HOME settings.json');
     assert.ok(openedDbPaths.every(p => !p.startsWith(join(home, '.obelisk'))), `opened: ${openedDbPaths}`);
