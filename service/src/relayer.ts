@@ -126,9 +126,10 @@ export class Relayer {
     return this.#deps.walletClient?.account.address ?? null;
   }
 
-  async relay(body: unknown): Promise<RelayResult> {
+  /** `internal` admits the service's own actions (RecordOpen, #9); see actions.ts. */
+  async relay(body: unknown, { internal = false }: { internal?: boolean } = {}): Promise<RelayResult> {
     const { config, publicClient } = this.#deps;
-    const request = parseRelayRequest(body);
+    const request = parseRelayRequest(body, { internal });
     const contract = request.definition.contract;
     const address = config.contracts[contract];
     const abi = CONTRACT_ABIS[contract];

@@ -32,6 +32,7 @@ export interface RelayAction {
 
 // `RecordOpen` is deliberately absent: the online service submits it itself
 // as part of releasing a key package (#9), after checking the share's rules.
+// It lives in INTERNAL_ACTIONS, which `POST /v1/relay` never accepts.
 export const RELAY_ACTIONS = {
   RegisterKey: { contract: 'KeyRegistry', functionName: 'registerKeyBySig', signerField: 'user', types: keyRegistryTypes },
   CreateShare: { contract: 'ShareRegistry', functionName: 'createShareBySig', signerField: 'sender', types: shareRegistryTypes },
@@ -41,10 +42,23 @@ export const RELAY_ACTIONS = {
   ReportUsage: { contract: 'UsageStats', functionName: 'reportBySig', signerField: 'reporter', types: usageStatsTypes },
 } as const satisfies Record<string, RelayAction>;
 
+export const INTERNAL_ACTIONS = {
+  RecordOpen: { contract: 'ShareRegistry', functionName: 'recordOpenBySig', signerField: 'recipient', types: shareRegistryTypes },
+} as const satisfies Record<string, RelayAction>;
+
 export type RelayActionName = keyof typeof RELAY_ACTIONS;
+export type AnyActionName = RelayActionName | keyof typeof INTERNAL_ACTIONS;
 
 export function isRelayActionName(value: unknown): value is RelayActionName {
   return typeof value === 'string' && Object.hasOwn(RELAY_ACTIONS, value);
+}
+
+function actionDefinition(action: unknown, internal: boolean): RelayAction | null {
+  if (isRelayActionName(action)) return RELAY_ACTIONS[action];
+  if (internal && typeof action === 'string' && Object.hasOwn(INTERNAL_ACTIONS, action)) {
+    return INTERNAL_ACTIONS[action as keyof typeof INTERNAL_ACTIONS];
+  }
+  return null;
 }
 
 /** A request the caller got wrong; the message is safe to return verbatim. */
@@ -122,7 +136,7 @@ function parseStruct(fields: readonly TypedField[], value: unknown, types: TypeT
 }
 
 export interface ParsedRelayRequest {
-  action: RelayActionName;
+  action: AnyActionName;
   definition: RelayAction;
   /** Typed values, ready for EIP-712 hashing. */
   message: Record<string, unknown>;
@@ -134,23 +148,26 @@ export interface ParsedRelayRequest {
   args: unknown[];
 }
 
-/** Validate a `POST /v1/relay` body: `{ action, message, signature }`. */
-export function parseRelayRequest(body: unknown): ParsedRelayRequest {
+/**
+ * Validate a `POST /v1/relay` body: `{ action, message, signature }`.
+ * `internal` also admits INTERNAL_ACTIONS, for the service's own flows.
+ */
+export function parseRelayRequest(body: unknown, { internal = false }: { internal?: boolean } = {}): ParsedRelayRequest {
   if (typeof body !== 'object' || body === null) throw new RequestError(400, 'invalid_request', 'Request body must be a JSON object');
   const { action, message, signature } = body as Record<string, unknown>;
-  if (!isRelayActionName(action)) {
+  const definition = actionDefinition(action, internal);
+  if (!definition) {
     throw new RequestError(400, 'unknown_action', `action must be one of: ${Object.keys(RELAY_ACTIONS).join(', ')}`);
   }
   if (typeof signature !== 'string' || !isHex(signature, { strict: true }) || size(signature as Hex) < 65) {
     throw new RequestError(400, 'invalid_signature', 'signature must be 0x-prefixed hex of at least 65 bytes');
   }
-  const definition: RelayAction = RELAY_ACTIONS[action];
-  const fields = definition.types[action]!;
+  const fields = definition.types[action as string]!;
   const parsed = parseStruct(fields, message, definition.types, '');
   const args = fields.filter((field) => field.name !== 'nonce').map((field) => parsed[field.name]);
   args.push(signature);
   return {
-    action,
+    action: action as AnyActionName,
     definition,
     message: parsed,
     signer: parsed[definition.signerField] as Address,

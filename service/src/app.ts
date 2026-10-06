@@ -25,6 +25,13 @@ import { createShare, MAX_SHARE_BODY_BYTES, parseShareId, readShare, type ShareD
 
 export const MAX_BODY_BYTES = 64 * 1024;
 
+/**
+ * Path the service uses to hand the relay queue its own actions (RecordOpen).
+ * `handleRequest` only ever forwards `POST /v1/relay`, so no outside request
+ * reaches the queue with this path.
+ */
+export const INTERNAL_RELAY_PATH = '/internal/relay';
+
 const CORS_HEADERS = {
   'access-control-allow-origin': '*',
   'access-control-allow-methods': 'GET, POST, OPTIONS',
@@ -80,7 +87,8 @@ export async function readJsonBody(request: Request, maxBytes = MAX_BODY_BYTES):
 export async function relayResponse(relayer: Relayer | (() => Relayer), request: Request): Promise<Response> {
   try {
     const instance = typeof relayer === 'function' ? relayer() : relayer;
-    const result = await instance.relay(await readJsonBody(request));
+    const internal = new URL(request.url).pathname === INTERNAL_RELAY_PATH;
+    const result = await instance.relay(await readJsonBody(request), { internal });
     return json(result, result.status === 'confirmed' ? 200 : 202);
   } catch (error) {
     return errorResponse(error);
