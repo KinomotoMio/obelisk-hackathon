@@ -131,6 +131,7 @@ export function makeApp({ relayerKey = RELAYER_KEY, limits = {}, shares = memory
     storage: { kv: true, r2: true },
     shares,
     skillContent,
+    usageTrend,
     relay: (request) => relayResponse(relayer, request),
   };
   return {

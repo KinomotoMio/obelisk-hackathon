@@ -155,6 +155,81 @@ Content is written once per fingerprint: storing the same content again
 returns `created: false`, and different content returns `409 content_exists`.
 Requests are limited to 256 KiB.
 
+## Skill usage
+
+Real usage per Skill version, as wallets report it to `UsageStats` (#23,
+`obelisk usage`). Reports are running totals per (wallet, version), so each
+wallet counts once per version however often it reports. Everything except
+the trend is read from the contract's views.
+
+| Route | Returns |
+| --- | --- |
+| `GET /v1/skills/:skillId/usage[?weeks=8]` | a Skill's usage across all its versions, for the Skill detail page |
+| `GET /v1/usage/:fingerprint[?wallet=0x…][&weeks=8]` | one version's usage; `wallet` adds that wallet's own report |
+
+`GET /v1/skills/:skillId/usage`:
+
+```jsonc
+{
+  "chainId": 968,
+  "contract": "0x…",                 // UsageStats
+  "skillId": "12",
+  "author": "0x…",
+  "parentSkillId": "3",              // or null
+  "birthScenes": [{ "tag": "v1:artifact/resume", "label": "简历与履历", "dimension": "artifact" }],
+  "totalInvocations": 1284,          // 真实调用: sum over versions
+  "uniqueWallets": 312,              // distinct wallets that reported any version
+  "uniqueWalletsExact": true,        // false: more than 1000 reporters, so this is the largest version's count (a lower bound)
+  "lastReportAt": "2026-10-07T…Z",   // or null
+  "scenes": [                        // 实测场景, largest first
+    { "key": "0x…", "tag": "v1:role/engineer", "label": "工程师", "dimension": "role", "invocations": 918 }
+  ],
+  "outcomes": [{ "key": "0x…", "id": "outcome/smooth", "invocations": 742 }],
+  "results": {                       // outcomes in the shape the page shows
+    "smooth": 742, "rework": 120, "failed": 40, "unknown": 252,
+    "judged": 902,                   // smooth + rework + failed
+    "smoothRate": 0.82,              // 顺利率 = smooth / judged; null when judged is 0
+    "signals": { "tool-error": 77, "user-correction": 180, "repeated-edit": 0, "repeated-invocation": 0 }
+  },
+  "trend": {
+    "unit": "week", "source": "relayed_reports",
+    "available": true,               // false when this service has no KV bound
+    "weeks": [{ "start": "2026-08-17", "invocations": 41 }]   // oldest first, the last entry is the current week
+  },
+  "versions": [
+    { "index": 0, "fingerprint": "0x…", "publishedAt": "…", "totalInvocations": 1000, "uniqueWallets": 300, "lastReportAt": "…" }
+  ]
+}
+```
+
+`GET /v1/usage/:fingerprint` has the same `totalInvocations`, `uniqueWallets`,
+`lastReportAt`, `scenes`, `outcomes`, `results`, and `trend` for that one
+version, plus `fingerprint`, `skillId`, `versionIndex`, and with `?wallet=`,
+`wallet: { address, cumulative, reportedAt }`. A fingerprint that is not
+minted answers `404 unknown_skill`.
+
+How to read the fields:
+
+- **Scenes.** Bucket keys are `keccak256` of a scene tag in the current
+  vocabulary version (`sceneBucketKey` in
+  [`packages/core/src/scenes.ts`](../packages/core/src/scenes.ts)). The service
+  names every vocabulary tag and the Skill's own birth scenes; other user tags
+  come back with `tag`, `label`, and `dimension` set to `null`.
+- **Outcomes.** One distribution holds the judged results (`outcome/smooth`,
+  `outcome/rework`, `outcome/failed`, `outcome/unknown`) and the fact signals
+  (`signal/tool-error`, `signal/user-correction`, `signal/repeated-edit`,
+  `signal/repeated-invocation`); keys are `keccak256` of those ids
+  ([`packages/core/src/usage-buckets.ts`](../packages/core/src/usage-buckets.ts)).
+  Show `judged` and `unknown` next to `smoothRate`. Scene and outcome counts
+  are filled in by #25; until then they are empty arrays and zeros.
+- **Trend.** The chain keeps no history that a view can return and BOT Chain
+  has no `eth_getLogs`, so the trend comes from this service's own record of
+  the reports it relayed: each confirmed `ReportUsage` adds the invocations it
+  added to the week it was confirmed in (weeks start Monday 00:00 UTC). It
+  follows when usage was reported, not when each invocation happened, and
+  leaves out reports sent to the contract directly. `weeks` is 1–52.
+- Up to 64 scene and 64 outcome keys are read per version.
+
 ## Configuration
 
 | Name | Kind | Meaning |

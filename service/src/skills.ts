@@ -28,7 +28,7 @@ export const MAX_SKILL_CONTENT_BYTES = 256 * 1024;
 const MAX_DESCRIPTION_LENGTH = 1024;
 const NAME_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const FINGERPRINT_RE = /^(?:0x)?([0-9a-fA-F]{64})$/;
-const SKILL_ID_RE = /^([1-9]\d{0,30})$/;
+export const SKILL_ID_RE = /^([1-9]\d{0,30})$/;
 
 /** Where stored Skill content lives: R2 in the Worker, a Map in tests. */
 export interface SkillContentStore {
@@ -65,14 +65,14 @@ function contentKey(chainId: number, fingerprint: Hex): string {
   return `skills/${chainId}/${fingerprint}.json`;
 }
 
-function parseFingerprint(value: string): Hex | null {
+export function parseFingerprint(value: string): Hex | null {
   const match = FINGERPRINT_RE.exec(value);
   return match ? (`0x${match[1]!.toLowerCase()}` as Hex) : null;
 }
 
 const ZERO = `0x${'0'.repeat(64)}`;
 
-async function readVersionRef(deps: SkillRouteDeps, fingerprint: Hex) {
+export async function readVersionRef(deps: SkillRouteDeps, fingerprint: Hex) {
   const [skillId, versionIndex] = await deps.publicClient.readContract({
     address: deps.config.contracts.SkillRegistry,
     abi: CONTRACT_ABIS.SkillRegistry,
@@ -82,7 +82,7 @@ async function readVersionRef(deps: SkillRouteDeps, fingerprint: Hex) {
   return skillId === 0n ? null : { skillId, versionIndex: Number(versionIndex) };
 }
 
-async function readSkillRecord(deps: SkillRouteDeps, skillId: bigint) {
+export async function readSkillRecord(deps: SkillRouteDeps, skillId: bigint) {
   const count = await deps.publicClient.readContract({
     address: deps.config.contracts.SkillRegistry,
     abi: CONTRACT_ABIS.SkillRegistry,
@@ -98,7 +98,7 @@ async function readSkillRecord(deps: SkillRouteDeps, skillId: bigint) {
   return { author, parentSkillId, createdAt, versionCount: Number(versionCount), birthScenes: [...birthScenes] };
 }
 
-async function readVersion(deps: SkillRouteDeps, skillId: bigint, index: number) {
+export async function readVersion(deps: SkillRouteDeps, skillId: bigint, index: number) {
   const [fingerprint, publishedAt] = await deps.publicClient.readContract({
     address: deps.config.contracts.SkillRegistry,
     abi: CONTRACT_ABIS.SkillRegistry,
@@ -108,13 +108,13 @@ async function readVersion(deps: SkillRouteDeps, skillId: bigint, index: number)
   return { fingerprint: fingerprint.toLowerCase() as Hex, publishedAt };
 }
 
-async function readStored(deps: SkillRouteDeps, fingerprint: Hex): Promise<StoredSkillContent | null> {
+export async function readStored(deps: SkillRouteDeps, fingerprint: Hex): Promise<StoredSkillContent | null> {
   if (!deps.skillContent) return null;
   const text = await deps.skillContent.get(contentKey(deps.config.chain.id, fingerprint));
   return text === null ? null : JSON.parse(text) as StoredSkillContent;
 }
 
-const iso = (seconds: bigint) => new Date(Number(seconds) * 1000).toISOString();
+export const iso = (seconds: bigint) => new Date(Number(seconds) * 1000).toISOString();
 
 /** GET /v1/skills/:ref */
 export async function readMintedSkill(deps: SkillRouteDeps, ref: string, versionParam: string | null) {

@@ -143,6 +143,7 @@ export default {
         storage: { kv: Boolean(env.INDEX), r2: Boolean(env.BLOBS) },
         shares: cloudflareShareStore(env.BLOBS, env.INDEX),
         skillContent: r2SkillContent(env.BLOBS),
+        usageTrend: kvUsageTrend(env.INDEX),
         relay: (forwarded) => env.RELAY_QUEUE.get(env.RELAY_QUEUE.idFromName('relay')).fetch(forwarded),
       });
     } catch (error) {
