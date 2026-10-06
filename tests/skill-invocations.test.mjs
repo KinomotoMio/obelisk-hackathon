@@ -15,6 +15,7 @@ import {
   skillFingerprint,
 } from '../packages/core/src/skills.ts';
 import { createBuiltinProviderRegistry } from '../packages/core/src/providers/builtins.ts';
+import { recordSkillFetch } from '../packages/core/src/skill-fetches.ts';
 import {
   recognizeSkillInvocations,
   skillUsageFor,
@@ -230,4 +231,23 @@ test('the CLI refuses usage for a Skill that is not in the library', () => {
   const result = runCli(['skill', 'invocations', 'nope'], { home });
   assert.equal(result.status, 1);
   assert.match(JSON.parse(result.stdout).error, /Skill not found in the local library: nope/);
+});
+
+test('fetched minted versions map to their installed name; one already in the library under that name counts once', async () => {
+  const home = makeTempDir('obelisk-skill-usage-fetched-');
+  const skillsDir = join(home, 'skills');
+  await saveSkillDraft(skillsDir, { name: 'fingerprint-probe', description: 'probe', body: probeMd });
+  const fetch = (name, fingerprint) => recordSkillFetch(skillsDir, {
+    name, fingerprint, chainId: 968, skillId: '7', versionIndex: 0, author: '0x00000000000000000000000000000000000000b2',
+    installedTo: join(home, '.claude', 'skills', name, 'SKILL.md'), fetchedAt: '2026-10-07T00:00:00.000Z',
+  });
+  await fetch('fingerprint-probe', probeFp);
+  await fetch('long-probe', longFp);
+  await fetch('long-probe', longFp);
+  const versions = await skillVersionsByFingerprint(skillsDir);
+  assert.deepEqual(versions.get(probeFp).map((match) => [match.name, match.state]), [['fingerprint-probe', 'draft']]);
+  assert.deepEqual(
+    versions.get(longFp).map((match) => ({ name: match.name, state: match.state, skillId: match.fetched.skillId })),
+    [{ name: 'long-probe', state: 'fetched', skillId: '7' }],
+  );
 });

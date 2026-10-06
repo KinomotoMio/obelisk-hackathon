@@ -24,6 +24,7 @@
 import { TEXT_LIMIT } from './parsing.ts';
 import { storedSessionCursor } from './provider-indexing.ts';
 import type { ProviderRegistry } from './providers/registry.ts';
+import { listSkillFetches } from './skill-fetches.ts';
 import { listSkills, parseLoadedSkill, readSkill, skillFingerprint } from './skills.ts';
 import type { SkillMint } from './skills.ts';
 import type { SqliteDb } from './sqlite-types.ts';
@@ -155,13 +156,17 @@ export function recognizeSkillInvocations(
 export interface SkillVersionMatch {
   name: string;
   fingerprint: string;
-  // minted: a frozen, minted version; draft: the current unminted draft.
-  state: 'minted' | 'draft';
+  // minted: a frozen, minted version; draft: the current unminted draft;
+  // fetched: another author's minted version installed by `obelisk skill fetch`.
+  state: 'minted' | 'draft' | 'fetched';
   mint: SkillMint | null;
+  fetched?: { chainId: number; skillId: string; versionIndex: number; author: string; installedTo: string };
 }
 
-// fingerprint -> the library Skill versions with that body. Several Skills can
-// share one body, so every match is kept.
+// fingerprint -> the library Skill versions with that body, plus fetched
+// minted versions (#17). Several Skills can share one body, so every match is
+// kept; a fetched version whose body is already in the library under the
+// same name is counted once, as the library version.
 export async function skillVersionsByFingerprint(skillsDir: string): Promise<Map<string, SkillVersionMatch[]>> {
   const out = new Map<string, SkillVersionMatch[]>();
   const add = (match: SkillVersionMatch): void => {
@@ -178,6 +183,14 @@ export async function skillVersionsByFingerprint(skillsDir: string): Promise<Map
     if (skill.draft && !skill.draft.minted) {
       add({ name: skill.name, fingerprint: skill.draft.fingerprint, state: 'draft', mint: null });
     }
+  }
+  // Latest fetch per (name, fingerprint).
+  const fetches = new Map<string, Awaited<ReturnType<typeof listSkillFetches>>[number]>();
+  for (const record of await listSkillFetches(skillsDir)) fetches.set(`${record.name}\u0000${record.fingerprint}`, record);
+  for (const record of fetches.values()) {
+    if (out.get(record.fingerprint)?.some((match) => match.name === record.name)) continue;
+    const { chainId, skillId, versionIndex, author, installedTo } = record;
+    add({ name: record.name, fingerprint: record.fingerprint, state: 'fetched', mint: null, fetched: { chainId, skillId, versionIndex, author, installedTo } });
   }
   return out;
 }

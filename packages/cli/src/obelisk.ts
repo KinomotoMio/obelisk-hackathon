@@ -180,10 +180,10 @@ async function main() {
       } else if (action === 'invocations') {
         // Skill loads recognized in the index, mapped to library versions by
         // fingerprint. With a name: that Skill's versions and every load.
-        if (target && !(await readSkill(skillsDir, target))) {
-          throw new Error(`Skill not found in the local library: ${target}`);
-        }
         const versions = await skillVersionsByFingerprint(skillsDir);
+        if (target && ![...versions.values()].flat().some((match) => match.name === target) && !(await readSkill(skillsDir, target))) {
+          throw new Error(`Skill not found in the local library: ${target} (nor among fetched Skills)`);
+        }
         const invocations = findSkillInvocations();
         emit(target ? skillUsageFor(target, invocations, versions) : summarizeSkillUsage(invocations, versions));
       } else if (action === 'mint') {
