@@ -16,8 +16,9 @@
 // on-chain SkillRegistry (#2): sha256 over the normalized body, where the body
 // is SKILL.md without its frontmatter. Claude Code loads a Skill as
 // "Base directory for this skill: <dir>\n\n" + body (+ "\n\nARGUMENTS: ..."),
-// and skillBodyFromLoadedText() reverses exactly that, so both sides hash the
-// same bytes.
+// Codex as "<skill>\n<name>..</name>\n<path>..</path>\n" + the whole SKILL.md
+// + "\n</skill>"; parseLoadedSkill() reverses exactly those, so both sides hash
+// the same bytes.
 
 import { createHash, randomUUID } from 'node:crypto';
 import { mkdir, readdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
@@ -30,8 +31,9 @@ export const SKILL_RECORD_SCHEMA = 1;
 const NAME_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const FINGERPRINT_RE = /^[0-9a-f]{64}$/;
 const FRONTMATTER_RE = /^---\n[\s\S]*?\n---(?:\n|$)/;
-const LOADED_PREFIX_RE = /^Base directory for this skill:[^\n]*\n(?:\n)?/;
+const LOADED_PREFIX_RE = /^Base directory for this skill:([^\n]*)\n(?:\n)?/;
 const LOADED_ARGUMENTS_RE = /\n\nARGUMENTS: [\s\S]*$/;
+const CODEX_LOADED_RE = /^<skill>\n<name>([^\n]*)<\/name>\n<path>([^\n]*)<\/path>\n([\s\S]*)\n<\/skill>\s*$/;
 
 // Content Claude Code rewrites at load time. A body containing any of these is
 // never loaded verbatim, so its fingerprint could never match an invocation.
@@ -147,12 +149,36 @@ export function skillBodyFromMarkdown(markdown: string): string {
   return normalizeSkillBody(text.replace(FRONTMATTER_RE, ''));
 }
 
-// Text Claude Code put in the transcript when it loaded a Skill -> normalized
-// body, or null when the text is not a Skill load.
-export function skillBodyFromLoadedText(text: string): string | null {
+export interface LoadedSkill {
+  format: 'claude' | 'codex';
+  // The name the agent loaded it under: the Skill directory for Claude Code,
+  // the <name> tag for Codex. Local naming only, not an identity.
+  name: string | null;
+  body: string;
+}
+
+// Text an agent put in the transcript when it loaded a Skill -> the loaded
+// name and normalized body, or null when the text is not a Skill load.
+export function parseLoadedSkill(text: string): LoadedSkill | null {
   const normalized = text.replace(/\r\n?/g, '\n');
-  if (!LOADED_PREFIX_RE.test(normalized)) return null;
-  return normalizeSkillBody(normalized.replace(LOADED_PREFIX_RE, '').replace(LOADED_ARGUMENTS_RE, ''));
+  const claude = LOADED_PREFIX_RE.exec(normalized);
+  if (claude) {
+    const dir = claude[1]!.trim().replace(/[\\/]+$/, '');
+    return {
+      format: 'claude',
+      name: dir.split(/[\\/]/).pop() || null,
+      body: normalizeSkillBody(normalized.slice(claude[0].length).replace(LOADED_ARGUMENTS_RE, '')),
+    };
+  }
+  const codex = CODEX_LOADED_RE.exec(normalized);
+  if (codex) {
+    return { format: 'codex', name: codex[1]!.trim() || null, body: skillBodyFromMarkdown(codex[3]!) };
+  }
+  return null;
+}
+
+export function skillBodyFromLoadedText(text: string): string | null {
+  return parseLoadedSkill(text)?.body ?? null;
 }
 
 // Lowercase hex sha256 of the normalized body. On chain it is the bytes32
