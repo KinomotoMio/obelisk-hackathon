@@ -162,6 +162,7 @@ test('a recipient who has not activated is shown in the preview and cannot be se
   const drafted = await run('share', 'draft', sessionId, '--to', recipient.address);
   assert.equal(drafted.json.recipient.activated, false);
   assert.match(drafted.json.next, /has not activated an Obelisk wallet yet/);
+  assert.ok(drafted.json.next.includes(`open ${service.url}/activate with that wallet in their browser`), drafted.json.next);
   const preview = await run('share', 'send', drafted.json.draft, '--redact', 'all');
   assert.equal(preview.json.recipient.activated, false);
   assert.match(preview.json.next, /obelisk wallet activate/);

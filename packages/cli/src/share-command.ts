@@ -198,8 +198,8 @@ async function recipientStatus(client: ObeliskServiceClient, recipient: Address)
   return { chain, activated: key.registered && Boolean(key.pubKey), key };
 }
 
-const NOT_ACTIVATED = (recipient: Address) =>
-  `${recipient} has not activated an Obelisk wallet yet, so nothing can be encrypted to it. Ask them to run \`obelisk wallet activate\` (or "帮我创建 Obelisk 钱包" in their AI coding assistant), then preview again.`;
+const NOT_ACTIVATED = (recipient: Address, serviceUrl: string) =>
+  `${recipient} has not activated an Obelisk wallet yet, so nothing can be encrypted to it. Ask them to open ${serviceUrl}/activate with that wallet in their browser (no Obelisk needed), or to run \`obelisk wallet activate\` (or "帮我创建 Obelisk 钱包" in their AI coding assistant), then preview again.`;
 
 // --- commands --------------------------------------------------------------
 
@@ -265,7 +265,7 @@ async function draft(args: string[], deps: ShareCommandDeps) {
       note: 'Only the type and location of each finding are shown, never its value.',
     },
     next: notActivated
-      ? NOT_ACTIVATED(recipient)
+      ? NOT_ACTIVATED(recipient, service(deps).baseUrl)
       : findings.length > 0
         ? `Show the user the privacy check (types and locations only; do not look up or quote the values) and ask whether to redact all of them or decide one by one. Then preview with \`obelisk share send ${record.draftId} --redact all\` (or --redact 1,3 to redact only those, or --redact none).`
         : `Nothing sensitive was found. Preview with \`obelisk share send ${record.draftId}\`.`,
@@ -329,7 +329,7 @@ async function send(args: string[], deps: ShareCommandDeps) {
       fee: 'Paid by the Obelisk online service; this wallet is not charged.',
       next: status.activated
         ? `Show this preview to the user. Only after they confirm, run \`obelisk share send ${record.draftId} --confirm\`.`
-        : NOT_ACTIVATED(record.recipient),
+        : NOT_ACTIVATED(record.recipient, client.baseUrl),
     };
   }
 
@@ -408,7 +408,7 @@ async function sendConfirmed(record: ShareDraft, snapshot: ShareSnapshot, redact
   }
 
   const key = await client.key(record.recipient);
-  if (!key.registered || !key.pubKey) throw new Error(`The share was not created: ${NOT_ACTIVATED(record.recipient)}`);
+  if (!key.registered || !key.pubKey) throw new Error(`The share was not created: ${NOT_ACTIVATED(record.recipient, client.baseUrl)}`);
   if (!outbox || outbox.recipientKey.toLowerCase() !== key.pubKey.toLowerCase() || outbox.redact.join(',') !== redact.join(',')) {
     const shareId = newShareId();
     const { contentKey, blob, contentHash } = encryptShareContent(new TextEncoder().encode(JSON.stringify(redacted)), shareId);

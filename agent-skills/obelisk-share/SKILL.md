@@ -129,9 +129,11 @@ cannot take back what the recipient has seen. Say so if the share is `read`.
 ## When things go wrong
 
 - `recipient.activated: false`, or `… has not activated an Obelisk wallet yet`:
-  nothing can be encrypted to that address until its owner activates their
-  wallet (`obelisk wallet activate`, or "帮我创建 Obelisk 钱包" in their own AI
-  coding assistant). Tell the user; do not send.
+  nothing can be encrypted to that address until its owner activates it. Give
+  the user the `<service>/activate` link from the message to pass on: the
+  recipient opens it with that wallet in a browser, no Obelisk needed (or runs
+  `obelisk wallet activate`, or says "帮我创建 Obelisk 钱包" in their own AI
+  coding assistant). Do not send until they have; then preview again.
 - `No Obelisk wallet for …`: the user has no wallet yet; use the
   `obelisk-wallet` skill to create one first (sharing does not need it to be
   activated).
