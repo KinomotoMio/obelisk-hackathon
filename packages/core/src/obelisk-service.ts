@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 
 // Client for the Obelisk online service (service/, #3): chain reads, the fee
-// relay, private shares (#8), and minted Skill bodies (#16). The service
-// decides which chain it serves; this client checks that the contract
-// addresses it reports match the deployments pinned in chain-protocol.ts
-// before anything is signed for them.
+// relay, private shares (#8), minted Skill bodies (#16), and Skill usage
+// (#23). The service decides which chain it serves; this client checks that
+// the contract addresses it reports match the deployments pinned in
+// chain-protocol.ts before anything is signed for them.
 
 import { getAddress, type Address, type Hex } from 'viem';
 
@@ -87,6 +87,18 @@ export interface MintedSkillInfo {
   version: { index: number; fingerprint: Hex; publishedAt: string };
   content: { name: string; description: string; body: string } | null;
   explorer: { author: string | null };
+}
+
+/** `GET /v1/usage/:fingerprint`: one Skill version's reported usage (#24). */
+export interface VersionUsageInfo {
+  chainId: number;
+  fingerprint: Hex;
+  skillId: string;
+  versionIndex: number;
+  totalInvocations: number;
+  uniqueWallets: number;
+  lastReportAt: string | null;
+  wallet?: { address: Address; cumulative: number; reportedAt: string | null };
 }
 
 export type RelayOutcome =
@@ -223,6 +235,12 @@ export class ObeliskServiceClient {
   skill(ref: string, { versionIndex }: { versionIndex?: number } = {}): Promise<MintedSkillInfo> {
     const query = versionIndex === undefined ? '' : `?versionIndex=${versionIndex}`;
     return this.#request<MintedSkillInfo>(`/v1/skills/${encodeURIComponent(ref)}${query}`);
+  }
+
+  /** A minted version's usage; with `wallet`, that wallet's own running total too. */
+  usage(fingerprint: Hex, { wallet }: { wallet?: Address } = {}): Promise<VersionUsageInfo> {
+    const query = wallet ? `?wallet=${wallet}` : '';
+    return this.#request<VersionUsageInfo>(`/v1/usage/${fingerprint}${query}`);
   }
 
   storeSkillContent(
