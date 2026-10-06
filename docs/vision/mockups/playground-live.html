@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Playground 运行 · 界面示意</title>
+<style>
+/* 界面示意用样式。颜色与字体取自 app/src/renderer/styles/base.css。 */
+:root {
+  --bg: #0a0b14;
+  --bg-2: #11131f;
+  --surface: rgba(255,255,255,0.03);
+  --surface-strong: rgba(255,255,255,0.06);
+  --surface-hi: rgba(255,255,255,0.09);
+  --fg: rgba(255,255,255,0.92);
+  --fg-2: rgba(255,255,255,0.72);
+  --muted: rgba(255,255,255,0.48);
+  --hairline: rgba(255,255,255,0.08);
+  --accent: #a78bfa;
+  --accent-2: #c4b5fd;
+  --accent-soft: rgba(167,139,250,0.12);
+  --ok: #4ade80;
+  --ok-soft: rgba(74,222,128,0.12);
+  --danger: #f87171;
+  --danger-soft: rgba(248,113,113,0.12);
+  --warn: #fbbf24;
+  --warn-soft: rgba(251,191,36,0.14);
+  --chain: #38bdf8;
+  --chain-soft: rgba(56,189,248,0.12);
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Inter', 'PingFang SC', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  color: var(--fg);
+  font: 14px/1.55 var(--font-sans);
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(80% 60% at 100% 0%, rgba(236,72,153,0.10), transparent 55%),
+    radial-gradient(70% 60% at 0% 100%, rgba(99,102,241,0.12), transparent 60%),
+    linear-gradient(to bottom, var(--bg) 0%, var(--bg-2) 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+  padding: 0 24px 64px;
+}
+a { color: var(--accent-2); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.mono { font-family: var(--font-mono); font-size: 12.5px; }
+.muted { color: var(--muted); }
+.fg2 { color: var(--fg-2); }
+
+/* 顶部说明条与导航 */
+.banner {
+  position: sticky; top: 0; z-index: 10;
+  margin: 0 -24px 32px; padding: 10px 24px;
+  background: rgba(10,11,20,0.88); backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--hairline);
+  display: flex; gap: 16px; align-items: center; flex-wrap: wrap;
+}
+.banner .tag { background: var(--warn-soft); color: var(--warn); padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+.banner nav { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; }
+.banner nav a.on { color: var(--fg); font-weight: 600; }
+
+.page { max-width: 1180px; margin: 0 auto; }
+h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.01em; }
+.lead { color: var(--fg-2); margin: 6px 0 28px; max-width: 760px; }
+
+/* 一个"画面"的外框 */
+.screen { margin-bottom: 40px; }
+.screen-label { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; }
+.screen-label .n {
+  width: 24px; height: 24px; border-radius: 50%; display: inline-grid; place-items: center;
+  background: var(--accent-soft); color: var(--accent-2); font-size: 12px; font-weight: 700; flex: none;
+}
+.screen-label h2 { font-size: 16px; font-weight: 600; }
+.screen-label .where { color: var(--muted); font-size: 12.5px; }
+.frame {
+  border: 1px solid var(--hairline); border-radius: 14px; overflow: hidden;
+  background: rgba(17,19,31,0.85); box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+.frame-bar {
+  display: flex; align-items: center; gap: 8px; padding: 9px 14px;
+  border-bottom: 1px solid var(--hairline); background: rgba(255,255,255,0.02); font-size: 12px; color: var(--muted);
+}
+.dots { display: flex; gap: 6px; }
+.dots i { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.14); display: block; }
+.url { flex: 1; background: var(--surface-strong); border-radius: 6px; padding: 3px 10px; font-family: var(--font-mono); }
+.frame-body { padding: 20px; }
+
+/* App 布局：侧栏 + 主区 */
+.app { display: grid; grid-template-columns: 180px 1fr; min-height: 420px; }
+.side { border-right: 1px solid var(--hairline); padding: 14px 10px; display: flex; flex-direction: column; gap: 2px; }
+.side .item { padding: 7px 10px; border-radius: 8px; color: var(--fg-2); font-size: 13px; }
+.side .item.on { background: var(--accent-soft); color: var(--fg); font-weight: 600; }
+.side .sep { height: 1px; background: var(--hairline); margin: 8px 4px; }
+.main { padding: 20px 22px; min-width: 0; }
+
+/* 通用部件 */
+.card { background: var(--surface); border: 1px solid var(--hairline); border-radius: 12px; padding: 16px; }
+.card h3 { font-size: 13px; font-weight: 600; color: var(--fg-2); margin-bottom: 10px; letter-spacing: 0.02em; }
+.grid { display: grid; gap: 14px; }
+.g2 { grid-template-columns: 1fr 1fr; }
+.g3 { grid-template-columns: repeat(3, 1fr); }
+.g4 { grid-template-columns: repeat(4, 1fr); }
+.row { display: flex; align-items: center; gap: 10px; }
+.between { justify-content: space-between; }
+.stack { display: flex; flex-direction: column; gap: 10px; }
+.pill { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.pill.ok { background: var(--ok-soft); color: var(--ok); }
+.pill.warn { background: var(--warn-soft); color: var(--warn); }
+.pill.danger { background: var(--danger-soft); color: var(--danger); }
+.pill.acc { background: var(--accent-soft); color: var(--accent-2); }
+.pill.chain { background: var(--chain-soft); color: var(--chain); }
+.pill.dim { background: var(--surface-strong); color: var(--fg-2); }
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; border: 1px solid var(--hairline); background: var(--surface-strong); color: var(--fg); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #140f26; }
+.btn.ghost { background: transparent; }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field label { font-size: 12px; color: var(--muted); }
+.input { background: rgba(0,0,0,0.25); border: 1px solid var(--hairline); border-radius: 8px; padding: 8px 10px; font-family: var(--font-mono); font-size: 13px; color: var(--fg); }
+.seg { display: inline-flex; border: 1px solid var(--hairline); border-radius: 8px; overflow: hidden; }
+.seg span { padding: 6px 12px; font-size: 12.5px; color: var(--fg-2); }
+.seg span.on { background: var(--accent-soft); color: var(--fg); font-weight: 600; }
+.check { width: 16px; height: 16px; border-radius: 4px; border: 1px solid var(--accent); background: var(--accent); display: inline-grid; place-items: center; color: #140f26; font-size: 11px; font-weight: 800; flex: none; }
+.check.off { background: transparent; border-color: var(--muted); color: transparent; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; color: var(--muted); font-weight: 500; font-size: 12px; padding: 8px 10px; border-bottom: 1px solid var(--hairline); }
+td { padding: 10px; border-bottom: 1px solid var(--hairline); vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+.big { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; }
+.note { font-size: 12.5px; color: var(--muted); }
+.callout { border-left: 3px solid var(--accent); background: var(--accent-soft); padding: 10px 14px; border-radius: 0 8px 8px 0; font-size: 13px; color: var(--fg-2); }
+.bar { height: 8px; border-radius: 999px; background: var(--surface-strong); overflow: hidden; }
+.bar > i { display: block; height: 100%; border-radius: 999px; background: var(--accent); }
+.bar.ok > i { background: var(--ok); }
+.bar.warn > i { background: var(--warn); }
+
+/* 对话时间线 */
+.msg { border-radius: 10px; padding: 10px 12px; font-size: 13px; border: 1px solid; }
+.msg.user { background: rgba(167,139,250,0.08); border-color: rgba(167,139,250,0.18); align-self: flex-end; max-width: 80%; }
+.msg.asst { background: rgba(255,255,255,0.025); border-color: rgba(255,255,255,0.06); max-width: 92%; }
+.msg.tool { background: rgba(0,0,0,0.25); border-color: var(--hairline); font-family: var(--font-mono); font-size: 12px; color: var(--fg-2); max-width: 92%; }
+.redact { background: var(--warn-soft); color: var(--warn); border-radius: 4px; padding: 0 4px; font-family: var(--font-mono); font-size: 12px; }
+.who { font-size: 11px; color: var(--muted); margin-bottom: 3px; }
+
+@media (max-width: 860px) {
+  .g2, .g3, .g4 { grid-template-columns: 1fr; }
+  .app { grid-template-columns: 1fr; }
+  .side { display: none; }
+}
+</style>
+<style>
+  .live { display: grid; grid-template-columns: 240px 1fr 200px; gap: 14px; }
+  @media (max-width: 1000px) { .live { grid-template-columns: 1fr; } }
+  .steps li { list-style: none; display: grid; grid-template-columns: 22px 1fr; gap: 8px; padding: 7px 8px; border-radius: 8px; font-size: 12.5px; color: var(--fg-2); }
+  .steps li .k { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 700; background: var(--surface-strong); color: var(--muted); }
+  .steps li.done .k { background: var(--ok-soft); color: var(--ok); }
+  .steps li.now { background: var(--accent-soft); color: var(--fg); }
+  .steps li.now .k { background: var(--accent); color: #140f26; }
+  .counter { padding: 10px 0; border-bottom: 1px solid var(--hairline); }
+  .counter:last-child { border-bottom: none; }
+  .counter .big { font-size: 22px; }
+  tr.new td { background: var(--accent-soft); }
+  .shots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  @media (max-width: 860px) { .shots { grid-template-columns: 1fr 1fr; } }
+  .shot { border: 1px solid var(--hairline); border-radius: 10px; overflow: hidden; background: rgba(0,0,0,0.2); }
+  .shot .pic { height: 110px; padding: 10px; display: flex; flex-direction: column; gap: 6px; justify-content: center; align-items: center; border-bottom: 1px solid var(--hairline); }
+  .shot .cap { padding: 8px 10px; font-size: 12px; color: var(--fg-2); }
+  .shot.todo .pic { color: var(--muted); font-size: 12px; }
+  .pop { border: 1px solid var(--accent); border-radius: 10px; padding: 12px 14px; background: #1a1730; font-size: 13px; color: var(--fg-2); max-width: 460px; }
+</style>
+</head>
+<body>
+<div class="banner">
+  <span class="tag">界面示意 · 数据为演示样例</span>
+  <nav>
+    <a href="private-sharing.html">私密分享</a>
+    <a href="skill-detail.html">Skill 详情</a>
+    <a href="market-and-revenue.html">市场与收益</a>
+    <a href="ai-capability-resume.html">AI 能力履历</a>
+    <a href="playground-live.html" class="on">Playground 运行</a>
+    <a href="investor-preview.html">投资人预览</a>
+    <a href="../09-playground.md">返回文档</a>
+  </nav>
+</div>
+<div class="page" style="max-width:1280px">
+  <h1>Playground 运行：跑出真实数据</h1>
+  <p class="lead">在本机让模拟用户走 Obelisk 的真实流程。运行时实时展示事件和链上交易，自动截取关键画面，并为每份数据生成出处记录。这是 Playground 的场景一（文档 09 · G1–G5）。</p>
+
+  <!-- 画面 1 -->
+  <section class="screen">
+    <div class="screen-label"><span class="n">1</span><h2>实时页面</h2><span class="where">开发者本机 · 运行中</span></div>
+    <div class="frame">
+      <div class="frame-bar">
+        <div class="dots"><i></i><i></i><i></i></div>
+        <span style="color:var(--fg)">运行 #12 · 剧本：演示闭环</span>
+        <span class="pill chain">BOT Chain 主网</span>
+        <span class="pill ok">运行中 03:42</span>
+        <span style="flex:1"></span>
+        <span class="btn" style="padding:4px 10px">暂停</span>
+      </div>
+      <div class="frame-body">
+        <div class="live">
+          <div class="card">
+            <h3>剧本进度</h3>
+            <ul class="steps">
+              <li class="done"><span class="k">1</span><span>A 把 session 分享给 B，只能打开 1 次</span></li>
+              <li class="done"><span class="k">2</span><span>C 打开转发的链接</span></li>
+              <li class="done"><span class="k">3</span><span>B 打开；A 收到已读回执</span></li>
+              <li class="done"><span class="k">4</span><span>A 在 Claude Code 中说一句话沉淀「AI 能力履历」，在 App 中确认并铸造</span></li>
+              <li class="now"><span class="k">5</span><span>用户 1–12 用 Skill 完成任务 · 7 / 12</span></li>
+              <li><span class="k">6</span><span>U 生成自己的能力履历</span></li>
+              <li><span class="k">7</span><span>D 衍生「设计师作品集版」</span></li>
+              <li><span class="k">8</span><span>U 向招聘方 H 出示佐证</span></li>
+              <li><span class="k">9</span><span>汇总调用量、族谱与收入</span></li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>事件 · 最新在上</h3>
+            <table>
+              <tr><th>时间</th><th>角色</th><th>发生了什么</th><th>产物</th></tr>
+              <tr class="new"><td class="mono">21:15:31</td><td>用户 7</td><td>在 Claude Code 中调用「AI 能力履历」，完成任务"整理后端岗位履历"</td><td><a href="#">session ↗</a></td></tr>
+              <tr><td class="mono">21:15:12</td><td>用户 6</td><td>后台判断（Claude Code）：场景"工程师求职"，结果"顺利"</td><td class="muted">本机</td></tr>
+              <tr><td class="mono">21:14:58</td><td>用户 6</td><td>在 Claude Code 中调用「AI 能力履历」</td><td><a href="#">session ↗</a></td></tr>
+              <tr><td class="mono">21:14:40</td><td>用户 5</td><td>汇总上报 3 次调用</td><td><a href="#">交易 ↗</a></td></tr>
+              <tr><td class="mono">21:14:02</td><td>用户 5</td><td>后台判断（Claude Code）：场景"设计作品集"，结果"有返工"</td><td class="muted">本机</td></tr>
+              <tr><td class="mono">21:13:37</td><td>A</td><td>铸造「AI 能力履历」v1.2</td><td><a href="#">交易 ↗</a></td></tr>
+            </table>
+          </div>
+          <div class="card">
+            <h3>本次运行</h3>
+            <div class="counter"><div class="note">模拟用户</div><div class="big">14</div></div>
+            <div class="counter"><div class="note">产生的 session</div><div class="big">38</div></div>
+            <div class="counter"><div class="note">Skill 调用</div><div class="big">52</div></div>
+            <div class="counter"><div class="note">链上交易</div><div class="big">61</div></div>
+            <div class="counter"><div class="note">关键截图</div><div class="big">3</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 画面 2 -->
+  <section class="screen">
+    <div class="screen-label"><span class="n">2</span><h2>关键截图</h2><span class="where">运行中按剧本标记自动截取</span></div>
+    <div class="shots">
+      <div class="shot"><div class="pic"><span class="pill ok">已读 21:03</span><span class="note">A 的 Share tab</span></div><div class="cap">第 3 步 · A 收到已读回执</div></div>
+      <div class="shot"><div class="pic"><span class="pill chain">已铸造 · BOT Chain</span><span class="note">AI 能力履历 v1.2</span></div><div class="cap">第 4 步 · 铸造成功</div></div>
+      <div class="shot"><div class="pic"><span class="big" style="font-size:22px">52</span><span class="note">真实调用</span></div><div class="cap">第 5 步 · 调用量更新</div></div>
+      <div class="shot todo"><div class="pic">待截取</div><div class="cap">第 7 步 · 族谱新增分支</div></div>
+    </div>
+  </section>
+
+  <!-- 画面 3 -->
+  <section class="screen">
+    <div class="screen-label"><span class="n">3</span><h2>数据出处记录</h2><span class="where">每次运行自动生成，可以导出</span></div>
+    <div class="frame"><div class="frame-body">
+      <table>
+        <tr><th style="width:140px">记录项</th><th>内容</th></tr>
+        <tr><td>运行</td><td>#12 · 2026-10-07 21:10 开始 · 剧本"演示闭环"</td></tr>
+        <tr><td>模拟用户</td><td>14 个钱包 · <a href="#">查看地址列表</a></td></tr>
+        <tr><td>任务</td><td>24 个任务，覆盖 6 个场景 · <a href="#">查看任务清单</a></td></tr>
+        <tr><td>AI 运行</td><td>Claude Code · 模型版本按实际运行记录</td></tr>
+        <tr><td>产物</td><td>38 个 session · 1 个铸造的 Skill · 61 笔链上交易 · <a href="#">逐条查看</a></td></tr>
+        <tr><td>截图</td><td>3 张，与剧本步骤对应</td></tr>
+      </table>
+      <div class="row" style="justify-content:flex-end;margin-top:14px"><span class="btn">导出出处记录</span></div>
+    </div></div>
+  </section>
+
+  <!-- 画面 4 -->
+  <section class="screen">
+    <div class="screen-label"><span class="n">4</span><h2>App 中的数据标明来源</h2><span class="where">任何人 · Skill 详情</span></div>
+    <div class="frame"><div class="frame-body">
+      <div class="row" style="align-items:flex-start;gap:20px;flex-wrap:wrap">
+        <div class="card" style="min-width:240px">
+          <h3>真实调用</h3>
+          <div class="big">1,284</div>
+          <div class="row" style="margin-top:6px"><span class="pill warn">来源：Playground 运行 #3–#12</span></div>
+        </div>
+        <div class="pop">
+          这些调用由 Playground 运行 #3–#12 产生：14 个模拟用户、24 个任务，每次调用都来自一段真实的 AI 运行，并在 BOT Chain 上留有记录。<br><a href="#">查看出处记录 →</a>
+        </div>
+      </div>
+    </div></div>
+  </section>
+</div>
+</body>
+</html>

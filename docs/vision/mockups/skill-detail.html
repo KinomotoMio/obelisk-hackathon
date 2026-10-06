@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Skill 详情 · 界面示意</title>
+<style>
+/* 界面示意用样式。颜色与字体取自 app/src/renderer/styles/base.css。 */
+:root {
+  --bg: #0a0b14;
+  --bg-2: #11131f;
+  --surface: rgba(255,255,255,0.03);
+  --surface-strong: rgba(255,255,255,0.06);
+  --surface-hi: rgba(255,255,255,0.09);
+  --fg: rgba(255,255,255,0.92);
+  --fg-2: rgba(255,255,255,0.72);
+  --muted: rgba(255,255,255,0.48);
+  --hairline: rgba(255,255,255,0.08);
+  --accent: #a78bfa;
+  --accent-2: #c4b5fd;
+  --accent-soft: rgba(167,139,250,0.12);
+  --ok: #4ade80;
+  --ok-soft: rgba(74,222,128,0.12);
+  --danger: #f87171;
+  --danger-soft: rgba(248,113,113,0.12);
+  --warn: #fbbf24;
+  --warn-soft: rgba(251,191,36,0.14);
+  --chain: #38bdf8;
+  --chain-soft: rgba(56,189,248,0.12);
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Inter', 'PingFang SC', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  color: var(--fg);
+  font: 14px/1.55 var(--font-sans);
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(80% 60% at 100% 0%, rgba(236,72,153,0.10), transparent 55%),
+    radial-gradient(70% 60% at 0% 100%, rgba(99,102,241,0.12), transparent 60%),
+    linear-gradient(to bottom, var(--bg) 0%, var(--bg-2) 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+  padding: 0 24px 64px;
+}
+a { color: var(--accent-2); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.mono { font-family: var(--font-mono); font-size: 12.5px; }
+.muted { color: var(--muted); }
+.fg2 { color: var(--fg-2); }
+
+/* 顶部说明条与导航 */
+.banner {
+  position: sticky; top: 0; z-index: 10;
+  margin: 0 -24px 32px; padding: 10px 24px;
+  background: rgba(10,11,20,0.88); backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--hairline);
+  display: flex; gap: 16px; align-items: center; flex-wrap: wrap;
+}
+.banner .tag { background: var(--warn-soft); color: var(--warn); padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+.banner nav { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; }
+.banner nav a.on { color: var(--fg); font-weight: 600; }
+
+.page { max-width: 1180px; margin: 0 auto; }
+h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.01em; }
+.lead { color: var(--fg-2); margin: 6px 0 28px; max-width: 760px; }
+
+/* 一个"画面"的外框 */
+.screen { margin-bottom: 40px; }
+.screen-label { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; }
+.screen-label .n {
+  width: 24px; height: 24px; border-radius: 50%; display: inline-grid; place-items: center;
+  background: var(--accent-soft); color: var(--accent-2); font-size: 12px; font-weight: 700; flex: none;
+}
+.screen-label h2 { font-size: 16px; font-weight: 600; }
+.screen-label .where { color: var(--muted); font-size: 12.5px; }
+.frame {
+  border: 1px solid var(--hairline); border-radius: 14px; overflow: hidden;
+  background: rgba(17,19,31,0.85); box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+.frame-bar {
+  display: flex; align-items: center; gap: 8px; padding: 9px 14px;
+  border-bottom: 1px solid var(--hairline); background: rgba(255,255,255,0.02); font-size: 12px; color: var(--muted);
+}
+.dots { display: flex; gap: 6px; }
+.dots i { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.14); display: block; }
+.url { flex: 1; background: var(--surface-strong); border-radius: 6px; padding: 3px 10px; font-family: var(--font-mono); }
+.frame-body { padding: 20px; }
+
+/* App 布局：侧栏 + 主区 */
+.app { display: grid; grid-template-columns: 180px 1fr; min-height: 420px; }
+.side { border-right: 1px solid var(--hairline); padding: 14px 10px; display: flex; flex-direction: column; gap: 2px; }
+.side .item { padding: 7px 10px; border-radius: 8px; color: var(--fg-2); font-size: 13px; }
+.side .item.on { background: var(--accent-soft); color: var(--fg); font-weight: 600; }
+.side .sep { height: 1px; background: var(--hairline); margin: 8px 4px; }
+.main { padding: 20px 22px; min-width: 0; }
+
+/* 通用部件 */
+.card { background: var(--surface); border: 1px solid var(--hairline); border-radius: 12px; padding: 16px; }
+.card h3 { font-size: 13px; font-weight: 600; color: var(--fg-2); margin-bottom: 10px; letter-spacing: 0.02em; }
+.grid { display: grid; gap: 14px; }
+.g2 { grid-template-columns: 1fr 1fr; }
+.g3 { grid-template-columns: repeat(3, 1fr); }
+.g4 { grid-template-columns: repeat(4, 1fr); }
+.row { display: flex; align-items: center; gap: 10px; }
+.between { justify-content: space-between; }
+.stack { display: flex; flex-direction: column; gap: 10px; }
+.pill { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.pill.ok { background: var(--ok-soft); color: var(--ok); }
+.pill.warn { background: var(--warn-soft); color: var(--warn); }
+.pill.danger { background: var(--danger-soft); color: var(--danger); }
+.pill.acc { background: var(--accent-soft); color: var(--accent-2); }
+.pill.chain { background: var(--chain-soft); color: var(--chain); }
+.pill.dim { background: var(--surface-strong); color: var(--fg-2); }
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; border: 1px solid var(--hairline); background: var(--surface-strong); color: var(--fg); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #140f26; }
+.btn.ghost { background: transparent; }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field label { font-size: 12px; color: var(--muted); }
+.input { background: rgba(0,0,0,0.25); border: 1px solid var(--hairline); border-radius: 8px; padding: 8px 10px; font-family: var(--font-mono); font-size: 13px; color: var(--fg); }
+.seg { display: inline-flex; border: 1px solid var(--hairline); border-radius: 8px; overflow: hidden; }
+.seg span { padding: 6px 12px; font-size: 12.5px; color: var(--fg-2); }
+.seg span.on { background: var(--accent-soft); color: var(--fg); font-weight: 600; }
+.check { width: 16px; height: 16px; border-radius: 4px; border: 1px solid var(--accent); background: var(--accent); display: inline-grid; place-items: center; color: #140f26; font-size: 11px; font-weight: 800; flex: none; }
+.check.off { background: transparent; border-color: var(--muted); color: transparent; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; color: var(--muted); font-weight: 500; font-size: 12px; padding: 8px 10px; border-bottom: 1px solid var(--hairline); }
+td { padding: 10px; border-bottom: 1px solid var(--hairline); vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+.big { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; }
+.note { font-size: 12.5px; color: var(--muted); }
+.callout { border-left: 3px solid var(--accent); background: var(--accent-soft); padding: 10px 14px; border-radius: 0 8px 8px 0; font-size: 13px; color: var(--fg-2); }
+.bar { height: 8px; border-radius: 999px; background: var(--surface-strong); overflow: hidden; }
+.bar > i { display: block; height: 100%; border-radius: 999px; background: var(--accent); }
+.bar.ok > i { background: var(--ok); }
+.bar.warn > i { background: var(--warn); }
+
+/* 对话时间线 */
+.msg { border-radius: 10px; padding: 10px 12px; font-size: 13px; border: 1px solid; }
+.msg.user { background: rgba(167,139,250,0.08); border-color: rgba(167,139,250,0.18); align-self: flex-end; max-width: 80%; }
+.msg.asst { background: rgba(255,255,255,0.025); border-color: rgba(255,255,255,0.06); max-width: 92%; }
+.msg.tool { background: rgba(0,0,0,0.25); border-color: var(--hairline); font-family: var(--font-mono); font-size: 12px; color: var(--fg-2); max-width: 92%; }
+.redact { background: var(--warn-soft); color: var(--warn); border-radius: 4px; padding: 0 4px; font-family: var(--font-mono); font-size: 12px; }
+.who { font-size: 11px; color: var(--muted); margin-bottom: 3px; }
+
+@media (max-width: 860px) {
+  .g2, .g3, .g4 { grid-template-columns: 1fr; }
+  .app { grid-template-columns: 1fr; }
+  .side { display: none; }
+}
+</style>
+<style>
+  .sess { display: grid; grid-template-columns: 1fr auto auto; gap: 12px; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--hairline); font-size: 13px; }
+  .sess .why { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .sess .rm { font-size: 12px; color: var(--muted); }
+  .term { background: #0b0c14; border: 1px solid var(--hairline); border-radius: 10px; padding: 14px 16px; font-family: var(--font-mono); font-size: 12.5px; line-height: 1.75; color: var(--fg-2); }
+  .term .you { color: var(--fg); }
+  .term .you::before { content: "> "; color: var(--accent-2); }
+  .term .step::before { content: "⏺ "; color: var(--ok); }
+  .term .dim { color: var(--muted); }
+  .term .hl { color: var(--accent-2); }
+  .md { background: rgba(0,0,0,0.25); border: 1px solid var(--hairline); border-radius: 10px; padding: 14px; font-family: var(--font-mono); font-size: 12.5px; color: var(--fg-2); white-space: pre-wrap; line-height: 1.6; }
+  .src li { margin: 4px 0 4px 18px; font-size: 13px; color: var(--fg-2); }
+  .scn { display: grid; grid-template-columns: 100px 1fr 64px 190px; gap: 12px; align-items: center; padding: 8px 0; font-size: 13px; }
+  .tags { display: flex; gap: 6px; flex-wrap: wrap; }
+  .kpi .big { margin: 2px 0; }
+</style>
+</head>
+<body>
+<div class="banner">
+  <span class="tag">界面示意 · 数据为演示样例</span>
+  <nav>
+    <a href="private-sharing.html">私密分享</a>
+    <a href="skill-detail.html" class="on">Skill 详情</a>
+    <a href="market-and-revenue.html">市场与收益</a>
+    <a href="ai-capability-resume.html">AI 能力履历</a>
+    <a href="playground-live.html">Playground 运行</a>
+    <a href="investor-preview.html">投资人预览</a>
+    <a href="../03-skill-assets.md">返回文档</a>
+  </nav>
+</div>
+<div class="page">
+  <h1>Skill：从证据中来，用数据说话</h1>
+  <p class="lead">沉淀时附出处和出生场景；上市后展示真实调用量、实测场景与顺利率，并和作者描述并排对比。对应文档 03 的 K1–K4 与文档 04 的 U1–U5。</p>
+
+  <!-- 画面 1 -->
+  <section class="screen">
+    <div class="screen-label"><span class="n">1a</span><h2>说一句话</h2><span class="where">作者 · 本机的 Claude Code · 由独立的「沉淀 Skill」skill 处理</span></div>
+    <div class="frame">
+      <div class="frame-bar"><div class="dots"><i></i><i></i><i></i></div><span>Claude Code · 终端</span></div>
+      <div class="frame-body">
+        <div class="term">
+          <div class="you">把我最近准备求职材料的做法，沉淀成一个 Skill</div>
+          <div class="step">使用 skill <span class="hl">「沉淀 Skill」</span></div>
+          <div class="step">通过 Obelisk 检索全部历史 session <span class="dim">· 找到 4 个直接相关的 session</span></div>
+          <div class="step">起草正文、出处卡和出生场景</div>
+          <div class="step">草稿已存入 Obelisk 的 Skill 库 <span class="dim">· 请在 Obelisk App 的 Skill tab 审阅并确认</span></div>
+        </div>
+        <p class="note" style="margin-top:10px">需要 AI 的工作在你自己的 AI 编程助手里完成，费用走你自己的订阅。阶段 1 先支持 Claude Code。</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen">
+    <div class="screen-label"><span class="n">1b</span><h2>审阅草稿并铸造</h2><span class="where">作者 · Obelisk App · Skill tab → 待确认</span></div>
+    <div class="frame">
+      <div class="frame-bar"><div class="dots"><i></i><i></i><i></i></div><span>Obelisk</span></div>
+      <div class="app">
+        <div class="side">
+          <div class="item">Sessions</div><div class="item">Memory</div><div class="item">Activity</div><div class="item">Recaps</div>
+          <div class="sep"></div><div class="item">Share</div><div class="item on">Skill</div><div class="sep"></div><div class="item">Settings</div>
+        </div>
+        <div class="main">
+          <div class="row between" style="margin-bottom:14px">
+            <div><div style="font-weight:700">待确认的草稿 · AI 能力履历</div><div class="note">来自 Claude Code 中的一句话："把我最近准备求职材料的做法，沉淀成一个 Skill"</div></div>
+            <span class="pill dim">阶段 2：也可以在这里直接说一句话</span>
+          </div>
+          <div class="grid g2">
+            <div class="card">
+              <h3>Obelisk 找到的直接证据 · 4 个 session</h3>
+              <div class="sess"><div><div>根据提交历史整理项目经历</div><div class="why">命中：按"解决了什么问题"而不是按提交归纳经历</div></div><span class="note">Claude Code · 09-12</span><span class="rm">去掉</span></div>
+              <div class="sess"><div><div>把排障过程改写成技术复盘</div><div class="why">命中：按"现象、原因、修复、验证"整理一次排障</div></div><span class="note">Codex · 09-19</span><span class="rm">去掉</span></div>
+              <div class="sess"><div><div>为面试准备系统设计案例</div><div class="why">命中：用真实案例说明设计取舍</div></div><span class="note">Claude Code · 09-26</span><span class="rm">去掉</span></div>
+              <div class="sess"><div><div>按岗位要求改写履历要点</div><div class="why">命中：被纠正"不要夸大个人在团队项目中的职责"</div></div><span class="note">Claude Code · 10-02</span><span class="rm">去掉</span></div>
+              <p class="note" style="margin-top:10px">这些 session 会作为出处写进出处卡。Obelisk 检索的是完整的 session 原文，而不是摘要过的记忆，所以能直接找到证据。</p>
+            </div>
+            <div class="stack">
+              <div class="card">
+                <h3>AI 起草的正文</h3>
+                <div class="md"># AI 能力履历
+从用户的 Obelisk 历史中，按"解决了什么问题"
+而不是"做过什么项目"整理能力证据……</div>
+              </div>
+              <div class="card">
+                <h3>出处卡</h3>
+                <ul class="src">
+                  <li>来自 4 个 session，时间跨度 3 周</li>
+                  <li>踩过的坑：直接罗列提交记录可读性差，改为按问题归纳</li>
+                  <li>被纠正过：不要夸大个人在团队项目中的职责</li>
+                </ul>
+                <div class="row" style="margin-top:10px"><span class="note">出生场景</span><div class="tags"><span class="pill acc">求职材料</span><span class="pill acc">工程师</span><span class="pill acc">文档写作</span></div></div>
+              </div>
+              <div class="row" style="justify-content:flex-end"><span class="btn">继续修改</span><span class="btn primary">确认并铸造</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 画面 2 -->
+  <section class="screen">
+    <div class="screen-label"><span class="n">2</span><h2>Skill 详情</h2><span class="where">任何人 · Obelisk App · Skill tab → 市场</span></div>
+    <div class="frame">
+      <div class="frame-bar"><div class="dots"><i></i><i></i><i></i></div><span>Obelisk</span></div>
+      <div class="app">
+        <div class="side">
+          <div class="item">Sessions</div><div class="item">Memory</div><div class="item">Activity</div><div class="item">Recaps</div>
+          <div class="sep"></div><div class="item">Share</div><div class="item on">Skill</div><div class="sep"></div><div class="item">Settings</div>
+        </div>
+        <div class="main stack" style="gap:14px">
+          <div class="row between">
+            <div>
+              <div class="row"><span style="font-size:20px;font-weight:700">AI 能力履历</span><span class="pill dim">v1.2</span><span class="pill chain">已铸造 · BOT Chain</span><span class="pill warn">来源：Playground 运行 #3–#12</span></div>
+              <div class="note" style="margin-top:4px">作者 <span class="mono">0xA1c9…3be2</span> · 指纹 <span class="mono">9c41…e07a</span> · 由 4 个 session 沉淀 · <a href="#">链上记录 ↗</a></div>
+            </div>
+            <div class="row"><span class="btn">在此基础上修改</span><span class="btn primary">取用</span></div>
+          </div>
+
+          <div class="grid g4">
+            <div class="card kpi"><h3>真实调用</h3><div class="big">1,284</div><div class="note">来自 312 个钱包</div></div>
+            <div class="card kpi"><h3>顺利率</h3><div class="big">86%</div><div class="note">基于 1,032 次可判断的调用，另有 252 次无法判断</div></div>
+            <div class="card kpi"><h3>调用后报错</h3><div class="big">6%</div><div class="note">事实信号，直接统计</div></div>
+            <div class="card kpi"><h3>被用户纠正</h3><div class="big">14%</div><div class="note">事实信号，直接统计</div></div>
+          </div>
+
+          <div class="card">
+            <div class="row between"><h3>近 8 周调用趋势</h3><span class="note">次 / 周</span></div>
+            <svg viewBox="0 0 800 110" width="100%" height="110" aria-label="近 8 周调用量逐周上升，从每周 41 次到 268 次">
+              <polyline fill="none" stroke="#a78bfa" stroke-width="2.5" points="20,98 125,90 230,82 335,70 440,58 545,42 650,30 780,12"/>
+              <g fill="#a78bfa"><circle cx="20" cy="98" r="3.5"/><circle cx="780" cy="12" r="3.5"/></g>
+              <g fill="rgba(255,255,255,0.55)" font-size="12" font-family="ui-monospace, monospace"><text x="28" y="94">41</text><text x="730" y="16">268</text></g>
+            </svg>
+          </div>
+
+          <div class="grid g2">
+            <div class="card">
+              <h3>作者的描述</h3>
+              <p class="fg2" style="font-size:14px">"适用于所有求职与自我展示场景：工程师、设计师、产品经理、学生，一键生成专业履历。"</p>
+              <div class="callout" style="margin-top:14px">描述覆盖 4 类人群；实测 71% 的调用来自工程师求职，设计作品集场景的顺利率只有 54%。</div>
+            </div>
+            <div class="card">
+              <h3>实测场景（来自真实调用）</h3>
+              <div class="scn"><span>工程师求职</span><div class="bar"><i style="width:100%"></i></div><span class="mono">918 次</span><span><span class="pill ok">顺利 91%</span> <span class="note">742 次可判断</span></span></div>
+              <div class="scn"><span>年终述职</span><div class="bar"><i style="width:22%"></i></div><span class="mono">201 次</span><span><span class="pill ok">顺利 82%</span> <span class="note">160 次</span></span></div>
+              <div class="scn"><span>设计作品集</span><div class="bar"><i style="width:11%"></i></div><span class="mono">97 次</span><span><span class="pill warn">顺利 54%</span> <span class="note">81 次</span></span></div>
+              <div class="scn"><span>学生实习</span><div class="bar"><i style="width:7%"></i></div><span class="mono">68 次</span><span><span class="pill ok">顺利 77%</span> <span class="note">49 次</span></span></div>
+            </div>
+          </div>
+
+          <div class="grid g2">
+            <div class="card">
+              <h3>出生场景</h3>
+              <div class="tags"><span class="pill acc">求职材料</span><span class="pill acc">工程师</span><span class="pill acc">文档写作</span></div>
+              <p class="note" style="margin-top:10px">铸造时写入链上，之后不可修改。</p>
+            </div>
+            <div class="card">
+              <h3>族谱</h3>
+              <svg viewBox="0 0 520 170" width="100%" height="170" aria-label="族谱：AI 能力履历衍生出设计师作品集版和年终述职版，设计师作品集版又衍生出插画师作品集版">
+                <g stroke="rgba(255,255,255,0.25)" stroke-width="1.5" fill="none">
+                  <path d="M120 40 C170 40 170 30 220 30"/><path d="M120 40 C170 40 170 100 220 100"/><path d="M380 30 C410 30 410 140 400 140"/>
+                </g>
+                <g font-family="-apple-system, PingFang SC, sans-serif" font-size="12.5">
+                  <rect x="4" y="22" width="116" height="36" rx="8" fill="rgba(167,139,250,0.18)" stroke="#a78bfa"/>
+                  <text x="14" y="44" fill="rgba(255,255,255,0.92)">AI 能力履历 · 本页</text>
+                  <rect x="220" y="12" width="160" height="36" rx="8" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.18)"/>
+                  <text x="230" y="34" fill="rgba(255,255,255,0.85)">设计师作品集版 · 0xD4…</text>
+                  <rect x="220" y="82" width="160" height="36" rx="8" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.18)"/>
+                  <text x="230" y="104" fill="rgba(255,255,255,0.85)">年终述职版 · 0xE5…</text>
+                  <rect x="400" y="122" width="116" height="36" rx="8" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.18)"/>
+                  <text x="408" y="144" fill="rgba(255,255,255,0.85)">插画师作品集版</text>
+                </g>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+</body>
+</html>

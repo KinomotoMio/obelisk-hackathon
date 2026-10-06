@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>私密分享 · 界面示意</title>
+<style>
+/* 界面示意用样式。颜色与字体取自 app/src/renderer/styles/base.css。 */
+:root {
+  --bg: #0a0b14;
+  --bg-2: #11131f;
+  --surface: rgba(255,255,255,0.03);
+  --surface-strong: rgba(255,255,255,0.06);
+  --surface-hi: rgba(255,255,255,0.09);
+  --fg: rgba(255,255,255,0.92);
+  --fg-2: rgba(255,255,255,0.72);
+  --muted: rgba(255,255,255,0.48);
+  --hairline: rgba(255,255,255,0.08);
+  --accent: #a78bfa;
+  --accent-2: #c4b5fd;
+  --accent-soft: rgba(167,139,250,0.12);
+  --ok: #4ade80;
+  --ok-soft: rgba(74,222,128,0.12);
+  --danger: #f87171;
+  --danger-soft: rgba(248,113,113,0.12);
+  --warn: #fbbf24;
+  --warn-soft: rgba(251,191,36,0.14);
+  --chain: #38bdf8;
+  --chain-soft: rgba(56,189,248,0.12);
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Inter', 'PingFang SC', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  color: var(--fg);
+  font: 14px/1.55 var(--font-sans);
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(80% 60% at 100% 0%, rgba(236,72,153,0.10), transparent 55%),
+    radial-gradient(70% 60% at 0% 100%, rgba(99,102,241,0.12), transparent 60%),
+    linear-gradient(to bottom, var(--bg) 0%, var(--bg-2) 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+  padding: 0 24px 64px;
+}
+a { color: var(--accent-2); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.mono { font-family: var(--font-mono); font-size: 12.5px; }
+.muted { color: var(--muted); }
+.fg2 { color: var(--fg-2); }
+
+/* 顶部说明条与导航 */
+.banner {
+  position: sticky; top: 0; z-index: 10;
+  margin: 0 -24px 32px; padding: 10px 24px;
+  background: rgba(10,11,20,0.88); backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--hairline);
+  display: flex; gap: 16px; align-items: center; flex-wrap: wrap;
+}
+.banner .tag { background: var(--warn-soft); color: var(--warn); padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+.banner nav { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; }
+.banner nav a.on { color: var(--fg); font-weight: 600; }
+
+.page { max-width: 1180px; margin: 0 auto; }
+h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.01em; }
+.lead { color: var(--fg-2); margin: 6px 0 28px; max-width: 760px; }
+
+/* 一个"画面"的外框 */
+.screen { margin-bottom: 40px; }
+.screen-label { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; }
+.screen-label .n {
+  width: 24px; height: 24px; border-radius: 50%; display: inline-grid; place-items: center;
+  background: var(--accent-soft); color: var(--accent-2); font-size: 12px; font-weight: 700; flex: none;
+}
+.screen-label h2 { font-size: 16px; font-weight: 600; }
+.screen-label .where { color: var(--muted); font-size: 12.5px; }
+.frame {
+  border: 1px solid var(--hairline); border-radius: 14px; overflow: hidden;
+  background: rgba(17,19,31,0.85); box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+.frame-bar {
+  display: flex; align-items: center; gap: 8px; padding: 9px 14px;
+  border-bottom: 1px solid var(--hairline); background: rgba(255,255,255,0.02); font-size: 12px; color: var(--muted);
+}
+.dots { display: flex; gap: 6px; }
+.dots i { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.14); display: block; }
+.url { flex: 1; background: var(--surface-strong); border-radius: 6px; padding: 3px 10px; font-family: var(--font-mono); }
+.frame-body { padding: 20px; }
+
+/* App 布局：侧栏 + 主区 */
+.app { display: grid; grid-template-columns: 180px 1fr; min-height: 420px; }
+.side { border-right: 1px solid var(--hairline); padding: 14px 10px; display: flex; flex-direction: column; gap: 2px; }
+.side .item { padding: 7px 10px; border-radius: 8px; color: var(--fg-2); font-size: 13px; }
+.side .item.on { background: var(--accent-soft); color: var(--fg); font-weight: 600; }
+.side .sep { height: 1px; background: var(--hairline); margin: 8px 4px; }
+.main { padding: 20px 22px; min-width: 0; }
+
+/* 通用部件 */
+.card { background: var(--surface); border: 1px solid var(--hairline); border-radius: 12px; padding: 16px; }
+.card h3 { font-size: 13px; font-weight: 600; color: var(--fg-2); margin-bottom: 10px; letter-spacing: 0.02em; }
+.grid { display: grid; gap: 14px; }
+.g2 { grid-template-columns: 1fr 1fr; }
+.g3 { grid-template-columns: repeat(3, 1fr); }
+.g4 { grid-template-columns: repeat(4, 1fr); }
+.row { display: flex; align-items: center; gap: 10px; }
+.between { justify-content: space-between; }
+.stack { display: flex; flex-direction: column; gap: 10px; }
+.pill { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.pill.ok { background: var(--ok-soft); color: var(--ok); }
+.pill.warn { background: var(--warn-soft); color: var(--warn); }
+.pill.danger { background: var(--danger-soft); color: var(--danger); }
+.pill.acc { background: var(--accent-soft); color: var(--accent-2); }
+.pill.chain { background: var(--chain-soft); color: var(--chain); }
+.pill.dim { background: var(--surface-strong); color: var(--fg-2); }
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; border: 1px solid var(--hairline); background: var(--surface-strong); color: var(--fg); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #140f26; }
+.btn.ghost { background: transparent; }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field label { font-size: 12px; color: var(--muted); }
+.input { background: rgba(0,0,0,0.25); border: 1px solid var(--hairline); border-radius: 8px; padding: 8px 10px; font-family: var(--font-mono); font-size: 13px; color: var(--fg); }
+.seg { display: inline-flex; border: 1px solid var(--hairline); border-radius: 8px; overflow: hidden; }
+.seg span { padding: 6px 12px; font-size: 12.5px; color: var(--fg-2); }
+.seg span.on { background: var(--accent-soft); color: var(--fg); font-weight: 600; }
+.check { width: 16px; height: 16px; border-radius: 4px; border: 1px solid var(--accent); background: var(--accent); display: inline-grid; place-items: center; color: #140f26; font-size: 11px; font-weight: 800; flex: none; }
+.check.off { background: transparent; border-color: var(--muted); color: transparent; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; color: var(--muted); font-weight: 500; font-size: 12px; padding: 8px 10px; border-bottom: 1px solid var(--hairline); }
+td { padding: 10px; border-bottom: 1px solid var(--hairline); vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+.big { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; }
+.note { font-size: 12.5px; color: var(--muted); }
+.callout { border-left: 3px solid var(--accent); background: var(--accent-soft); padding: 10px 14px; border-radius: 0 8px 8px 0; font-size: 13px; color: var(--fg-2); }
+.bar { height: 8px; border-radius: 999px; background: var(--surface-strong); overflow: hidden; }
+.bar > i { display: block; height: 100%; border-radius: 999px; background: var(--accent); }
+.bar.ok > i { background: var(--ok); }
+.bar.warn > i { background: var(--warn); }
+
+/* 对话时间线 */
+.msg { border-radius: 10px; padding: 10px 12px; font-size: 13px; border: 1px solid; }
+.msg.user { background: rgba(167,139,250,0.08); border-color: rgba(167,139,250,0.18); align-self: flex-end; max-width: 80%; }
+.msg.asst { background: rgba(255,255,255,0.025); border-color: rgba(255,255,255,0.06); max-width: 92%; }
+.msg.tool { background: rgba(0,0,0,0.25); border-color: var(--hairline); font-family: var(--font-mono); font-size: 12px; color: var(--fg-2); max-width: 92%; }
+.redact { background: var(--warn-soft); color: var(--warn); border-radius: 4px; padding: 0 4px; font-family: var(--font-mono); font-size: 12px; }
+.who { font-size: 11px; color: var(--muted); margin-bottom: 3px; }
+
+@media (max-width: 860px) {
+  .g2, .g3, .g4 { grid-template-columns: 1fr; }
+  .app { grid-template-columns: 1fr; }
+  .side { display: none; }
+}
+</style>
+<style>
+  .modal { max-width: 640px; margin: 0 auto; background: #151726; border: 1px solid var(--hairline); border-radius: 14px; box-shadow: 0 30px 80px rgba(0,0,0,0.5); }
+  .modal-head { padding: 16px 20px; border-bottom: 1px solid var(--hairline); display: flex; justify-content: space-between; align-items: center; }
+  .step { padding: 14px 20px; border-bottom: 1px solid var(--hairline); }
+  .step-t { font-size: 12px; color: var(--muted); margin-bottom: 8px; font-weight: 600; letter-spacing: 0.04em; }
+  .modal-foot { padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .finding { display: grid; grid-template-columns: 18px 110px 1fr auto; gap: 10px; align-items: center; padding: 6px 0; font-size: 13px; }
+  .reader { position: relative; overflow: hidden; }
+  .wm { position: absolute; inset: -40%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 70px 40px; transform: rotate(-22deg); pointer-events: none; }
+  .wm span { font-family: var(--font-mono); font-size: 12px; color: rgba(255,255,255,0.07); white-space: nowrap; }
+  .denied { text-align: center; padding: 56px 20px; }
+  .denied svg { margin-bottom: 14px; }
+</style>
+</head>
+<body>
+<div class="banner">
+  <span class="tag">界面示意 · 数据为演示样例</span>
+  <nav>
+    <a href="private-sharing.html" class="on">私密分享</a>
+    <a href="skill-detail.html">Skill 详情</a>
+    <a href="market-and-revenue.html">市场与收益</a>
+    <a href="ai-capability-resume.html">AI 能力履历</a>
+    <a href="playground-live.html">Playground 运行</a>
+    <a href="investor-preview.html">投资人预览</a>
+    <a href="../02-private-sharing.md">返回文档</a>
+  </nav>
+</div>
+<div class="page">
+  <h1>私密分享：只给 TA 看</h1>
+  <p class="lead">发送方在 App 里打码、指定接收者和规则；接收方用钱包在网页上打开；拿到被转发链接的人打不开。对应文档 02 的 S1–S6。</p>
+
+  <!-- 画面 1 -->
+  <section class="screen">
+    <div class="screen-label"><span class="n">1</span><h2>发起分享</h2><span class="where">发送方 · Obelisk App · Session 详情页 → 分享</span></div>
+    <div class="frame">
+      <div class="frame-bar"><div class="dots"><i></i><i></i><i></i></div><span>Obelisk</span></div>
+      <div class="app">
+        <div class="side">
+          <div class="item on">Sessions</div><div class="item">Memory</div><div class="item">Activity</div><div class="item">Recaps</div>
+          <div class="sep"></div><div class="item">Share</div><div class="item">Skill</div><div class="sep"></div><div class="item">Settings</div>
+        </div>
+        <div class="main">
+          <div class="modal">
+            <div class="modal-head">
+              <div><div style="font-weight:700">分享 session 片段</div><div class="note">修复支付回调重复扣款 · Claude Code · 2026-10-07</div></div>
+              <span class="pill acc">只给 TA 看</span>
+            </div>
+            <div class="step">
+              <div class="step-t">1 · 选择范围</div>
+              <div class="row between"><span>第 12–48 条消息</span><span class="note">37 条消息 · 9 次工具调用</span></div>
+            </div>
+            <div class="step">
+              <div class="step-t">2 · 隐私体检 · 检出 4 处敏感信息</div>
+              <div class="finding"><span class="check">✓</span><span class="fg2">API 密钥</span><span class="mono">sk-live-••••••••</span><span class="pill warn">已打码</span></div>
+              <div class="finding"><span class="check">✓</span><span class="fg2">本地路径</span><span class="mono">/Users/••••/work/pay-gateway</span><span class="pill warn">已打码</span></div>
+              <div class="finding"><span class="check">✓</span><span class="fg2">数据库连接串</span><span class="mono">postgres://••••@••••</span><span class="pill warn">已打码</span></div>
+              <div class="finding"><span class="check">✓</span><span class="fg2">邮箱</span><span class="mono">••••@••••.com</span><span class="pill warn">已打码</span></div>
+            </div>
+            <div class="step">
+              <div class="step-t">3 · 接收者</div>
+              <div class="row"><div class="input" style="flex:1">0x7a3f…c21e</div><span class="pill ok">已激活，可加密发送</span></div>
+            </div>
+            <div class="step">
+              <div class="step-t">4 · 打开规则</div>
+              <div class="grid g2">
+                <div class="field"><label>打开次数</label><div class="seg"><span class="on">1 次</span><span>3 次</span><span>不限</span></div></div>
+                <div class="field"><label>有效期</label><div class="seg"><span>1 小时</span><span class="on">24 小时</span><span>7 天</span></div></div>
+                <div class="field"><label>水印</label><div class="row"><span class="check">✓</span><span class="fg2">印上接收者地址与分享编号</span></div></div>
+                <div class="field"><label>价格（上下文付费 · 阶段 2）</label><div class="row"><span class="check off">✓</span><span class="muted">免费</span></div></div>
+              </div>
+            </div>
+            <div class="modal-foot">
+              <span class="note">内容在本机加密后才上传，Obelisk 在线服务无法读取。规则将写入 BOT Chain。</span>
+              <span class="btn primary">生成分享链接</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 画面 2 -->
+  <section class="screen">
+    <div class="screen-label"><span class="n">2</span><h2>Share tab · 已发送</h2><span class="where">发送方 · Obelisk App</span></div>
+    <div class="frame">
+      <div class="frame-bar"><div class="dots"><i></i><i></i><i></i></div><span>Obelisk</span></div>
+      <div class="app">
+        <div class="side">
+          <div class="item">Sessions</div><div class="item">Memory</div><div class="item">Activity</div><div class="item">Recaps</div>
+          <div class="sep"></div><div class="item on">Share</div><div class="item">Skill</div><div class="sep"></div><div class="item">Settings</div>
+        </div>
+        <div class="main">
+          <div class="row" style="margin-bottom:14px"><div class="seg"><span class="on">已发送</span><span>收到的 · 阶段 2</span></div></div>
+          <table>
+            <tr><th>内容</th><th>接收者</th><th>规则</th><th>状态</th><th>链上记录</th><th></th></tr>
+            <tr><td>修复支付回调重复扣款</td><td class="mono">0x7a3f…c21e</td><td class="fg2">1 次 · 24 小时</td><td><span class="pill ok">已读 · 10-07 21:03</span></td><td><a href="#">打开回执 ↗</a></td><td></td></tr>
+            <tr><td>迁移到新版鉴权中间件</td><td class="mono">0x19be…44d0</td><td class="fg2">3 次 · 7 天</td><td><span class="pill dim">未读</span></td><td><a href="#">分享授权 ↗</a></td><td><span class="btn ghost">撤回</span></td></tr>
+            <tr><td>首页性能排查</td><td class="mono">0x5c02…9a17</td><td class="fg2">1 次 · 1 小时</td><td><span class="pill warn">已过期</span></td><td><a href="#">分享授权 ↗</a></td><td></td></tr>
+            <tr><td>部署脚本整理</td><td class="mono">0xe4d1…07bb</td><td class="fg2">不限 · 7 天</td><td><span class="pill danger">已撤回</span></td><td><a href="#">撤回记录 ↗</a></td><td></td></tr>
+          </table>
+          <p class="note" style="margin-top:12px">"已读""已撤回"等状态来自 BOT Chain 上的记录，任何人可在区块浏览器核对。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 画面 3 -->
+  <section class="screen">
+    <div class="screen-label"><span class="n">3</span><h2>网页阅读页</h2><span class="where">接收方 · 浏览器 · 不需要安装 Obelisk</span></div>
+    <div class="frame">
+      <div class="frame-bar"><div class="dots"><i></i><i></i><i></i></div><span class="url">Obelisk 分享 · #S-0142</span></div>
+      <div class="frame-body reader">
+        <div class="wm">
+          <span>0x7a3f…c21e · #S-0142 · 10-07 21:03</span><span>0x7a3f…c21e · #S-0142 · 10-07 21:03</span><span>0x7a3f…c21e · #S-0142 · 10-07 21:03</span>
+          <span>0x7a3f…c21e · #S-0142 · 10-07 21:03</span><span>0x7a3f…c21e · #S-0142 · 10-07 21:03</span><span>0x7a3f…c21e · #S-0142 · 10-07 21:03</span>
+          <span>0x7a3f…c21e · #S-0142 · 10-07 21:03</span><span>0x7a3f…c21e · #S-0142 · 10-07 21:03</span><span>0x7a3f…c21e · #S-0142 · 10-07 21:03</span>
+          <span>0x7a3f…c21e · #S-0142 · 10-07 21:03</span><span>0x7a3f…c21e · #S-0142 · 10-07 21:03</span><span>0x7a3f…c21e · #S-0142 · 10-07 21:03</span>
+          <span>0x7a3f…c21e · #S-0142 · 10-07 21:03</span><span>0x7a3f…c21e · #S-0142 · 10-07 21:03</span><span>0x7a3f…c21e · #S-0142 · 10-07 21:03</span>
+        </div>
+        <div class="row between" style="margin-bottom:14px; position:relative">
+          <div>
+            <div style="font-size:17px;font-weight:700">修复支付回调重复扣款</div>
+            <div class="note">来自 0xA1c9…3be2 · 快照于 2026-10-07 18:20 · 第 12–48 条 · 4 处已打码</div>
+          </div>
+          <div class="row"><span class="pill ok">已验证：你是指定接收者</span><span class="pill warn">这是最后一次打开</span></div>
+        </div>
+        <div class="stack" style="position:relative">
+          <div class="msg user"><div class="who">用户</div>线上偶发重复扣款，日志里同一笔订单收到了两次支付回调，帮我查一下原因。</div>
+          <div class="msg tool">grep -rn "payment_callback" src/ · 读取 3 个文件</div>
+          <div class="msg asst"><div class="who">Claude</div>回调处理在写入订单状态之前就返回了成功，支付平台超时重试时会再次进入扣款逻辑。建议以订单号加幂等键做去重，并把状态写入和确认放进同一个事务。</div>
+          <div class="msg tool">编辑 src/payments/callback.ts · 配置项 <span class="redact">[已打码：API 密钥]</span></div>
+          <div class="msg user"><div class="who">用户</div>重试测试通过了，帮我补一个回归测试。</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 画面 4 -->
+  <section class="screen">
+    <div class="screen-label"><span class="n">4</span><h2>被转发的链接</h2><span class="where">其他人 · 浏览器</span></div>
+    <div class="frame">
+      <div class="frame-bar"><div class="dots"><i></i><i></i><i></i></div><span class="url">Obelisk 分享 · #S-0142</span></div>
+      <div class="denied">
+        <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-label="已锁定"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+        <div style="font-size:18px;font-weight:700;margin-bottom:6px">这份分享属于 0x7a3f…c21e</div>
+        <div class="fg2">你当前连接的钱包是 <span class="mono">0x33aa…f0c1</span>，无法打开。</div>
+        <div class="note" style="margin-top:14px">打开规则由 BOT Chain 上的分享授权决定 · <a href="#">查看链上记录 ↗</a></div>
+      </div>
+    </div>
+  </section>
+</div>
+</body>
+</html>

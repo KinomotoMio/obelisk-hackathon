@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI 能力履历 · 界面示意</title>
+<style>
+/* 界面示意用样式。颜色与字体取自 app/src/renderer/styles/base.css。 */
+:root {
+  --bg: #0a0b14;
+  --bg-2: #11131f;
+  --surface: rgba(255,255,255,0.03);
+  --surface-strong: rgba(255,255,255,0.06);
+  --surface-hi: rgba(255,255,255,0.09);
+  --fg: rgba(255,255,255,0.92);
+  --fg-2: rgba(255,255,255,0.72);
+  --muted: rgba(255,255,255,0.48);
+  --hairline: rgba(255,255,255,0.08);
+  --accent: #a78bfa;
+  --accent-2: #c4b5fd;
+  --accent-soft: rgba(167,139,250,0.12);
+  --ok: #4ade80;
+  --ok-soft: rgba(74,222,128,0.12);
+  --danger: #f87171;
+  --danger-soft: rgba(248,113,113,0.12);
+  --warn: #fbbf24;
+  --warn-soft: rgba(251,191,36,0.14);
+  --chain: #38bdf8;
+  --chain-soft: rgba(56,189,248,0.12);
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Inter', 'PingFang SC', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  color: var(--fg);
+  font: 14px/1.55 var(--font-sans);
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(80% 60% at 100% 0%, rgba(236,72,153,0.10), transparent 55%),
+    radial-gradient(70% 60% at 0% 100%, rgba(99,102,241,0.12), transparent 60%),
+    linear-gradient(to bottom, var(--bg) 0%, var(--bg-2) 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+  padding: 0 24px 64px;
+}
+a { color: var(--accent-2); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.mono { font-family: var(--font-mono); font-size: 12.5px; }
+.muted { color: var(--muted); }
+.fg2 { color: var(--fg-2); }
+
+/* 顶部说明条与导航 */
+.banner {
+  position: sticky; top: 0; z-index: 10;
+  margin: 0 -24px 32px; padding: 10px 24px;
+  background: rgba(10,11,20,0.88); backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--hairline);
+  display: flex; gap: 16px; align-items: center; flex-wrap: wrap;
+}
+.banner .tag { background: var(--warn-soft); color: var(--warn); padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+.banner nav { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; }
+.banner nav a.on { color: var(--fg); font-weight: 600; }
+
+.page { max-width: 1180px; margin: 0 auto; }
+h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.01em; }
+.lead { color: var(--fg-2); margin: 6px 0 28px; max-width: 760px; }
+
+/* 一个"画面"的外框 */
+.screen { margin-bottom: 40px; }
+.screen-label { display: flex; align-items: baseline; gap: 10px; margin-bottom: 10px; }
+.screen-label .n {
+  width: 24px; height: 24px; border-radius: 50%; display: inline-grid; place-items: center;
+  background: var(--accent-soft); color: var(--accent-2); font-size: 12px; font-weight: 700; flex: none;
+}
+.screen-label h2 { font-size: 16px; font-weight: 600; }
+.screen-label .where { color: var(--muted); font-size: 12.5px; }
+.frame {
+  border: 1px solid var(--hairline); border-radius: 14px; overflow: hidden;
+  background: rgba(17,19,31,0.85); box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+}
+.frame-bar {
+  display: flex; align-items: center; gap: 8px; padding: 9px 14px;
+  border-bottom: 1px solid var(--hairline); background: rgba(255,255,255,0.02); font-size: 12px; color: var(--muted);
+}
+.dots { display: flex; gap: 6px; }
+.dots i { width: 10px; height: 10px; border-radius: 50%; background: rgba(255,255,255,0.14); display: block; }
+.url { flex: 1; background: var(--surface-strong); border-radius: 6px; padding: 3px 10px; font-family: var(--font-mono); }
+.frame-body { padding: 20px; }
+
+/* App 布局：侧栏 + 主区 */
+.app { display: grid; grid-template-columns: 180px 1fr; min-height: 420px; }
+.side { border-right: 1px solid var(--hairline); padding: 14px 10px; display: flex; flex-direction: column; gap: 2px; }
+.side .item { padding: 7px 10px; border-radius: 8px; color: var(--fg-2); font-size: 13px; }
+.side .item.on { background: var(--accent-soft); color: var(--fg); font-weight: 600; }
+.side .sep { height: 1px; background: var(--hairline); margin: 8px 4px; }
+.main { padding: 20px 22px; min-width: 0; }
+
+/* 通用部件 */
+.card { background: var(--surface); border: 1px solid var(--hairline); border-radius: 12px; padding: 16px; }
+.card h3 { font-size: 13px; font-weight: 600; color: var(--fg-2); margin-bottom: 10px; letter-spacing: 0.02em; }
+.grid { display: grid; gap: 14px; }
+.g2 { grid-template-columns: 1fr 1fr; }
+.g3 { grid-template-columns: repeat(3, 1fr); }
+.g4 { grid-template-columns: repeat(4, 1fr); }
+.row { display: flex; align-items: center; gap: 10px; }
+.between { justify-content: space-between; }
+.stack { display: flex; flex-direction: column; gap: 10px; }
+.pill { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.pill.ok { background: var(--ok-soft); color: var(--ok); }
+.pill.warn { background: var(--warn-soft); color: var(--warn); }
+.pill.danger { background: var(--danger-soft); color: var(--danger); }
+.pill.acc { background: var(--accent-soft); color: var(--accent-2); }
+.pill.chain { background: var(--chain-soft); color: var(--chain); }
+.pill.dim { background: var(--surface-strong); color: var(--fg-2); }
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; border: 1px solid var(--hairline); background: var(--surface-strong); color: var(--fg); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #140f26; }
+.btn.ghost { background: transparent; }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field label { font-size: 12px; color: var(--muted); }
+.input { background: rgba(0,0,0,0.25); border: 1px solid var(--hairline); border-radius: 8px; padding: 8px 10px; font-family: var(--font-mono); font-size: 13px; color: var(--fg); }
+.seg { display: inline-flex; border: 1px solid var(--hairline); border-radius: 8px; overflow: hidden; }
+.seg span { padding: 6px 12px; font-size: 12.5px; color: var(--fg-2); }
+.seg span.on { background: var(--accent-soft); color: var(--fg); font-weight: 600; }
+.check { width: 16px; height: 16px; border-radius: 4px; border: 1px solid var(--accent); background: var(--accent); display: inline-grid; place-items: center; color: #140f26; font-size: 11px; font-weight: 800; flex: none; }
+.check.off { background: transparent; border-color: var(--muted); color: transparent; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; color: var(--muted); font-weight: 500; font-size: 12px; padding: 8px 10px; border-bottom: 1px solid var(--hairline); }
+td { padding: 10px; border-bottom: 1px solid var(--hairline); vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+.big { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; }
+.note { font-size: 12.5px; color: var(--muted); }
+.callout { border-left: 3px solid var(--accent); background: var(--accent-soft); padding: 10px 14px; border-radius: 0 8px 8px 0; font-size: 13px; color: var(--fg-2); }
+.bar { height: 8px; border-radius: 999px; background: var(--surface-strong); overflow: hidden; }
+.bar > i { display: block; height: 100%; border-radius: 999px; background: var(--accent); }
+.bar.ok > i { background: var(--ok); }
+.bar.warn > i { background: var(--warn); }
+
+/* 对话时间线 */
+.msg { border-radius: 10px; padding: 10px 12px; font-size: 13px; border: 1px solid; }
+.msg.user { background: rgba(167,139,250,0.08); border-color: rgba(167,139,250,0.18); align-self: flex-end; max-width: 80%; }
+.msg.asst { background: rgba(255,255,255,0.025); border-color: rgba(255,255,255,0.06); max-width: 92%; }
+.msg.tool { background: rgba(0,0,0,0.25); border-color: var(--hairline); font-family: var(--font-mono); font-size: 12px; color: var(--fg-2); max-width: 92%; }
+.redact { background: var(--warn-soft); color: var(--warn); border-radius: 4px; padding: 0 4px; font-family: var(--font-mono); font-size: 12px; }
+.who { font-size: 11px; color: var(--muted); margin-bottom: 3px; }
+
+@media (max-width: 860px) {
+  .g2, .g3, .g4 { grid-template-columns: 1fr; }
+  .app { grid-template-columns: 1fr; }
+  .side { display: none; }
+}
+</style>
+<style>
+  .resume { display: grid; grid-template-columns: 380px 1fr; gap: 20px; align-items: start; }
+  @media (max-width: 860px) { .resume { grid-template-columns: 1fr; } }
+  .ev { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--hairline); font-size: 13px; }
+  .ev:last-child { border-bottom: none; }
+</style>
+</head>
+<body>
+<div class="banner">
+  <span class="tag">界面示意 · 数据为演示样例</span>
+  <nav>
+    <a href="private-sharing.html">私密分享</a>
+    <a href="skill-detail.html">Skill 详情</a>
+    <a href="market-and-revenue.html">市场与收益</a>
+    <a href="ai-capability-resume.html" class="on">AI 能力履历</a>
+    <a href="playground-live.html">Playground 运行</a>
+    <a href="investor-preview.html">投资人预览</a>
+    <a href="../06-ai-capability-resume.md">返回文档</a>
+  </nav>
+</div>
+<div class="page">
+  <h1>AI 能力履历：FDE 的终极名片</h1>
+  <p class="lead">由「AI 能力履历」Skill 从持有人自己的 session 历史生成。展示的不是做过什么项目，而是解决过什么问题；数据可以在链上核对，证据可以私密出示。对应文档 06 的 R1–R3。</p>
+
+  <section class="screen">
+    <div class="screen-label"><span class="n">1</span><h2>生成的履历</h2><span class="where">用户 U · 在任意 AI 编程助手中调用后生成</span></div>
+    <div class="frame"><div class="frame-body">
+      <div class="row between" style="margin-bottom:18px">
+        <div>
+          <div style="font-size:20px;font-weight:700">AI 能力履历</div>
+          <div class="note">持有人 <span class="mono">0x8b2e…41a2</span> · 统计范围 2026-07-01 至 2026-10-07 · 163 个 session</div>
+        </div>
+        <div class="row"><span class="pill chain">数据可在 BOT Chain 核对</span><span class="pill dim">由「AI 能力履历」v1.2 生成</span></div>
+      </div>
+
+      <div class="resume">
+        <div class="card">
+          <h3>能力维度 · 各维度顺利率（括号内为 session 数）</h3>
+          <svg viewBox="-36 0 432 340" width="100%" aria-label="能力维度图：调试与排障 91%，后端与数据 84%，前端与交互 64%，自动化与脚本 88%，系统设计 76%，文档与沟通 86%">
+            <g fill="none" stroke="rgba(255,255,255,0.12)">
+              <polygon points="180,40 292.6,105 292.6,235 180,300 67.4,235 67.4,105"/>
+              <polygon points="180,84.2 254.3,127.1 254.3,212.9 180,255.8 105.7,212.9 105.7,127.1"/>
+              <polygon points="180,127.1 217.2,148.6 217.2,191.5 180,212.9 142.8,191.5 142.8,148.6"/>
+              <path d="M180 170 L180 40 M180 170 L292.6 105 M180 170 L292.6 235 M180 170 L180 300 M180 170 L67.4 235 M180 170 L67.4 105"/>
+            </g>
+            <polygon points="180,51.7 274.6,115.4 252.1,211.6 180,284.4 94.4,219.4 83.2,114.1" fill="rgba(167,139,250,0.25)" stroke="#a78bfa" stroke-width="2"/>
+            <g font-family="-apple-system, PingFang SC, sans-serif" font-size="12.5" fill="rgba(255,255,255,0.85)">
+              <text x="180" y="28" text-anchor="middle">调试与排障 91%（46）</text>
+              <text x="298" y="96">后端与数据</text><text x="298" y="112">84%（38）</text>
+              <text x="298" y="246">前端与交互</text><text x="298" y="262">64%（11）</text>
+              <text x="180" y="322" text-anchor="middle">自动化与脚本 88%（29）</text>
+              <text x="62" y="246" text-anchor="end">系统设计</text><text x="62" y="262" text-anchor="end">76%（17）</text>
+              <text x="62" y="96" text-anchor="end">文档与沟通</text><text x="62" y="112" text-anchor="end">86%（22）</text>
+            </g>
+          </svg>
+          <p class="note">维度来自场景标签；顺利率不含无法判断的调用。维度数据在本机计算，持有人选择放进履历的部分才会导出。</p>
+        </div>
+
+        <div class="stack" style="gap:14px">
+          <div class="card">
+            <h3>解决过的代表性问题</h3>
+            <div class="ev"><div><div>线上重复扣款：定位支付回调重试导致的重复扣款，加入幂等去重并补回归测试</div><div class="note">调试与排障 · 后端与数据</div></div><span class="btn">私密出示佐证</span></div>
+            <div class="ev"><div><div>慢查询：从监控定位到索引调整，接口耗时恢复到基线</div><div class="note">后端与数据</div></div><span class="btn">私密出示佐证</span></div>
+            <div class="ev"><div><div>发布流程脚本化：把手工发布步骤整理成可重复执行的脚本与检查清单</div><div class="note">自动化与脚本</div></div><span class="btn">私密出示佐证</span></div>
+          </div>
+          <div class="card">
+            <h3>沉淀的 Skill · 链上可核对</h3>
+            <table>
+              <tr><th>Skill</th><th>真实调用</th><th>钱包数</th><th>顺利率</th><th></th></tr>
+              <tr><td>SQL 慢查询调优</td><td class="mono">1,620</td><td class="mono">371</td><td><span class="pill ok">90%</span></td><td><a href="#">链上记录 ↗</a></td></tr>
+              <tr><td>发布流程检查清单</td><td class="mono">520</td><td class="mono">115</td><td><span class="pill ok">85%</span></td><td><a href="#">链上记录 ↗</a></td></tr>
+            </table>
+          </div>
+          <div class="callout">招聘方点击"链上记录"即可在区块浏览器核对调用统计；点击"私密出示佐证"，持有人会把对应 session 只分享给招聘方的钱包：只能看一次，带水印，持有人收到已读回执。</div>
+        </div>
+      </div>
+    </div></div>
+  </section>
+</div>
+</body>
+</html>
