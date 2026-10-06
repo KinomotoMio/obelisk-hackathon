@@ -4,7 +4,7 @@
 
 
 import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
 
 import {
@@ -14,6 +14,14 @@ import {
   executeQuery,
   executeAttune,
 } from '../../core/src/core.ts';
+import { resolveObeliskPaths } from '../../core/src/paths.ts';
+import {
+  listSkills,
+  readSkill,
+  saveSkillDraft,
+  skillBodyFromMarkdown,
+  skillFingerprint,
+} from '../../core/src/skills.ts';
 
 async function main() {
   const args = process.argv.slice(2);
@@ -98,6 +106,35 @@ async function main() {
     try { emit(await executeAttune(readFileSync(resolve(args[1]), 'utf8'))); } catch (error) { fail(error); }
     return;
   }
+  if (args[0] === 'skill') {
+    try {
+      const skillsDir = resolveObeliskPaths().skillsDir;
+      const [, action, target] = args;
+      if (action === 'list') {
+        emit(await listSkills(skillsDir));
+      } else if (action === 'show' && target) {
+        const skill = await readSkill(skillsDir, target);
+        if (!skill) throw new Error(`Skill not found in the local library: ${target}`);
+        emit(skill);
+      } else if (action === 'save' && target) {
+        // The draft is a JSON file; `bodyFile` (relative to that file) may
+        // replace an inline `body` so agents can keep the Markdown as Markdown.
+        const draftPath = resolve(target);
+        const draft = JSON.parse(readFileSync(draftPath, 'utf8')) as Record<string, unknown>;
+        if (typeof draft['bodyFile'] === 'string') {
+          draft['body'] = readFileSync(resolve(dirname(draftPath), draft['bodyFile']), 'utf8');
+          delete draft['bodyFile'];
+        }
+        const skill = await saveSkillDraft(skillsDir, draft);
+        emit({ name: skill.name, fingerprint: skill.draft?.fingerprint ?? null, path: skill.draft?.path ?? null, status: skill.status });
+      } else if (action === 'fingerprint' && target) {
+        emit({ fingerprint: skillFingerprint(skillBodyFromMarkdown(readFileSync(resolve(target), 'utf8'))) });
+      } else {
+        throw new Error('Usage: obelisk skill list | show <name> | save <draft.json> | fingerprint <SKILL.md>');
+      }
+    } catch (error) { fail(error); }
+    return;
+  }
   if (args[0] === 'install') {
     const npx = process.platform === 'win32' ? 'npx.cmd' : 'npx';
     const child = spawnSync(
@@ -113,7 +150,7 @@ async function main() {
     }
     return;
   }
-  process.stderr.write('Usage:\n  obelisk install [skills options]\n  obelisk --build\n  obelisk --search "text" [--nonce <token>]\n  obelisk --query <file.js>\n  obelisk --attune <file.js>\n');
+  process.stderr.write('Usage:\n  obelisk install [skills options]\n  obelisk --build\n  obelisk --search "text" [--nonce <token>]\n  obelisk --query <file.js>\n  obelisk --attune <file.js>\n  obelisk skill list | show <name> | save <draft.json> | fingerprint <SKILL.md>\n');
   process.exitCode = 1;
 }
 
