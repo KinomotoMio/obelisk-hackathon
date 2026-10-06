@@ -26,6 +26,9 @@ export default tseslint.config(
       'chain/cache/**',
       'chain/types/**',
       'chain/coverage/**',
+      // service/ is a standalone Cloudflare Worker project; wrangler writes
+      // bundles here during `wrangler dev`.
+      'service/.wrangler/**',
     ],
   },
   js.configs.recommended,

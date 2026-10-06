@@ -37,6 +37,15 @@ jobs:
           npm ci
           npm test
           npm run typecheck
+      # After the chain job: the relay end-to-end tests run against a Hardhat
+      # node from chain/ with the contracts it just built.
+      - name: Verify online service
+        if: runner.os == 'Linux'
+        working-directory: service
+        run: |
+          npm ci
+          npm run typecheck
+          npm test
       - run: npm run build:cli
       - name: Verify CLI package and runtime contract
         run: node --experimental-test-module-mocks --test tests/cli-package.test.mjs tests/runtime-cli-envelope.test.mjs tests/runtime.test.mjs tests/codex-index.test.mjs
