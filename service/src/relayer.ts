@@ -15,7 +15,6 @@
 import {
   BaseError,
   ContractFunctionRevertedError,
-  WaitForTransactionReceiptTimeoutError,
   formatEther,
   recoverTypedDataAddress,
   type Abi,
@@ -158,10 +157,10 @@ export class Relayer {
       }
       return { status: 'confirmed', action: request.action, signer: request.signer, txHash, blockNumber: receipt.blockNumber.toString(), explorerUrl };
     } catch (error) {
-      if (error instanceof WaitForTransactionReceiptTimeoutError) {
-        return { status: 'pending', action: request.action, signer: request.signer, txHash, explorerUrl };
-      }
-      throw error;
+      if (error instanceof RequestError) throw error;
+      // The transaction is out; a slow or flaky receipt lookup must not be
+      // reported as a failure the caller might retry. They poll /v1/tx.
+      return { status: 'pending', action: request.action, signer: request.signer, txHash, explorerUrl };
     }
   }
 
