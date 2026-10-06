@@ -134,6 +134,10 @@ From the user's sentence, work out:
   synonyms and concrete artifacts for a kind of work (`resume`, `cover letter`,
   `简历`, `求职`, `面试`), or process words for a methodology (`plan`,
   `review`, `PR`, `test`, `验收`, `拆分`, `计划`).
+- **What to leave out.** Constraints like "只沉淀 AI 工作方法论，不要泄露产品
+  设计、技术架构" define a keep-out list (here: product design, technical
+  architecture). Write it down; it shapes every excerpt, rule and hit reason
+  you produce, and Step 4 checks against it.
 - **Revising an existing draft?** If the user names a draft ("继续修改草稿 X",
   "从草稿 X 中去掉 session Y"), run `obelisk skill show <name>`, start from its
   body and provenance, and go to [Revising a draft](#revising-a-draft).
@@ -273,7 +277,8 @@ and ask whether to continue.
 
 Before drafting, show the user what you are building on, then continue without
 waiting. One line per session: title, tool, date, and the hit reason in the
-user's language:
+user's language. When there is a keep-out list, phrase the reasons in its
+terms (how the work was done, not what was built):
 
 ```text
 找到 5 个直接相关的 session（Claude Code 2 · Codex 3；项目 A、B、C）：
@@ -296,9 +301,9 @@ user's language:
 - **Pitfalls**: what went wrong before and how it was fixed.
 - **Done when**: what the user accepted as finished, if the sessions show it.
 
-Every rule must be supported by at least one source session; when the evidence
-is ambiguous, leave the rule out rather than generalize. Do not mention session
-ids or dates in the body; they belong in the provenance card.
+Every rule should trace back to at least one source session; when the evidence
+is ambiguous, leave the rule out rather than generalize. Session ids and dates
+belong in the provenance card, not in the body.
 
 The body is hashed into the version fingerprint, so it must load exactly as
 written. Claude Code rewrites a few patterns when it loads a Skill, and
@@ -320,9 +325,17 @@ evidence; do not widen it to scenes the sessions never covered.
 - `sessionId`: the full session id.
 - `reason`: the hit reason from Step 3, one line.
 - `excerpts`: at most 2 short verbatim quotes (under 200 characters) with their
-  `messageUuid`, preferably the user's own words. Leave out secrets and
-  personal data.
+  `messageUuid`, preferably the user's own words.
 - `pitfalls` and `corrections`: short lines, only what this session shows.
+
+**Check before saving.** Read the name, description, body, and every provenance
+`reason`, excerpt, pitfall and correction once more against the private
+material above and the user's keep-out list. A quote that is about method but
+names a component, data model or product decision gets cut down to the method
+part or replaced by another quote; a rule that only makes sense with the
+product details goes. Count what you removed by type (for example 产品设计 3 处,
+技术架构 2 处, 路径 1 处) for the report, without repeating the removed content
+anywhere.
 
 ## Step 5 — Tag the birth scenes
 
@@ -391,6 +404,7 @@ Keep it short so the user sees at a glance what happened and what to do next:
 - 证据：4 个 session（Claude Code 3 · Codex 1），跨度 3 周
 - 出处卡：踩过的坑 2 条 · 被纠正 3 条
 - 出生场景：求职与实习 · 文档写作与沟通 · 简历与履历
+- 已略去：产品设计 3 处 · 技术架构 2 处
 - 指纹：9c41…e07a
 
 下一步：打开 Obelisk App 的 Skill tab 审阅草稿、证据和出处卡。
@@ -398,6 +412,7 @@ Keep it short so the user sees at a glance what happened and what to do next:
 ```
 
 When a tag was created, add it to the scenes line as `新建 user:<dimension>/<label>（<一句理由>）`.
+Leave out the 已略去 line when nothing was removed.
 
 If the App is not open, `obelisk skill show <name>` prints the same draft.
 
