@@ -1,0 +1,33 @@
+{
+  "chainId": 968,
+  "network": "botTestnet",
+  "complete": true,
+  "updatedAt": "2026-10-06T19:41:08.621Z",
+  "contracts": {
+    "KeyRegistry": {
+      "address": "0x82450C2AA0aE363b363C04E5eabA6Ee1d92D1dDE",
+      "txHash": "0xeeb92315005d4c6bf7ad5827551f36dbc1a8115c813ad89f703878e89bd2585d",
+      "blockNumber": 25941323,
+      "deployer": "0x2f8A318ad91cBa234Af92ad6029F9bE395a20F9f"
+    },
+    "ShareRegistry": {
+      "address": "0x81B4B63d101941ffeb2Da61754981796eC2DD8dd",
+      "txHash": "0x2392af17b3a12469e8aaf75a06367ec800dfc24d8f96a79a71c6670a99f83891",
+      "blockNumber": 25941561,
+      "deployer": "0x2f8A318ad91cBa234Af92ad6029F9bE395a20F9f"
+    },
+    "SkillRegistry": {
+      "address": "0xD42208e780225e90C5DE7f56A7F007058230900b",
+      "txHash": "0xbf8bbb355763169dcb3d6da2f4afb06f68cea78e3315e1a714a769f1a4358ec7",
+      "blockNumber": 25941568,
+      "deployer": "0x2f8A318ad91cBa234Af92ad6029F9bE395a20F9f"
+    },
+    "UsageStats": {
+      "address": "0x84b17B83C976E2b0C447A4df09c52D80e4f40B98",
+      "txHash": "0x484c7d6b07cea1cc76c8d8ca15995b0f7fc7e4c16a8bde2ffd9202122ac72542",
+      "blockNumber": 25941574,
+      "deployer": "0x2f8A318ad91cBa234Af92ad6029F9bE395a20F9f"
+    }
+  },
+  "pending": {}
+}
