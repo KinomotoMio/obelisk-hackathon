@@ -70,5 +70,5 @@ test('CLI lists the fixed scene list by dimension and refuses scenes outside it'
   writeFileSync(join(work, 'draft.json'), JSON.stringify({ ...draft, body: '# Probe', birthScenes: ['求职材料'] }));
   const refused = runCli(['skill', 'save', join(work, 'draft.json')], { home, env });
   assert.equal(refused.status, 1);
-  assert.match(JSON.parse(refused.stdout).error, /not in the fixed scene list; pick ids from `obelisk skill scenes`/);
+  assert.match(JSON.parse(refused.stdout).error, /is not a tag in scene vocabulary v1; use a tag from `obelisk skill scenes`/);
 });

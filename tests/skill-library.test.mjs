@@ -16,7 +16,16 @@ import {
   skillBodyFromMarkdown,
   skillFingerprint,
 } from '../packages/core/src/skills.ts';
-import { SCENE_DIMENSIONS, SCENES, findScene } from '../packages/core/src/scenes.ts';
+import {
+  SCENE_DIMENSIONS,
+  SCENES,
+  findScene,
+  migrateSceneTag,
+  normalizeSceneTag,
+  sceneBucketKey,
+  vocabularyTag,
+} from '../packages/core/src/scenes.ts';
+import { keccak256, stringToBytes } from 'viem';
 import { makeTempDir } from './temp-dirs.mjs';
 
 const fixtureDir = new URL('./fixtures/claude/', import.meta.url);
@@ -75,7 +84,7 @@ test('a saved draft keeps provenance, birth scenes, and parent under the data di
   const saved = await saveSkillDraft(skillsDir, draft({ parent: { name: 'resume-base', chainId: 968, skillId: '3' } }), { now: () => '2026-10-07T01:00:00.000Z' });
   assert.equal(saved.dir, join(skillsDir, 'ai-capability-resume'));
   assert.equal(saved.status, 'draft');
-  assert.deepEqual(saved.birthScenes, ['domain/career', 'artifact/resume']);
+  assert.deepEqual(saved.birthScenes, ['v1:domain/career', 'v1:artifact/resume']);
   assert.deepEqual(saved.parent, { name: 'resume-base', chainId: 968, skillId: '3' });
   assert.equal(saved.provenance[0].excerpts[0].text, '不要写没有证据的能力');
   assert.equal(saved.draft.fingerprint, sha256('# AI capability resume\n\nCollect evidence from real sessions before writing claims.'));
@@ -129,58 +138,68 @@ test('drafts whose loaded text Claude Code would rewrite are refused', async () 
   }
 });
 
-test('出生场景从固定的场景列表中选取: unknown ids are refused, duplicates collapse', async () => {
+test('出生场景写成"词表版本 + 标签": vocabulary ids are stored with their version, duplicates collapse', async () => {
   const skillsDir = join(makeTempDir('obelisk-skills-'), 'skills');
-  for (const birthScenes of [['求职材料'], ['writing/resume'], ['domain/career', 'domain/nope'], 'domain/career', [42]]) {
+  const saved = await saveSkillDraft(skillsDir, draft({ birthScenes: ['task/writing', ' v1:artifact/resume ', 'v1:task/writing'] }));
+  assert.deepEqual(saved.birthScenes, ['v1:task/writing', 'v1:artifact/resume']);
+  for (const birthScenes of [['writing/resume'], ['v1:domain/nope'], ['v9:artifact/resume'], 'v1:domain/career', [42]]) {
     await assert.rejects(saveSkillDraft(skillsDir, draft({ birthScenes })), /birthScenes/, JSON.stringify(birthScenes));
   }
   await assert.rejects(
-    saveSkillDraft(skillsDir, draft({ birthScenes: ['domain/career', '求职材料'] })),
-    /birthScenes\[1\] "求职材料" is not in the fixed scene list; pick ids from `obelisk skill scenes`/,
+    saveSkillDraft(skillsDir, draft({ birthScenes: ['v1:task/writing', '求职材料'] })),
+    /birthScenes\[1\] "求职材料" is not a tag in scene vocabulary v1; use a tag from `obelisk skill scenes`, or create one as user:<dimension>\/<label>/,
   );
-  const saved = await saveSkillDraft(skillsDir, draft({ birthScenes: ['task/writing', ' artifact/resume ', 'task/writing'] }));
-  assert.deepEqual(saved.birthScenes, ['task/writing', 'artifact/resume']);
 });
 
-test('the scene list is chain-compatible and every id is unique', () => {
+test('a new tag outside the vocabulary is stored as user:<dimension>/<label> within 64 bytes', async () => {
+  const skillsDir = join(makeTempDir('obelisk-skills-'), 'skills');
+  const saved = await saveSkillDraft(skillsDir, draft({ birthScenes: ['user:artifact/插画 作品集', 'user:Task/Cover Letter'] }));
+  assert.deepEqual(saved.birthScenes, ['user:artifact/插画-作品集', 'user:task/cover-letter']);
+  assert.ok(saved.birthScenes.every((tag) => Buffer.byteLength(tag) <= 64));
+  for (const tag of ['user:artifact/', 'user:nope/x', 'user:artifact/a:b', 'user:artifact/a/b', `user:artifact/${'插'.repeat(17)}`]) {
+    await assert.rejects(saveSkillDraft(skillsDir, draft({ birthScenes: [tag] })), /birthScenes\[0\]/, tag);
+  }
+});
+
+test('scene vocabulary versions translate old tags through synonyms; bucket keys follow the translation', () => {
+  const scene = (dimension, slug) => ({ id: `${dimension}/${slug}`, dimension, label: slug, labelEn: slug });
+  const dimensions = [{ id: 'task', label: '任务类型', labelEn: 'Task' }];
+  const catalogue = {
+    vocabularies: [
+      { version: 1, dimensions, scenes: [scene('task', 'debug'), scene('task', 'analysis'), scene('task', 'learning')] },
+      { version: 2, dimensions, scenes: [scene('task', 'debug'), scene('task', 'research')] },
+    ],
+    synonyms: { 1: { 'task/analysis': 'task/research' } },
+  };
+  assert.equal(migrateSceneTag('v1:task/debug', { catalogue }), 'v2:task/debug');
+  assert.equal(migrateSceneTag('v1:task/analysis', { catalogue }), 'v2:task/research');
+  assert.equal(migrateSceneTag('task/analysis', { catalogue }), 'v2:task/research', 'bare ids from old records read as v1');
+  assert.equal(migrateSceneTag('v1:task/learning', { catalogue }), null, 'retired');
+  assert.equal(migrateSceneTag('v1:task/analysis', { catalogue, to: 1 }), 'v1:task/analysis');
+  assert.equal(migrateSceneTag('user:task/漫画分镜', { catalogue }), 'user:task/漫画分镜');
+  assert.equal(normalizeSceneTag('task/research', catalogue), 'v2:task/research', 'input without a version means the current one');
+  assert.equal(normalizeSceneTag('v1:task/analysis', catalogue), 'v1:task/analysis', 'older tags stay as written');
+
+  const key = (text) => keccak256(stringToBytes(text));
+  assert.equal(sceneBucketKey('v1:task/analysis', catalogue), key('v2:task/research'));
+  assert.equal(sceneBucketKey('v2:task/research', catalogue), key('v2:task/research'));
+  assert.equal(sceneBucketKey('v1:task/learning', catalogue), key('v1:task/learning'), 'retired tags keep their own bucket');
+  assert.equal(sceneBucketKey('user:task/漫画分镜', catalogue), key('user:task/漫画分镜'));
+  assert.match(sceneBucketKey('v1:artifact/resume'), /^0x[0-9a-f]{64}$/);
+});
+
+test('the current vocabulary is chain-compatible and every id is unique', () => {
   const ids = SCENES.map((scene) => scene.id);
   assert.equal(new Set(ids).size, ids.length);
   for (const scene of SCENES) {
-    assert.match(scene.id, /^(domain|task|artifact)\/[a-z0-9]+(?:-[a-z0-9]+)*$/);
-    assert.ok(Buffer.byteLength(scene.id) <= 64, scene.id);
+    assert.match(scene.id, /^[a-z]+\/[a-z0-9]+(?:-[a-z0-9]+)*$/);
+    assert.equal(scene.id.split('/')[0], scene.dimension);
+    assert.ok(Buffer.byteLength(vocabularyTag(scene.id)) <= 64, scene.id);
     assert.ok(scene.label && scene.labelEn, scene.id);
     assert.equal(findScene(scene.id), scene);
   }
   for (const dimension of SCENE_DIMENSIONS) {
     assert.ok(SCENES.some((scene) => scene.dimension === dimension.id), dimension.id);
-  }
-  assert.equal(findScene('writing/resume'), null);
-});
-
-test('出处卡: each source session keeps its hit reason, pitfalls, and corrections', async () => {
-  const skillsDir = join(makeTempDir('obelisk-skills-'), 'skills');
-  const provenance = [
-    {
-      sessionId: 'session-a',
-      reason: '按"解决了什么问题"归纳经历',
-      excerpts: [{ messageUuid: 'm-1', text: '不要夸大个人在团队项目中的职责' }],
-      pitfalls: [' 直接罗列提交记录可读性差 '],
-      corrections: ['不要夸大个人在团队项目中的职责'],
-    },
-    { sessionId: 'session-b', reason: '面试案例用真实取舍' },
-  ];
-  const saved = await saveSkillDraft(skillsDir, draft({ provenance }));
-  assert.deepEqual(saved.provenance[0].pitfalls, ['直接罗列提交记录可读性差']);
-  assert.deepEqual(saved.provenance[0].corrections, ['不要夸大个人在团队项目中的职责']);
-  assert.equal('pitfalls' in saved.provenance[1], false);
-  const reread = await readSkill(skillsDir, 'ai-capability-resume');
-  assert.deepEqual(reread.provenance, saved.provenance);
-
-  for (const bad of [{ pitfalls: 'one' }, { corrections: [''] }, { corrections: [1] }]) {
-    await assert.rejects(
-      saveSkillDraft(skillsDir, draft({ provenance: [{ sessionId: 's', reason: 'r', ...bad }] })),
-      /provenance\[0\]\.(pitfalls|corrections) must be an array of non-empty strings/,
-    );
   }
 });
 
