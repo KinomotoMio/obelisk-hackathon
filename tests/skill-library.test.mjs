@@ -9,6 +9,7 @@ import { join } from 'node:path';
 
 import {
   listSkills,
+  listUserSceneTags,
   readSkill,
   recordMintedVersion,
   saveSkillDraft,
@@ -159,6 +160,18 @@ test('a new tag outside the vocabulary is stored as user:<dimension>/<label> wit
   for (const tag of ['user:artifact/', 'user:nope/x', 'user:artifact/a:b', 'user:artifact/a/b', `user:artifact/${'插'.repeat(17)}`]) {
     await assert.rejects(saveSkillDraft(skillsDir, draft({ birthScenes: [tag] })), /birthScenes\[0\]/, tag);
   }
+});
+
+test('user-created tags are recorded locally as candidates for the next vocabulary version', async () => {
+  const skillsDir = join(makeTempDir('obelisk-skills-'), 'skills');
+  await saveSkillDraft(skillsDir, draft({ name: 'first', birthScenes: ['v1:role/designer', 'user:artifact/插画作品集'] }), { now: () => '2026-10-07T01:00:00.000Z' });
+  await saveSkillDraft(skillsDir, draft({ name: 'second', birthScenes: ['user:artifact/插画作品集', 'user:task/分镜'] }), { now: () => '2026-10-07T02:00:00.000Z' });
+  await saveSkillDraft(skillsDir, draft({ name: 'first', birthScenes: ['v1:role/designer'] }), { now: () => '2026-10-07T03:00:00.000Z' });
+  assert.deepEqual(await listUserSceneTags(skillsDir), [
+    { tag: 'user:artifact/插画作品集', dimension: 'artifact', label: '插画作品集', firstUsedAt: '2026-10-07T01:00:00.000Z', lastUsedAt: '2026-10-07T02:00:00.000Z', skills: ['first', 'second'] },
+    { tag: 'user:task/分镜', dimension: 'task', label: '分镜', firstUsedAt: '2026-10-07T02:00:00.000Z', lastUsedAt: '2026-10-07T02:00:00.000Z', skills: ['second'] },
+  ], 'the record keeps a tag after the Skill that created it drops it');
+  assert.deepEqual((await listSkills(skillsDir)).map((skill) => skill.name).sort(), ['first', 'second']);
 });
 
 test('scene vocabulary versions translate old tags through synonyms; bucket keys follow the translation', () => {

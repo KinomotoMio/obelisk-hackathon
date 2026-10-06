@@ -24,7 +24,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import { mkdir, readdir, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { normalizeBirthScenes } from './scenes.ts';
+import { USER_TAG_PREFIX, normalizeBirthScenes, parseSceneTag } from './scenes.ts';
 
 export const SKILL_RECORD_SCHEMA = 1;
 
@@ -347,7 +347,67 @@ export async function saveSkillDraft(skillsDir: string, input: unknown, { now = 
     versions: existing?.versions ?? [],
   };
   await writeFileAtomic(join(dir, 'skill.json'), `${JSON.stringify(record, null, 2)}\n`);
+  await recordUserSceneTags(skillsDir, draft.name, record.birthScenes, timestamp);
   return (await readSkill(skillsDir, draft.name))!;
+}
+
+// --- User-created scene tags ---------------------------------------------------
+//
+// Tags created because nothing in the scene vocabulary fitted (user:...) are
+// recorded in <skills dir>/user-scene-tags.json the first time a Skill uses
+// them, with every Skill that has used them. It is the local evidence for
+// promoting a tag into the next vocabulary version, and it outlives the Skills
+// themselves. The file name is not a valid Skill name, so listings skip it.
+
+export const USER_SCENE_TAGS_FILE = 'user-scene-tags.json';
+
+export interface UserSceneTagRecord {
+  tag: string;
+  dimension: string;
+  label: string;
+  firstUsedAt: string;
+  lastUsedAt: string;
+  skills: string[];
+}
+
+interface UserSceneTagFile {
+  schema: 1;
+  tags: UserSceneTagRecord[];
+}
+
+async function readUserSceneTagFile(skillsDir: string): Promise<UserSceneTagFile> {
+  const text = await readOptional(join(skillsDir, USER_SCENE_TAGS_FILE));
+  if (text === null) return { schema: 1, tags: [] };
+  const parsed = JSON.parse(text) as UserSceneTagFile;
+  if (parsed.schema !== 1 || !Array.isArray(parsed.tags)) {
+    fail(`Unsupported user scene tag record in ${join(skillsDir, USER_SCENE_TAGS_FILE)}`);
+  }
+  return parsed;
+}
+
+async function recordUserSceneTags(skillsDir: string, skillName: string, tags: string[], timestamp: string): Promise<void> {
+  const userTags = tags.filter((tag) => tag.startsWith(USER_TAG_PREFIX));
+  if (userTags.length === 0) return;
+  const file = await readUserSceneTagFile(skillsDir);
+  for (const tag of userTags) {
+    const parsed = parseSceneTag(tag);
+    if (parsed.kind !== 'user') continue;
+    const existing = file.tags.find((entry) => entry.tag === tag);
+    if (existing) {
+      existing.lastUsedAt = timestamp;
+      if (!existing.skills.includes(skillName)) existing.skills.push(skillName);
+    } else {
+      file.tags.push({ tag, dimension: parsed.dimension, label: parsed.label, firstUsedAt: timestamp, lastUsedAt: timestamp, skills: [skillName] });
+    }
+  }
+  await mkdir(skillsDir, { recursive: true });
+  await writeFileAtomic(join(skillsDir, USER_SCENE_TAGS_FILE), `${JSON.stringify(file, null, 2)}\n`);
+}
+
+// Recorded user-created tags, most widely used first.
+export async function listUserSceneTags(skillsDir: string): Promise<UserSceneTagRecord[]> {
+  const { tags } = await readUserSceneTagFile(skillsDir);
+  return [...tags].sort((a, b) => b.skills.length - a.skills.length || a.tag.localeCompare(b.tag));
 }
 
 // Freeze the current draft as a minted version (called by minting, #16).
