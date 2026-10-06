@@ -58,6 +58,43 @@ test('build:skill ships the standalone 沉淀 Skill as a docs-only skill that de
   assert.deepEqual(findDynamicSkillContent(skill), []);
 });
 
+test('the 沉淀 Skill triggers from plain requests and fits the skill listing', () => {
+  const skill = readFileSync(join(repoRoot, 'agent-skills', 'obelisk-distill', 'SKILL.md'), 'utf8');
+  const fields = frontmatterFields(skill);
+  // Codex rejects descriptions over 1024 characters; Claude Code truncates
+  // description + when_to_use at 1,536 characters in the skill listing.
+  assert.ok(fields.description.length <= 1024, `description is ${fields.description.length} characters`);
+  assert.ok(fields.description.length + fields.when_to_use.length <= 1536);
+  // Lead with the user's intent in plain words, not only with the word "skill".
+  for (const phrase of ['沉淀', '提炼', '总结', '整理', 'methodology', '经验', '呈现出来', '只沉淀方法论']) {
+    assert.ok(fields.description.includes(phrase), `description should mention ${phrase}`);
+  }
+  assert.match(fields.when_to_use, /\/obelisk-distill/);
+  // The value of the Obelisk route, the multi-project scope, and the keep-out check.
+  assert.match(skill, /## Why do it through Obelisk/);
+  assert.match(skill, /\*\*Scope the projects\*\*/);
+  assert.match(skill, /\*\*Check before saving\.\*\*/);
+  assert.match(skill, /已略去/);
+  assert.doesNotMatch(skill, /\/Users\/|\/home\/[a-z]/, 'no absolute home paths');
+});
+
+// Top-level `key: value` and folded `key: >` scalars from a SKILL.md frontmatter.
+function frontmatterFields(markdown) {
+  const block = markdown.match(/^---\n([\s\S]*?)\n---\n/)[1];
+  const fields = {};
+  let key = null;
+  for (const line of block.split('\n')) {
+    const top = line.match(/^([a-z_-]+):\s*(.*)$/);
+    if (top) {
+      key = top[1];
+      fields[key] = top[2] === '>' ? '' : top[2];
+    } else if (key && /^\s+\S/.test(line) && !/^\s+- /.test(line)) {
+      fields[key] = `${fields[key]} ${line.trim()}`.trim();
+    }
+  }
+  return fields;
+}
+
 test('build:skill ships the standalone wallet skill, which previews before writing on chain', () => {
   execFileSync(npmCommand, ['run', 'build:skill'], {
     cwd: repoRoot,
