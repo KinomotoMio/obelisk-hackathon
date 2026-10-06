@@ -22,6 +22,7 @@ import {
   type Address,
   type Hex,
   type PublicClient,
+  type TransactionReceipt,
   type WalletClient,
 } from 'viem';
 
@@ -60,6 +61,8 @@ export interface RelayerDeps {
   limits: RateLimiter;
   /** Persist a small record of a submitted transaction (best effort). */
   recordTx?: (hash: Hex, record: RelayRecord) => Promise<void>;
+  /** Called once a relayed transaction is confirmed (best effort; usage trends, #24). */
+  onConfirmed?: (request: ParsedRelayRequest, receipt: TransactionReceipt) => Promise<void>;
   now?: () => number;
   receiptTimeoutMs?: number;
   pollingIntervalMs?: number;
@@ -162,6 +165,7 @@ export class Relayer {
       if (receipt.status !== 'success') {
         throw new RequestError(502, 'transaction_reverted', `Transaction ${txHash} was mined but reverted`, { txHash, explorerUrl });
       }
+      await this.#deps.onConfirmed?.(request, receipt).catch(() => undefined);
       return { status: 'confirmed', action: request.action, signer: request.signer, txHash, blockNumber: receipt.blockNumber.toString(), explorerUrl };
     } catch (error) {
       if (error instanceof RequestError) throw error;

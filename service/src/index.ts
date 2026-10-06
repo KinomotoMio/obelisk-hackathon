@@ -17,6 +17,7 @@ import { HourlyRateLimiter, parseLimit } from './limits.ts';
 import { Relayer, type RelayRecord } from './relayer.ts';
 import type { KeyPackage, ShareStore, ShareTransactions } from './shares.ts';
 import type { SkillContentStore } from './skills.ts';
+import { usageTrendRecorder, type UsageTrendEntry, type UsageTrendStore } from './usage.ts';
 
 export interface Env extends ChainEnv {
   RELAYER_PRIVATE_KEY?: string;
@@ -105,6 +106,31 @@ function r2SkillContent(bucket: R2Bucket | undefined): SkillContentStore | null 
   };
 }
 
+/**
+ * Relayed usage reports in KV, one key per confirmed report:
+ * `usage:<chainId>:<fingerprint>:<txHash>:<logIndex>`, the entry in its
+ * metadata so one list call returns them.
+ */
+function kvUsageTrend(kv: KVNamespace | undefined): UsageTrendStore | null {
+  if (!kv) return null;
+  const prefix = (chainId: number, fingerprint: Hex) => `usage:${chainId}:${fingerprint}:`;
+  return {
+    async add(chainId, fingerprint, id, entry) {
+      await kv.put(`${prefix(chainId, fingerprint)}${id}`, '', { metadata: entry });
+    },
+    async list(chainId, fingerprint) {
+      const entries: UsageTrendEntry[] = [];
+      let cursor: string | undefined;
+      do {
+        const page = await kv.list<UsageTrendEntry>({ prefix: prefix(chainId, fingerprint), cursor });
+        for (const key of page.keys) if (key.metadata) entries.push(key.metadata);
+        cursor = page.list_complete ? undefined : page.cursor;
+      } while (cursor);
+      return entries;
+    },
+  };
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     try {
@@ -144,6 +170,7 @@ export class RelayQueue {
     const env = this.#env;
     const { config, publicClient, walletClient } = chainClients(env);
     const txIndex = kvTxIndex(env.INDEX);
+    const usageTrend = kvUsageTrend(env.INDEX);
     this.#relayer = new Relayer({
       config,
       publicClient,
@@ -153,6 +180,7 @@ export class RelayQueue {
         global: parseLimit(env.RELAY_LIMIT_GLOBAL_HOURLY),
       }),
       recordTx: txIndex ? (hash, record) => txIndex.put(hash, record) : undefined,
+      onConfirmed: usageTrend ? usageTrendRecorder(config, usageTrend) : undefined,
     });
     return this.#relayer;
   }

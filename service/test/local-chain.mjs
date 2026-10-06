@@ -19,6 +19,7 @@ import { handleRequest, relayResponse } from '../src/app.ts';
 import { resolveChainConfig } from '../src/chains.ts';
 import { HourlyRateLimiter } from '../src/limits.ts';
 import { Relayer } from '../src/relayer.ts';
+import { usageTrendRecorder } from '../src/usage.ts';
 import { obeliskDomain } from '../../chain/eip712.ts';
 
 const chainDir = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'chain');
@@ -95,7 +96,19 @@ export function memorySkillContent() {
   };
 }
 
-export function makeApp({ relayerKey = RELAYER_KEY, limits = {}, shares = memoryShareStore(), skillContent = memorySkillContent() } = {}) {
+/** In-memory stand-in for the KV usage trend store in src/index.ts. */
+export function memoryUsageTrend() {
+  const entries = new Map();
+  return {
+    entries,
+    async add(chainId, fingerprint, id, entry) { entries.set(`${chainId}:${fingerprint}:${id}`, entry); },
+    async list(chainId, fingerprint) {
+      return [...entries].filter(([key]) => key.startsWith(`${chainId}:${fingerprint}:`)).map(([, entry]) => entry);
+    },
+  };
+}
+
+export function makeApp({ relayerKey = RELAYER_KEY, limits = {}, shares = memoryShareStore(), skillContent = memorySkillContent(), usageTrend = memoryUsageTrend() } = {}) {
   const config = resolveChainConfig(env);
   const transport = http(config.rpcUrl);
   const account = relayerKey ? privateKeyToAccount(relayerKey) : null;
@@ -107,6 +120,7 @@ export function makeApp({ relayerKey = RELAYER_KEY, limits = {}, shares = memory
     walletClient: account ? createWalletClient({ account, chain: config.chain, transport }) : null,
     limits: new HourlyRateLimiter({ get: async (k) => store.get(k), put: async (k, v) => { store.set(k, v); } }, limits),
     recordTx: async (hash, record) => { txRecords.set(hash, record); },
+    onConfirmed: usageTrendRecorder(config, usageTrend),
     pollingIntervalMs: 50,
   });
   const deps = {
@@ -123,6 +137,7 @@ export function makeApp({ relayerKey = RELAYER_KEY, limits = {}, shares = memory
     config,
     shares,
     skillContent,
+    usageTrend,
     async call(method, path, body) {
       const response = await handleRequest(new Request(`http://service.test${path}`, {
         method,

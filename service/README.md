@@ -11,7 +11,8 @@ A Cloudflare Worker that sits between local Obelisk and BOT Chain
   App, and the web reader.
 - **Storage.** R2 (`BLOBS`) holds share ciphertext and key packages and
   minted Skill bodies, and KV (`INDEX`) holds small indexes: relayed
-  transactions and each share's transaction hashes.
+  transactions, each share's transaction hashes, and what each relayed usage
+  report added (for usage trends, see [Skill usage](#skill-usage)).
 
 The service never sees plaintext session content and does nothing that needs
 AI. Minted Skill bodies are the exception by design: they are public, so
