@@ -2,7 +2,9 @@
 
 The local Obelisk runtime used by coding agents. It indexes Claude Code, Codex,
 Kimi Code, and Pi transcripts into `~/.obelisk/obelisk.sqlite` and exposes the
-stable `build`, `search`, `query`, and `attune` process interface.
+stable `build`, `search`, `query`, and `attune` process interface. Set
+`OBELISK_HOME` to an absolute path to keep the index and settings somewhere
+other than `~/.obelisk`.
 
 ```bash
 npm install --global @obelisk-apps/cli

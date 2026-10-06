@@ -25,7 +25,24 @@ The agent writes JS queries, runs them locally, and answers in plain language.
 
 **App side** — an Electron desktop app for humans to browse sessions, manage memories, view usage stats, and see weekly recap cards.
 
-Both read from the same `~/.obelisk/obelisk.sqlite` database. The indexer reads Claude Code transcripts from `~/.claude/projects`, Codex transcripts from `~/.codex/sessions` and `~/.codex/archived_sessions`, DeepSeek Harness sessions from `~/.dsh/sessions` (or `$DSH_HOME/sessions`), Kimi Code sessions from `~/.kimi-code/sessions` (or `$KIMI_CODE_HOME/sessions`), OMP sessions from `~/.omp/agent/sessions`, and Pi sessions from `~/.pi/agent/sessions`.
+Both read from the same `~/.obelisk/obelisk.sqlite` database (see [Data directory](#data-directory) to move it). The indexer reads Claude Code transcripts from `~/.claude/projects`, Codex transcripts from `~/.codex/sessions` and `~/.codex/archived_sessions`, DeepSeek Harness sessions from `~/.dsh/sessions` (or `$DSH_HOME/sessions`), Kimi Code sessions from `~/.kimi-code/sessions` (or `$KIMI_CODE_HOME/sessions`), OMP sessions from `~/.omp/agent/sessions`, and Pi sessions from `~/.pi/agent/sessions`.
+
+## Data directory
+
+Obelisk keeps its own state — `obelisk.sqlite`, `writer.lock.sqlite`,
+`settings.json`, and `recap/` — in `~/.obelisk`. Set `OBELISK_HOME` to an
+absolute path (a leading `~` is expanded) to use a different directory; the CLI
+and the app both honor it, so two processes with different `OBELISK_HOME`
+values never share an index, settings, or memories. A custom `OBELISK_HOME`
+never copies the legacy `~/.claude/obelisk.sqlite` forward, and a relative
+value is rejected. Provider transcript roots are not affected; point them at
+other directories through that data directory's `settings.json`
+(`providerRoots`) or **Settings**.
+
+```bash
+OBELISK_HOME=~/obelisk-roles/alice obelisk --build
+OBELISK_HOME=~/obelisk-roles/alice npm run dev   # from app/
+```
 
 ## Multi-provider support
 
@@ -184,7 +201,8 @@ npm run dev
 - To attach a Node debugger to the Electron main process, start it with
   `npm run dev -- --inspect=5858`, then attach your debugger to port `5858`.
 - The development app reads and updates the real `~/.obelisk` index. Back it up
-  before testing destructive rebuilds. For an isolated run, launch with a
+  before testing destructive rebuilds, or set `OBELISK_HOME` to a disposable
+  directory. For a fully isolated run, launch with a
   disposable home directory (`HOME=/tmp/obelisk-dev npm run dev` on
   macOS/Linux, or set a temporary `USERPROFILE` first on Windows), then select
   fixture source directories in **Settings**.
