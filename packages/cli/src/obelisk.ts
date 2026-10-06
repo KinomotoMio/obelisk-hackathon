@@ -18,13 +18,22 @@ import {
 import { resolveObeliskPaths } from '../../core/src/paths.ts';
 import {
   listSkills,
+  listUserSceneTags,
   readSkill,
   saveSkillDraft,
   skillBodyFromMarkdown,
   updateSkillBirthScenes,
   skillFingerprint,
 } from '../../core/src/skills.ts';
-import { SCENE_DIMENSIONS, SCENES, describeSceneTag } from '../../core/src/scenes.ts';
+import {
+  CURRENT_SCENE_VOCABULARY,
+  MAX_BIRTH_SCENES,
+  MAX_SCENE_TAG_BYTES,
+  SCENE_DIMENSIONS,
+  SCENES,
+  describeSceneTag,
+  vocabularyTag,
+} from '../../core/src/scenes.ts';
 import {
   skillUsageFor,
   skillVersionsByFingerprint,
@@ -137,12 +146,21 @@ async function main() {
         const skill = await saveSkillDraft(skillsDir, draft);
         emit({ name: skill.name, fingerprint: skill.draft?.fingerprint ?? null, path: skill.draft?.path ?? null, status: skill.status });
       } else if (action === 'scenes') {
-        // The fixed scene list birth scenes are picked from, grouped by dimension.
-        emit(SCENE_DIMENSIONS.map((dimension) => ({
-          ...dimension,
-          scenes: SCENES.filter((scene) => scene.dimension === dimension.id)
-            .map(({ id, label, labelEn }) => ({ id, label, labelEn })),
-        })));
+        // The current scene vocabulary, ready to copy as tags, plus the
+        // user-created tags this library has recorded.
+        emit({
+          vocabulary: `v${CURRENT_SCENE_VOCABULARY.version}`,
+          rule: 'Prefer a vocabulary tag. Only when nothing in a dimension fits, create user:<dimension>/<label> and say why.',
+          limits: { perSkill: MAX_BIRTH_SCENES, bytesPerTag: MAX_SCENE_TAG_BYTES },
+          dimensions: SCENE_DIMENSIONS.map((dimension) => ({
+            id: dimension.id,
+            label: dimension.label,
+            labelEn: dimension.labelEn,
+            tags: SCENES.filter((scene) => scene.dimension === dimension.id)
+              .map((scene) => ({ tag: vocabularyTag(scene.id), label: scene.label, labelEn: scene.labelEn })),
+          })),
+          userTags: (await listUserSceneTags(skillsDir)).map(({ tag, label, skills }) => ({ tag, label, skills })),
+        });
       } else if (action === 'tag' && target) {
         // obelisk skill tag <name> [--add <tag>]... [--remove <tag>]...
         const add: string[] = [];

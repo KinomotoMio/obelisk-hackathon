@@ -54,21 +54,30 @@ test('CLI saves, lists, shows, and fingerprints Skills in its own data directory
   assert.match(JSON.parse(missing.stdout).error, /Skill not found in the local library: nope/);
 });
 
-test('CLI lists the fixed scene list by dimension and refuses scenes outside it', () => {
+test('obelisk skill scenes prints the current vocabulary as ready-to-use tags and the recorded user tags', () => {
   const home = makeTempDir('obelisk-skills-cli-');
   const env = { OBELISK_HOME: join(home, 'data') };
   const scenes = runCli(['skill', 'scenes'], { home, env });
   assert.equal(scenes.status, 0, scenes.stderr || scenes.stdout);
-  const dimensions = JSON.parse(scenes.stdout);
-  assert.deepEqual(dimensions.map((d) => d.id), ['domain', 'task', 'artifact', 'context', 'role']);
-  const ids = dimensions.flatMap((d) => d.scenes.map((scene) => scene.id));
-  assert.ok(ids.includes('artifact/resume'));
-  assert.ok(dimensions.every((d) => d.scenes.every((scene) => scene.id.startsWith(`${d.id}/`) && scene.label)));
+  const out = JSON.parse(scenes.stdout);
+  assert.equal(out.vocabulary, 'v1');
+  assert.match(out.rule, /user:<dimension>\/<label>/);
+  assert.deepEqual(out.limits, { perSkill: 16, bytesPerTag: 64 });
+  assert.deepEqual(out.dimensions.map((d) => d.id), ['domain', 'task', 'artifact', 'context', 'role']);
+  const tags = out.dimensions.flatMap((d) => d.tags.map((entry) => entry.tag));
+  assert.ok(tags.includes('v1:artifact/resume'));
+  assert.ok(out.dimensions.every((d) => d.tags.every((entry) => entry.tag.startsWith(`v1:${d.id}/`) && entry.label)));
+  assert.deepEqual(out.userTags, []);
 
   const work = join(home, 'work');
   mkdirSync(work, { recursive: true });
-  writeFileSync(join(work, 'draft.json'), JSON.stringify({ ...draft, body: '# Probe', birthScenes: ['求职材料'] }));
-  const refused = runCli(['skill', 'save', join(work, 'draft.json')], { home, env });
+  writeFileSync(join(work, 'draft.json'), JSON.stringify({ ...draft, body: '# Probe', birthScenes: ['v1:task/testing', 'user:artifact/指纹样本'] }));
+  assert.equal(runCli(['skill', 'save', join(work, 'draft.json')], { home, env }).status, 0);
+  const after = JSON.parse(runCli(['skill', 'scenes'], { home, env }).stdout);
+  assert.deepEqual(after.userTags, [{ tag: 'user:artifact/指纹样本', label: '指纹样本', skills: ['fingerprint-probe'] }]);
+
+  writeFileSync(join(work, 'bad.json'), JSON.stringify({ ...draft, body: '# Probe', birthScenes: ['求职材料'] }));
+  const refused = runCli(['skill', 'save', join(work, 'bad.json')], { home, env });
   assert.equal(refused.status, 1);
   assert.match(JSON.parse(refused.stdout).error, /is not a tag in scene vocabulary v1; use a tag from `obelisk skill scenes`/);
 });
