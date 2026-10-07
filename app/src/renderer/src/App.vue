@@ -313,29 +313,16 @@ provide('recapGenerateOpen', recapGenerateOpen);
     <div class="columns">
       <aside class="sidebar">
         <div class="sidebar-brand">
-          <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <defs>
-              <radialGradient id="icon-aurora" cx="50%" cy="62%" r="55%">
-                <stop offset="0%"  stop-color="#ec4899" stop-opacity="0.8"/>
-                <stop offset="45%" stop-color="#a855f7" stop-opacity="0.7"/>
-                <stop offset="100%" stop-color="#6366f1" stop-opacity="0"/>
-              </radialGradient>
-              <linearGradient id="icon-stone-lit" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%"  stop-color="#cbd5e1"/>
-                <stop offset="100%" stop-color="#475569"/>
-              </linearGradient>
-            </defs>
-            <ellipse cx="20" cy="22" rx="15" ry="11" fill="url(#icon-aurora)"/>
-            <ellipse cx="20" cy="21" rx="9"  ry="7"  fill="url(#icon-aurora)" opacity="0.7"/>
-            <circle cx="8"  cy="13" r="0.7" fill="#fff" opacity="0.9"/>
-            <circle cx="32" cy="11" r="0.9" fill="#fff" opacity="0.95"/>
-            <circle cx="34" cy="22" r="0.5" fill="#fff" opacity="0.7"/>
-            <polygon points="20,7 16.5,12 23.5,12" fill="url(#icon-stone-lit)"/>
-            <polygon points="20,12 16.5,12 17.5,33 20,33" fill="url(#icon-stone-lit)"/>
-            <polygon points="20,12 23.5,12 22.5,33 20,33" fill="#1e293b"/>
-            <rect x="15.5" y="33" width="9" height="1.6" rx="0.3" fill="#0f172a"/>
-          </svg>
-          <span class="name">Obelisk</span>
+          <span class="brand" role="img" aria-label="Obelisk">
+            <!-- Obelisk's mark and wordmark, from the official landing page (as service/public/site/logo.svg). -->
+            <svg class="brand-mark" viewBox="13 0 51 64" fill="none" aria-hidden="true">
+              <path d="M 17 63 L 51.9 1.5 A 15 15 0 0 1 62.5 12.1 Z" fill="#c4b5fd" opacity="0.55"/>
+              <polygon points="17,63 63,24 63,40" fill="#a78bfa" opacity="0.5"/>
+              <path d="M 17 63 L 62.5 51.9 A 15 15 0 0 1 48 63 Z" fill="#6366f1" opacity="0.5"/>
+              <polygon points="17,9 15.2,15 14.3,63 19.7,63 18.8,15" fill="#f5f3ee"/>
+            </svg>
+            <span class="brand-word" aria-hidden="true"><span class="brand-word-a">Obe</span><svg class="brand-word-l" viewBox="0 0 14 46"><polygon points="7,1 5,6 4.5,45 9.5,45 9,6" fill="#c4b5fd"/></svg><span class="brand-word-b">isk</span></span>
+          </span>
           <button class="source-health" title="Connected sources" @click="showSourcePopover = !showSourcePopover">
             <span v-for="src in sourceDots" :key="src.id" class="h-dot" :class="src.status" :style="{ '--source-color': src.color }"></span>
           </button>
