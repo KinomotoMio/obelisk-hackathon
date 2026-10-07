@@ -83,6 +83,8 @@ export class ServiceError extends Error {
 }
 
 export interface ChainInfo {
+  market?: Address | null;
+  rpcUrl?: string;
   chainId: number;
   name: string;
   explorerUrl: string | null;
@@ -263,6 +265,9 @@ export class ObeliskServiceClient {
         throw new Error(`The Obelisk online service reports ${name} at ${reported ?? 'nothing'}, but ${networkLabel(info.chainId)} has it at ${address}; refusing to sign for it`);
       }
     }
+    if (info.market && (!pinned.market || getAddress(info.market) !== getAddress(pinned.market))) {
+      throw new Error('The service settlement address is not pinned for this network; refusing to sign');
+    }
     return info;
   }
 
@@ -339,13 +344,19 @@ export class ObeliskServiceClient {
 
   storeSkillContent(
     fingerprint: Hex,
-    content: { author: Address; name: string; description: string; body: string; signature: Hex },
+    content: { author: Address; name: string; description: string; body: string; signature: Hex; visibility?: 'licensed' | 'public' },
   ): Promise<{ stored: true; created: boolean; skillId: string; versionIndex: number }> {
     return this.#request(`/v1/skills/${fingerprint}/content`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify(content),
       timeoutMs: 30_000,
+    });
+  }
+
+  licensedSkillContent(fingerprint: Hex, access: { buyer: Address; useTransaction: Hex; deadline: string; signature: Hex }): Promise<{ content: { name: string; description: string; body: string } }> {
+    return this.#request(`/v1/market/content/${fingerprint}`, {
+      method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(access),
     });
   }
 

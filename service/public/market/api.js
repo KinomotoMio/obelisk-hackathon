@@ -45,6 +45,7 @@ export const skills = (before) => getJson(`/v1/skills?limit=24${before ? `&befor
 export const skill = (id) => getJson(`/v1/skills/${id}`);
 export const usage = (id) => getJson(`/v1/skills/${id}/usage?weeks=8`);
 export const lineage = (id) => getJson(`/v1/skills/${id}/lineage`);
+export const offer = (fingerprint) => getJson(`/v1/market/offers/${encodeURIComponent(fingerprint)}`);
 
 /** An explorer page for an address or transaction, when the chain has an explorer. */
 export function explorer(chainInfo, kind, value) {

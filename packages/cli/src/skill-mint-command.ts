@@ -20,6 +20,7 @@ import { getAddress, type Address } from 'viem';
 import { resolveObeliskPaths } from '../../core/src/paths.ts';
 import { systemSecretStore, type SecretStore } from '../../core/src/keychain.ts';
 import { loadWallet } from '../../core/src/wallet.ts';
+import { obeliskDomain, privateSkillContentTypes } from '../../core/src/chain-protocol.ts';
 import {
   ObeliskServiceClient,
   networkLabel,
@@ -40,7 +41,7 @@ import {
 } from '../../core/src/skills.ts';
 import { fingerprintToBytes32, signMintSkill, signPublishVersion, signSkillContent } from '../../core/src/skill-chain.ts';
 
-export const SKILL_MINT_USAGE = 'Usage: obelisk skill mint <name> [--confirm <fingerprint>]';
+export const SKILL_MINT_USAGE = 'Usage: obelisk skill mint <name> [--licensed] [--confirm <fingerprint>]';
 
 /** How long a mint signature stays valid for the relay. */
 const MINT_DEADLINE_SECONDS = 600;
@@ -48,6 +49,7 @@ const MINT_DEADLINE_SECONDS = 600;
 const MAX_BODY_BYTES = 200 * 1024;
 
 export interface SkillChainDeps {
+  licensed?: boolean;
   env?: NodeJS.ProcessEnv;
   secrets?: SecretStore;
   fetch?: typeof fetch;
@@ -142,12 +144,16 @@ async function storeBody(
   account: Awaited<ReturnType<typeof loadWallet>>['account'],
   skill: SkillView,
   fingerprint: string,
+  licensed = false,
 ): Promise<{ bodyStored: boolean; bodyError?: string }> {
   const body = normalizeSkillBody(skill.draft!.body);
   const message = { author: account.address, fingerprint: fingerprintToBytes32(fingerprint), name: skill.name, description: skill.description };
   try {
-    const signature = await signSkillContent(account, chain.chainId, chain.contracts.SkillRegistry, message);
-    await client.storeSkillContent(message.fingerprint, { ...message, body, signature });
+    const signature = licensed
+      ? await account.signTypedData({ domain: obeliskDomain('SkillRegistry', chain.chainId, chain.contracts.SkillRegistry),
+        types: privateSkillContentTypes, primaryType: 'PrivateSkillContent', message: { ...message, visibility: 'licensed' } })
+      : await signSkillContent(account, chain.chainId, chain.contracts.SkillRegistry, message);
+    await client.storeSkillContent(message.fingerprint, { ...message, body, signature, ...(licensed ? { visibility: 'licensed' as const } : {}) });
     return { bodyStored: true };
   } catch (error) {
     return { bodyStored: false, bodyError: error instanceof Error ? error.message : String(error) };
@@ -180,7 +186,10 @@ async function finishMint(
     mintedAt: info.version.publishedAt,
   };
   if (!local) await recordMintedVersion(skillsDir, skill.name, { fingerprint, mint });
-  const body = info.content ? { bodyStored: true } : await storeBody(client, chain, account, skill, fingerprint);
+  if (info.content && Boolean(info.content.locked) !== Boolean(deps.licensed)) {
+    throw new Error('This version already has a different content access policy; publish a new version instead of changing previously published access');
+  }
+  const body = info.content ? { bodyStored: true } : await storeBody(client, chain, account, skill, fingerprint, deps.licensed);
   const version = info.version.index + 1;
   return {
     status,
@@ -214,6 +223,7 @@ async function mint(name: string, confirmed: string | null, deps: SkillChainDeps
   const { account } = await loadWallet({ paths, secrets: deps.secrets ?? systemSecretStore() });
   const client = skillService(deps);
   const chain = await client.chain();
+  if (deps.licensed && !chain.market) throw new Error('Licensed publishing requires a deployed Skill market on this network');
   const network = networkLabel(chain.chainId);
 
   // Already on chain: recorded locally, or minted by an earlier run that did
@@ -342,6 +352,12 @@ async function mint(name: string, confirmed: string | null, deps: SkillChainDeps
 }
 
 export async function runSkillMintCommand(args: string[], deps: SkillChainDeps = {}): Promise<unknown> {
+  if (args.includes('--licensed')) {
+    const result = await runSkillMintCommand(args.filter(arg => arg !== '--licensed'), { ...deps, licensed: true });
+    const output = result as Record<string, unknown>;
+    return { ...output, contentVisibility: 'licensed', next: typeof output.next === 'string'
+      ? output.next.replace(/obelisk skill mint ([^`]+)(?=`)/g, 'obelisk skill mint $1 --licensed') : output.next };
+  }
   const [name, ...rest] = args;
   if (!name || name.startsWith('--')) throw new Error(SKILL_MINT_USAGE);
   if (rest.length === 0) return mint(name, null, deps);

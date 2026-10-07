@@ -7,8 +7,7 @@
 import { h, link, replace, s } from './dom.js';
 import * as api from './api.js';
 import { networkName } from '/site/site.js';
-import { addressLink, ago, count, day, empty, failure, loading, percent, promptBox, sceneChip, shortAddress, shortHex, skillName, title } from './ui.js';
-import { exampleSplit, splitFlow } from './split.js';
+import { addressLink, ago, count, day, empty, failure, loading, percent, promptBox, sceneChip, shortAddress, shortHex, title } from './ui.js';
 
 const OUTCOMES = [
   { id: 'smooth', label: '顺利', className: 'ok' },
@@ -159,41 +158,23 @@ function chainRecords(chainInfo, skill) {
 // The family a sale would be split along: this Skill's own ancestry, or, for
 // a Skill with no parent but with descendants, its deepest descendant's, so
 // the preview shows what this author would earn when a derived Skill sells.
-function familyForSale(skill, tree) {
-  const nodes = api.list(tree?.nodes).filter((node) => api.isSkillId(node?.skillId));
-  const byId = new Map(nodes.map((node) => [node.skillId, node]));
-  const entry = (id) => ({
-    skillId: id,
-    name: api.str(byId.get(id)?.name, 120) ?? (id === skill.skillId ? skillName(skill) : null),
-    author: api.isAddress(byId.get(id)?.author) ? byId.get(id).author : id === skill.skillId ? skill.author : null,
-  });
-  const ancestry = (id) => {
-    const out = [];
-    for (let at = id, guard = 0; at && guard < 64; at = byId.get(at)?.parentSkillId ?? null, guard += 1) out.unshift(at);
-    return out;
-  };
-  const own = ancestry(skill.skillId);
-  if (own.length > 1 || !nodes.length) return { family: (own.length ? own : [skill.skillId]).map(entry), seller: skill.skillId };
-  const below = nodes.filter((node) => node.skillId !== skill.skillId && ancestry(node.skillId).includes(skill.skillId))
-    .sort((a, b) => api.num(b.depth) - api.num(a.depth));
-  if (!below.length) return { family: [entry(skill.skillId)], seller: skill.skillId };
-  const path = ancestry(below[0].skillId);
-  return { family: path.slice(path.indexOf(skill.skillId)).map(entry), seller: below[0].skillId };
+function creationInvite(promptName) {
+  return panel('让知识在你的手里继续生长', '从使用者，成为下一位分享者',
+    h('p', { class: 'lead' }, '用出自己的经验，也可以把它分享出来。你的改进能帮助更多人，为你带来回报，也让最初愿意分享的人得到一份鼓励。'),
+    promptBox('在此基础上创作', { skill: 'obelisk-distill', text: `我用过 ${promptName}，有了一些自己的经验，想在它的基础上做出改进并分享。请帮我梳理值得留下的方法，再看看如何发布。我的想法是：` }),
+    h('p', { class: 'muted small' }, '发布前会向你说明许可和需要留给前面分享者的份额，由你确认。每一次有价值的改进，都能成为新的起点。'));
 }
 
-function stage2Teaser(skill, tree) {
-  const { family, seller } = familyForSale(skill, tree);
-  const sold = family.at(-1);
-  const text = family.length === 1
-    ? '它还没有上游，也没有衍生：示例收入全部归作者。有人在它基础上衍生并卖出时，它的作者会按链上比例分到一份。价格和比例是示例。'
-    : seller === skill.skillId
-      ? '族谱是真实的；价格和比例是示例。阶段 2 里，每卖出一次，钱会在同一笔交易里沿族谱拆给每一位上游作者。'
-      : `族谱是真实的：下面是它的衍生${sold.name ? `「${sold.name}」` : ' '}#${sold.skillId} 卖出一次时，这个 Skill 的作者能分到多少。价格和比例是示例。`;
-  return h('section', { class: 'panel stage2-panel' },
-    h('div', { class: 'panel-head' }, h('h2', null, seller === skill.skillId ? '如果它上架' : '如果它的衍生上架'), h('span', { class: 'pill stage2' }, '阶段 2 预览')),
-    h('p', { class: 'fg2' }, text),
-    splitFlow(exampleSplit(family), 0.5, skill.skillId),
-    h('div', { class: 'row-end' }, link(`/market/stage-2?skill=${seller}`, { class: 'btn' }, '看完整的阶段 2 预览 →')));
+function commerce(offer, locked, promptName) {
+  if (!offer) return panel('取用方式', null, h('p', { class: 'fg2' }, locked ? '作者尚未开放购买，请稍后再来看看。' : '正文已公开。取用前，你的助手会展示内容并核对版本。'));
+  const mode = { free: '免费取用', 'per-use': '按次取用', buyout: '此版本买断' }[offer.mode];
+  const license = { personal: '个人使用', commercial: '商用许可' }[offer.license];
+  if (!mode || !license || !api.isSkillId(offer.offerId) || !/^\d+(\.\d+)?$/.test(offer.price)) return failure({ message: '暂时无法读取上架信息。' });
+  return panel('这份知识，适合你吗？', offer.testnet ? '测试网演示 · 使用测试币' : null,
+    h('p', { class: 'lead' }, offer.mode === 'free' ? '免费' : `${offer.price} BOT`),
+    h('p', { class: 'fg2' }, `${mode} · ${license}`),
+    h('p', { class: 'muted' }, offer.mode === 'per-use' ? '每次购买获得一次正文取用；请结合上面的使用场景和效果判断是否适合你的任务。' : '结合真实使用记录和你的任务，决定是否把这份方法带进自己的工作。'),
+    promptBox(offer.mode === 'free' ? '交给助手取用' : '让助手帮我购买', { skill: 'obelisk-skill-assets', text: `我想取用 ${promptName}。请查看当前上架方案 #${offer.offerId}，说明价格、许可和网络费用，得到我的确认后再购买并安装。` }));
 }
 
 export async function renderDetail(root, id) {
@@ -222,6 +203,7 @@ export async function renderDetail(root, id) {
   skill.name = skill.content?.name ?? null;
   const usage = usageResult.status === 'fulfilled' ? usageResult.value : null;
   const tree = lineageResult.status === 'fulfilled' ? lineageResult.value : null;
+  const offerResult = skill.version ? await api.offer(skill.version.fingerprint).catch(() => ({ offer: null })) : { offer: null };
   const parent = skill.parentSkillId ? api.list(tree?.nodes).find((node) => node?.skillId === skill.parentSkillId) : null;
   document.title = `${title(skill)} · Obelisk Skill 市场`;
 
@@ -244,6 +226,8 @@ export async function renderDetail(root, id) {
         skill.parentSkillId ? link(`/market/skills/${skill.parentSkillId}`, { class: 'pill acc' }, `基于 Skill #${skill.parentSkillId}${api.str(parent?.name, 120) ? `「${parent.name}」` : ''}`) : null,
         chainInfo ? h('span', { class: 'pill chain' }, `可在${networkName(chainInfo.chainId)}上核对`) : null),
       skill.content?.description ? h('p', { class: 'lead' }, skill.content.description) : null),
+
+    commerce(offerResult.offer, raw.content?.locked === true, promptName),
 
     usage
       ? h('div', { class: 'kpis' },
@@ -269,7 +253,7 @@ export async function renderDetail(root, id) {
         promptBox('在此基础上修改', { skill: 'obelisk-distill', text: `在 ${promptName} 的基础上改出一个新版本，铸造时记录父 Skill。我想改成：` })),
       h('p', { class: 'muted small' }, '复制后粘贴到 Claude Code 或 Codex，在冒号后面写上你要做的事。取用前会先给你看预览并核对指纹；衍生的新 Skill 铸造时会把它记为父 Skill。')),
 
-    stage2Teaser(skill, tree),
+    creationInvite(promptName),
 
     panel('链上记录', null, chainRecords(chainInfo, { ...skill, skillId: id })));
 }

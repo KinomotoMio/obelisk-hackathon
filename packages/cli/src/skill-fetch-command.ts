@@ -30,8 +30,12 @@ import {
 import { fingerprintFromBytes32, fingerprintToBytes32 } from '../../core/src/skill-chain.ts';
 import { fetchInstalledAt, recordSkillFetch } from '../../core/src/skill-fetches.ts';
 import { skillService, type SkillChainDeps } from './skill-mint-command.ts';
+import { loadWallet } from '../../core/src/wallet.ts';
+import { systemSecretStore } from '../../core/src/keychain.ts';
+import { skillAccessTypes } from '../../core/src/chain-protocol.ts';
+import type { Hex } from 'viem';
 
-export const SKILL_FETCH_USAGE = 'Usage: obelisk skill fetch <skill id | fingerprint> [--version <n>] [--name <name>] [--project <dir>] [--harness claude|codex] [--confirm]';
+export const SKILL_FETCH_USAGE = 'Usage: obelisk skill fetch <skill id | fingerprint> [--version <n>] [--name <name>] [--project <dir>] [--harness claude|codex] [--receipt <use-tx>] [--confirm]';
 
 const NAME_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
@@ -57,6 +61,7 @@ async function readOptional(path: string): Promise<string | null> {
 }
 
 interface FetchOptions {
+  receipt: Hex | null;
   version: number | null;
   name: string | null;
   project: string | null;
@@ -86,6 +91,19 @@ async function fetchSkill(ref: string, options: FetchOptions, deps: SkillChainDe
   if (requested && requested !== fingerprint) throw new Error(`The Obelisk online service returned ${fingerprint} for ${requested}; refusing it`);
   if (!info.content) {
     throw new Error(`${label} is minted, but its body is not stored on the Obelisk online service; its author can store it by running \`obelisk skill mint <name> --confirm ${fingerprint}\` again`);
+  }
+  if (info.content.locked && options.receipt) {
+    if (!chain.market) throw new Error('No settlement contract on this network');
+    const paths = resolveObeliskPaths({ env: envOf(deps) });
+    const { account } = await loadWallet({ paths, secrets: deps.secrets ?? systemSecretStore() });
+    const deadline = BigInt(Math.floor((deps.now?.() ?? new Date()).getTime() / 1000) + 600);
+    const message = { buyer: account.address, fingerprint: info.version.fingerprint, useTransaction: options.receipt, deadline };
+    const signature = await account.signTypedData({
+      domain: { name: 'ObeliskSkillMarket', version: '1', chainId: chain.chainId, verifyingContract: chain.market },
+      types: skillAccessTypes, primaryType: 'SkillAccess', message,
+    });
+    const delivered = await client.licensedSkillContent(info.version.fingerprint, { ...message, deadline: deadline.toString(), signature });
+    info.content = delivered.content;
   }
   const { body, description } = info.content;
   if (info.content.locked || typeof body !== 'string') {
@@ -130,6 +148,7 @@ async function fetchSkill(ref: string, options: FetchOptions, deps: SkillChainDe
     options.name ? ` --name ${name}` : '',
     options.project !== null ? ` --project ${JSON.stringify(options.project)}` : '',
     ` --harness ${options.harness}`,
+    options.receipt ? ` --receipt ${options.receipt}` : '',
   ].join('');
   const warnings = findDynamicSkillContent(body).map((item) =>
     `The body contains ${item}, which Claude Code rewrites at load time, so its invocations will not be recognized as this version.`);
@@ -189,7 +208,7 @@ async function fetchSkill(ref: string, options: FetchOptions, deps: SkillChainDe
 export async function runSkillFetchCommand(args: string[], deps: SkillChainDeps = {}): Promise<unknown> {
   const [ref, ...rest] = args;
   if (!ref || ref.startsWith('--')) throw new Error(SKILL_FETCH_USAGE);
-  const options: FetchOptions = { version: null, name: null, project: null, confirm: false, harness: 'claude' };
+  const options: FetchOptions = { version: null, name: null, project: null, confirm: false, harness: 'claude', receipt: null };
   for (let i = 0; i < rest.length; i++) {
     const flag = rest[i];
     const value = rest[i + 1];
@@ -199,6 +218,7 @@ export async function runSkillFetchCommand(args: string[], deps: SkillChainDeps 
     else if (flag === '--name') options.name = value;
     else if (flag === '--harness' && (value === 'codex' || value === 'claude')) options.harness = value;
     else if (flag === '--project') options.project = value;
+    else if (flag === '--receipt' && /^0x[0-9a-fA-F]{64}$/.test(value)) options.receipt = value as Hex;
     else throw new Error(SKILL_FETCH_USAGE);
     i++;
   }

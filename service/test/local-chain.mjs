@@ -157,7 +157,7 @@ export async function signAction(app, account, contract, types, action, message)
   return account.signTypedData({ domain, types, primaryType: action, message });
 }
 
-export async function startLocalChain() {
+export async function startLocalChain({ market = false } = {}) {
   if (!ready) return;
   const port = await freePort();
   node = await startNode(port);
@@ -176,10 +176,10 @@ export async function startLocalChain() {
     SkillRegistry: skillRegistry,
     UsageStats: await deploy(deployer, 'UsageStats', [skillRegistry]),
   };
+  if (market) contracts.SkillMarket = await deploy(deployer, 'SkillMarket', [skillRegistry, deployer.account.address, 500]);
   env = { CHAIN_ID: '31337', RPC_URL: rpcUrl, LOCAL_CONTRACTS: JSON.stringify(contracts) };
 }
 
 export function stopLocalChain() {
   node?.kill();
 }
-

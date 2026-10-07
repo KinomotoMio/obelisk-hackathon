@@ -93,10 +93,9 @@ export async function renderList(root) {
     more,
     h('aside', { class: 'stage2-band' },
       h('div', null,
-        h('span', { class: 'pill stage2' }, '阶段 2 预览'),
-        h('div', { class: 'band-title' }, '上架定价、沿族谱自动分成、收入面板、上下文付费'),
-        h('p', { class: 'muted' }, '还没有上线。先看看它会是什么样子：示例数字都标了「示例」。')),
-      link('/market/stage-2', { class: 'btn' }, '看阶段 2 预览 →')));
+        h('span', { class: 'pill acc' }, '知识因分享而生长'),
+        h('div', { class: 'band-title' }, '带走一种方法，也留下你的新发现'),
+        h('p', { class: 'muted' }, '找到适合你的 Skill，在真实工作中用出自己的经验。你的改进可以帮助更多人，也让一路分享知识的人得到回报。'))));
   replace(grid, loading());
 
   const [chainInfo, first] = await Promise.allSettled([api.chain(), api.skills()]);

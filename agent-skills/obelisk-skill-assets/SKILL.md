@@ -115,3 +115,31 @@ the fetch is refused; offer `--name <other-name>`.
   that do not match the known deployment. Stop and report it.
 - `OBELISK_SERVICE_URL`: the online service address set in that variable is
   not usable. Tell the user. Do not guess a URL.
+
+## Skill market: publishing, buying and creator income
+
+Use natural user requests to decide whether to search, use or improve a Skill;
+do not force a purchase or Skill load to inflate demonstration statistics.
+
+- For a new paid version, preview `obelisk skill mint <name> --licensed`, then
+  use its fingerprint confirmation. The signed access policy keeps the body
+  out of public reads. Already public versions cannot be made private.
+- Preview an offer with `obelisk market list <skillId> --mode free|per-use|buyout
+  --license personal|commercial --price <BOT> --royalty-bps <0-10000>`.
+  `--version` is zero-based and defaults to 0. Explain the displayed inherited
+  obligations and platform fee to the creator. Follow the returned confirmation
+  command only within the user's authorization.
+- For buyers, explain the Skill's value, price, license and network first.
+  Preview `obelisk market buy <offerId>`. This wallet pays principal and gas;
+  the gas relayer does not fund purchases. Never move to mainnet without the
+  agreed spend budget. Testnet payments are demo evidence, not operating revenue.
+- After purchase, `obelisk market use <offerId>` authorizes a retrieval. Follow
+  its confirmation, then `obelisk skill fetch <fingerprint> --receipt <use-tx>
+  --harness codex` (or `claude`), preview the body, and confirm installation.
+- Retrying a transaction must reuse the same `--confirm <request-id>`. The
+  local journal resends identical signed bytes. Do not create another purchase
+  after a timeout. Retrying delivery uses the same receipt and does not spend
+  another retrieval. Per-use means content retrieval, not copy prevention.
+- `obelisk market income` reads the current creator's actual settlement income.
+  Public buyer pages show value and derivation opportunities; detailed revenue
+  belongs in creator and platform views. Paid sessions remain future work.

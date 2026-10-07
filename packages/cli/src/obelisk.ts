@@ -42,6 +42,7 @@ import {
 import { runResumeCommand } from './resume-command.ts';
 import { runShareCommand } from './share-command.ts';
 import { runSkillFetchCommand } from './skill-fetch-command.ts';
+import { runMarketCommand } from './market-command.ts';
 import { runSkillMintCommand } from './skill-mint-command.ts';
 import { runUsageCommand } from './usage-command.ts';
 import { runWalletCommand } from './wallet-command.ts';
@@ -199,6 +200,10 @@ async function main() {
         throw new Error('Usage: obelisk skill list | show <name> | save <draft.json> | scenes | tag <name> [--add <tag>] [--remove <tag>] | invocations [<name>] | fingerprint <SKILL.md> | mint <name> [--confirm <fingerprint>] | fetch <skill id | fingerprint> [--version <n>] [--name <name>] [--project <dir>] [--confirm]');
       }
     } catch (error) { fail(error); }
+    return;
+  }
+  if (args[0] === 'market') {
+    try { emit(await runMarketCommand(args.slice(1))); } catch (error) { fail(error); }
     return;
   }
   if (args[0] === 'wallet') {

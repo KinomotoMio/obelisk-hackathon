@@ -66,5 +66,7 @@ export function renderChainProtocol(fromDir = chainDir) {
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   writeFileSync(chainProtocolPath, renderChainProtocol());
+  const abi = JSON.parse(readFileSync(join(chainDir, 'abi', 'SkillMarket.json'), 'utf8'));
+  writeFileSync(join(repoRoot, 'packages/core/src/market-abi.ts'), '// Generated from chain/abi/SkillMarket.json by sync:chain.\nexport const skillMarketAbi = ' + JSON.stringify(abi, null, 2) + ' as const;\n');
   process.stdout.write(`Wrote ${chainProtocolPath}\n`);
 }
