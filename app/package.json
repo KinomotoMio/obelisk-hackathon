@@ -29,6 +29,7 @@
     "test:electron:skills": "electron-vite build && electron --no-sandbox tests/electron-skill-tab.mjs",
     "test:electron:share": "electron-vite build && electron --no-sandbox tests/electron-share-tab.mjs",
     "test:electron:playground": "electron-vite build && electron --no-sandbox tests/electron-playground.mjs",
+    "test:electron:capture": "electron-vite build && electron --no-sandbox tests/electron-capture.mjs",
     "test:electron:all": "electron-vite build && node tests/run-electron-suites.mjs"
   },
   "build": {

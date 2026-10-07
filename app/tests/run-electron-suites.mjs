@@ -18,6 +18,7 @@ const suites = [
   'electron-skill-tab.mjs',
   'electron-share-tab.mjs',
   'electron-playground.mjs',
+  'electron-capture.mjs',
 ]
 
 const failed = []
