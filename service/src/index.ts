@@ -3,7 +3,7 @@
 
 // Cloudflare Worker entry point. Bindings (see wrangler.jsonc):
 //   RELAY_QUEUE  Durable Object; the one place relayed transactions are sent from
-//   INDEX        KV; small indexes (relayed transaction records today)
+//   INDEX        KV; small indexes (relayed transaction records, usage reports, checked transactions)
 //   BLOBS        R2; share ciphertext and key packages (#8), minted Skill bodies (#16)
 //   ASSETS       static files from public/: the web reader (#10), the market (#35), the investor preview (#33)
 //   RELAYER_PRIVATE_KEY  secret; the relay wallet that pays gas
@@ -19,6 +19,7 @@ import { Relayer, type RelayRecord } from './relayer.ts';
 import { requestScopedHttp } from './rpc.ts';
 import type { KeyPackage, ShareStore, ShareTransactions } from './shares.ts';
 import type { SkillContentStore } from './skills.ts';
+import type { TxCheck, TxCheckCache } from './txcheck.ts';
 import { usageTrendRecorder, type UsageTrendEntry, type UsageTrendStore } from './usage.ts';
 
 export interface Env extends ChainEnv {
@@ -132,6 +133,15 @@ function kvUsageTrend(kv: KVNamespace | undefined): UsageTrendStore | null {
   };
 }
 
+/** Final answers of GET /v1/txs (confirmed or reverted), one key per transaction: `txcheck:<chainId>:<hash>`. */
+function kvTxChecks(kv: KVNamespace | undefined): TxCheckCache | null {
+  if (!kv) return null;
+  return {
+    get: (key) => kv.get<TxCheck>(`txcheck:${key}`, 'json'),
+    put: (key, value) => kv.put(`txcheck:${key}`, JSON.stringify(value)),
+  };
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     try {
@@ -145,6 +155,7 @@ export default {
         shares: cloudflareShareStore(env.BLOBS, env.INDEX),
         skillContent: r2SkillContent(env.BLOBS),
         usageTrend: kvUsageTrend(env.INDEX),
+        txChecks: kvTxChecks(env.INDEX),
         relay: (forwarded) => env.RELAY_QUEUE.get(env.RELAY_QUEUE.idFromName('relay')).fetch(forwarded),
         readerPage: env.ASSETS ? () => env.ASSETS!.fetch(new URL('/reader/index.html', request.url)) : undefined,
         sitePage: env.ASSETS ? (path) => env.ASSETS!.fetch(new URL(path, request.url)) : undefined,

@@ -9,13 +9,14 @@
 //   GET  /v1/keys/:address              KeyRegistry record + next RegisterKey nonce
 //   GET  /v1/nonces/:contract/:address  next signature nonce on any Obelisk contract
 //   GET  /v1/tx/:hash                   status of a relayed transaction
+//   GET  /v1/txs?hashes=0x…,0x…         whether each transaction exists and succeeded (txcheck.ts)
 //   POST /v1/relay                      { action, message, signature } -> submitted on chain
 //   POST /v1/shares                     upload a share's ciphertext + key package, relay CreateShare
 //   GET  /v1/shares/:id                 a share's on-chain rules, status, and receipts
 //   POST /v1/shares/:id/open            recipient-signed RecordOpen -> receipt on chain, then the key package
 //   POST /v1/shares/:id/revoke          sender-signed RevokeShare -> relayed, transaction kept with the share
 //   GET  /s/:shareId, /activate         the web reader page (public/reader, #10)
-//   GET  /market/…, /preview/…          public web pages (public/<page>/index.html; SITE_PAGES)
+//   GET  /market/…, /preview/…, /runs/… public web pages (public/<page>/index.html; SITE_PAGES)
 //   GET  /v1/skills                     minted Skills, newest first, for the market (market.ts)
 //   GET  /v1/skills/:ref                minted Skill version + stored body (skills.ts)
 //   POST /v1/skills/:fingerprint/content store a minted version's body (skills.ts)
@@ -34,6 +35,7 @@ import type { Relayer, RelayRecord } from './relayer.ts';
 import { createShare, MAX_SHARE_BODY_BYTES, openShare, parseShareId, readShare, revokeShare, type ShareDeps, type ShareStore } from './shares.ts';
 import { readSkillList } from './market.ts';
 import { handleSkillRoute, type SkillContentStore } from './skills.ts';
+import { checkTransactions, parseHashes, type TxCheckCache } from './txcheck.ts';
 import { handleUsageRoute, type UsageTrendStore } from './usage.ts';
 
 export const MAX_BODY_BYTES = 64 * 1024;
@@ -86,6 +88,8 @@ export interface AppDeps {
   skillContent?: SkillContentStore | null;
   /** What relayed usage reports added, for trends (KV); null when unbound. */
   usageTrend?: UsageTrendStore | null;
+  /** Final answers of GET /v1/txs (KV); absent or null to look every transaction up. */
+  txChecks?: TxCheckCache | null;
   /** The web reader's HTML (public/reader/index.html); absent when assets are not bound. */
   readerPage?: () => Promise<Response>;
   /** A public page's HTML from the assets binding, by asset path (SITE_PAGES); absent when assets are not bound. */
@@ -263,6 +267,9 @@ export async function handleRequest(request: Request, deps: AppDeps): Promise<Re
     }
     if (route.length === 2 && route[0] === 'shares') {
       return json(await readShare(shareDeps(request, deps), parseShareId(route[1]!)));
+    }
+    if (route.length === 1 && route[0] === 'txs') {
+      return json(await checkTransactions(publicClient, config, parseHashes(new URL(request.url).searchParams), deps.txChecks ?? null));
     }
     if (route.length === 2 && route[0] === 'tx') {
       const record = deps.txIndex ? await deps.txIndex.get(route[1]!.toLowerCase()) : null;
