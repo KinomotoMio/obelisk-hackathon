@@ -19,6 +19,7 @@ const Settings = () => import('./views/Settings.vue');
 const SkillList = () => import('./views/SkillList.vue');
 const SkillDetail = () => import('./views/SkillDetail.vue');
 const SkillChainDetail = () => import('./views/SkillChainDetail.vue');
+const ShareList = () => import('./views/ShareList.vue');
 
 const routes = [
   {
@@ -86,6 +87,11 @@ const routes = [
     name: 'SkillDetail',
     component: SkillDetail,
     props: true
+  },
+  {
+    path: '/share',
+    name: 'ShareList',
+    component: ShareList
   },
   {
     path: '/settings',

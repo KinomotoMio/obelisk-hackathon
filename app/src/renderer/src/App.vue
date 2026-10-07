@@ -22,6 +22,7 @@ import { buildSidebarProjects } from './sidebar-projects.mjs';
 import { resolveGlobalShortcut } from './keyboard-shortcuts.mjs';
 import { sourceLabel } from './source-catalog.mjs';
 import { loadSkills } from './skill-data.js';
+import { loadShares, shareState } from './share-data.js';
 import { DISTILL_EXAMPLE_PROMPT } from './skill-prompts.mjs';
 import PromptCopyButton from './components/PromptCopyButton.vue';
 import PromptCopyToast from './components/PromptCopyToast.vue';
@@ -31,6 +32,7 @@ const route = useRoute();
 let searchTimer = null;
 let stopSourceUpdates = null;
 let stopSkillUpdates = null;
+let stopShareUpdates = null;
 
 const routeSession = computed(() => {
   return getSessionSummary(route.params.id);
@@ -43,6 +45,7 @@ const archivedCount = computed(() => state.memories.filter(m => m.archived).leng
 const totalMemoryCount = computed(() => state.memories.length);
 const sessionCount = computed(() => state.sessions.length);
 const skillCount = computed(() => state.skills.length);
+const shareCount = computed(() => shareState.shares.length);
 
 const currentRouteType = computed(() => {
   const name = route.name;
@@ -51,6 +54,7 @@ const currentRouteType = computed(() => {
   if (name === 'Recap' || name === 'RecapDetail') return 'recap';
   if (name === 'Settings') return 'settings';
   if (name === 'SkillList' || name === 'SkillDetail' || name === 'MintedSkill') return 'skills';
+  if (name === 'ShareList') return 'share';
   return 'memory';
 });
 
@@ -99,6 +103,8 @@ const windowTitle = computed(() => {
     scopeText = `Recap · ${route.params.id}`;
   } else if (route.name === 'Settings') {
     scopeText = 'Settings';
+  } else if (route.name === 'ShareList') {
+    scopeText = 'Share';
   } else if (route.name === 'SkillList') {
     scopeText = 'Skill';
   } else if (route.name === 'SkillDetail') {
@@ -143,6 +149,8 @@ function handleSidebarRoute(routeName) {
     router.push('/recap');
   } else if (routeName === 'skills') {
     router.push('/skills');
+  } else if (routeName === 'share') {
+    router.push('/share');
   } else {
     router.push('/memory');
   }
@@ -218,6 +226,8 @@ onMounted(() => {
   stopSourceUpdates = window.obelisk?.onIndexUpdated?.(() => loadSourceDots()) ?? null;
   loadSkills();
   stopSkillUpdates = window.obelisk?.onSkillsUpdated?.(() => loadSkills()) ?? null;
+  loadShares();
+  stopShareUpdates = window.obelisk?.onSharesUpdated?.(() => loadShares()) ?? null;
 });
 onUnmounted(() => {
   window.removeEventListener('keydown', handleGlobalKeydown);
@@ -226,6 +236,8 @@ onUnmounted(() => {
   stopSourceUpdates = null;
   stopSkillUpdates?.();
   stopSkillUpdates = null;
+  stopShareUpdates?.();
+  stopShareUpdates = null;
   clearTimeout(searchTimer);
 });
 
@@ -375,6 +387,18 @@ provide('recapGenerateOpen', recapGenerateOpen);
             </svg>
             <span class="label">Archived</span>
             <span class="badge">{{ archivedCount }}</span>
+          </button>
+          <button
+            class="sidebar-item"
+            :class="{ active: currentRouteType === 'share' }"
+            @click="handleSidebarRoute('share')"
+          >
+            <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="7" width="10" height="7" rx="1.5"/>
+              <path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/>
+            </svg>
+            <span class="label">Share</span>
+            <span class="badge">{{ shareCount }}</span>
           </button>
           <button
             class="sidebar-item"
@@ -553,6 +577,7 @@ provide('recapGenerateOpen', recapGenerateOpen);
               <span v-if="route.name === 'Recap'" class="crumb terminal">Recap</span>
               <span v-if="route.name === 'Settings'" class="crumb terminal">Settings</span>
               <span v-if="route.name === 'SkillList'" class="crumb terminal">Skill</span>
+              <span v-if="route.name === 'ShareList'" class="crumb terminal">Share</span>
               <router-link v-if="route.name === 'SkillDetail' || route.name === 'MintedSkill'" class="crumb" to="/skills">Skill</router-link>
               <template v-if="route.name === 'SkillDetail' || route.name === 'MintedSkill'">
                 <span class="crumb-sep">/</span>
