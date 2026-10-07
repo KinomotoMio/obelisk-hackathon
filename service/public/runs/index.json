@@ -2,6 +2,25 @@
   "schema": "obelisk.playground.runs/1",
   "runs": [
     {
+      "id": "run-20261007T194022Z-9de4",
+      "title": "模拟用户明确选择方法后的安装与改进；测试网，不计自主发现",
+      "startedAt": "2026-10-07T19:40:22Z",
+      "endedAt": "2026-10-07T19:43:19Z",
+      "status": "succeeded",
+      "chainId": 968,
+      "dryRun": false,
+      "fixture": false,
+      "totals": {
+        "roles": 2,
+        "steps": 5,
+        "sessions": 2,
+        "commands": 14,
+        "transactions": 0,
+        "screenshots": 0
+      },
+      "publishedAt": "2026-10-07T20:06:18Z"
+    },
+    {
       "id": "run-20261007T192824Z-92b5",
       "title": "模拟角色的日常求职、作品集与排障请求；真实 AI 执行，测试网",
       "startedAt": "2026-10-07T19:28:24Z",
