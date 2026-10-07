@@ -586,7 +586,7 @@ async function run() {
     trend: document.querySelectorAll('.trend-dot').length,
   })`);
   assert(!market.text.includes('我的 Skill'), "someone else's Skill is not marked as mine");
-  assert(market.smooth === '86%' && market.text.includes('基于 1032 次可判断的调用，另有 252 次无法判断'), `the smooth rate shows its sample (${market.smooth})`);
+  assert(market.smooth === '86%' && market.text.includes('基于 1,032 次可判断的调用，另有 252 次无法判断'), `the smooth rate shows its sample (${market.smooth})`);
   assert(JSON.stringify(market.scenes) === JSON.stringify(['移动端', '构建与发布', '前端与交互', '应用商店审核清单', '词表外的标签']), `measured scenes are labelled (${market.scenes})`);
   assert(market.text.includes('适用于所有发布场景') && market.text.includes('实测 71% 的调用来自「移动端」'), "the author's description sits next to what was measured");
   assert(market.trend === 8, 'the weekly trend has one point per week');

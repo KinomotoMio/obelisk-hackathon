@@ -191,15 +191,15 @@ function errorText(failure) {
       <div class="kpis">
         <section class="skill-panel kpi" data-kpi="invocations">
           <h3 class="skill-panel-title">真实调用</h3>
-          <div class="big">{{ usage ? usage.totalInvocations.toLocaleString() : '—' }}</div>
-          <div class="note" v-if="usage">来自 {{ usage.uniqueWalletsExact ? '' : '至少 ' }}{{ usage.uniqueWallets.toLocaleString() }} 个钱包</div>
+          <div class="big">{{ usage ? usage.totalInvocations.toLocaleString('en-US') : '—' }}</div>
+          <div class="note" v-if="usage">来自 {{ usage.uniqueWalletsExact ? '' : '至少 ' }}{{ usage.uniqueWallets.toLocaleString('en-US') }} 个钱包</div>
           <button v-if="playground" class="source-link" @click="showPlaygroundSource">含 Playground 数据 · {{ playground.runs }} 次运行</button>
         </section>
         <section class="skill-panel kpi" data-kpi="smooth">
           <h3 class="skill-panel-title">顺利率</h3>
           <template v-if="results && results.judged > 0">
             <div class="big">{{ percent(results.smooth, results.judged) }}</div>
-            <div class="note">基于 {{ results.judged }} 次可判断的调用，另有 {{ results.unknown }} 次无法判断</div>
+            <div class="note">基于 {{ results.judged.toLocaleString('en-US') }} 次可判断的调用，另有 {{ results.unknown.toLocaleString('en-US') }} 次无法判断</div>
           </template>
           <template v-else>
             <div class="big off">—</div>
@@ -257,7 +257,7 @@ function errorText(failure) {
           <div class="trend-axis">
             <span>{{ formatShortDate(trend[0].start) }}</span>
             <span v-if="trendQuiet" class="note">近 {{ trend.length }} 周没有新的上报</span>
-            <span>本周 <strong class="mono">{{ trend[trend.length - 1].invocations }}</strong></span>
+            <span>本周 <strong class="mono">{{ trend[trend.length - 1].invocations.toLocaleString('en-US') }}</strong></span>
           </div>
         </template>
       </section>
@@ -265,7 +265,7 @@ function errorText(failure) {
       <div class="grid-2">
         <section class="skill-panel">
           <h3 class="skill-panel-title">作者的描述</h3>
-          <p v-if="skill.description" class="author-description">"{{ skill.description }}"</p>
+          <p v-if="skill.description" class="author-description">“{{ skill.description }}”</p>
           <p v-else class="skill-panel-empty">作者还没有上传正文和描述。</p>
           <div class="callout">
             <template v-if="scenesOn && topScene">
@@ -293,7 +293,7 @@ function errorText(failure) {
                 >{{ sceneName(row.scene) }}</span>
                 <span v-if="row.scene.kind === 'user'" class="scene-new" title="用户新建的场景标签，不在场景词表里">新建</span>
                 <span v-if="row.scene.dimensionLabel" class="scene-dim">{{ row.scene.dimensionLabel }}</span>
-                <span class="mono scene-count">{{ row.scene.invocations.toLocaleString() }} 次</span>
+                <span class="mono scene-count">{{ row.scene.invocations.toLocaleString('en-US') }} 次</span>
               </div>
               <div class="scene-line">
                 <div class="scene-track">
@@ -303,9 +303,9 @@ function errorText(failure) {
                 </div>
                 <span v-if="row.enough" class="scene-rate" data-rate>
                   <strong>{{ percent(row.rate, 1) }}</strong> 顺利<span v-if="row.low" class="scene-low">偏低</span>
-                  <small>{{ row.judged }} 次可判断</small>
+                  <small>{{ row.judged.toLocaleString('en-US') }} 次可判断</small>
                 </span>
-                <span v-else-if="row.hasResults" class="scene-rate off" data-rate="few">样本不足<small>{{ row.judged }} 次可判断</small></span>
+                <span v-else-if="row.hasResults" class="scene-rate off" data-rate="few">样本不足<small>{{ row.judged.toLocaleString('en-US') }} 次可判断</small></span>
                 <span v-else class="scene-rate off">未判断</span>
               </div>
             </div>
@@ -313,7 +313,7 @@ function errorText(failure) {
               <span v-for="item in SCENE_OUTCOME_LEGEND" :key="item.key"><i :class="item.key"></i>{{ item.label }}</span>
             </div>
             <p v-if="sceneOutcomesOn" class="note">
-              顺利率 = 顺利 ÷（顺利 + 返工 + 失败），"无法判断"不计入。可判断的调用少于 {{ SCENE_SAMPLE_MIN }} 次的场景只显示样本不足。一次调用可以同时属于几个场景。
+              顺利率 = 顺利 ÷（顺利 + 返工 + 失败），「无法判断」不计入。可判断的调用少于 {{ SCENE_SAMPLE_MIN }} 次的场景只显示样本不足。一次调用可以同时属于几个场景。
             </p>
           </template>
           <p v-else class="skill-panel-empty">场景与顺利率统计尚未开启。开启后，这里按真实调用所在的场景显示分布，和作者的描述并排对照。</p>
@@ -362,8 +362,8 @@ function errorText(failure) {
               <td class="mono version-label">{{ versionLabel(version.index) }}</td>
               <td class="mono" :title="version.fingerprint">{{ shortFingerprint(version.fingerprint) }}</td>
               <td class="mono">{{ fmtListTime(version.publishedAt) }}</td>
-              <td class="mono num">{{ version.totalInvocations.toLocaleString() }}</td>
-              <td class="mono num">{{ version.uniqueWallets.toLocaleString() }}</td>
+              <td class="mono num">{{ version.totalInvocations.toLocaleString('en-US') }}</td>
+              <td class="mono num">{{ version.uniqueWallets.toLocaleString('en-US') }}</td>
             </tr>
           </tbody>
         </table>
