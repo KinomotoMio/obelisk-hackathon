@@ -2,10 +2,11 @@
    type, top bar and footer. The same visual language as the web reader
    (public/reader/style.css) and the App (app/src/renderer/styles/base.css).
    Each page links this file first, then its own stylesheet, and copies the
-   top bar and footer markup below.
+   top bar and footer markup below. The brand (mark and wordmark) comes from
+   brand.css, imported here; its markup is in that file.
 
    <header class="site-top">
-     <a class="site-brand" href="/market"><svg class="site-logo" …/>Obelisk</a>
+     <a class="ob-brand" href="/market" aria-label="Obelisk">…brand.css…</a>
      <nav class="site-nav" aria-label="页面">
        <a href="/market" aria-current="page">Skill 市场</a>
        <a href="/preview">项目预览</a>
@@ -13,9 +14,14 @@
      <span class="site-net" data-site-network hidden></span>
    </header>
    <main class="site-main">…</main>
-   <footer class="site-foot">…</footer>
+   <footer class="site-foot">
+     <a class="ob-brand ob-brand-lg site-foot-brand" href="/market" aria-label="Obelisk">…brand.css…</a>
+     <p>…</p>
+   </footer>
 
    site.js fills [data-site-network] from GET /v1/chain. */
+
+@import url('/site/brand.css');
 
 :root {
   --bg: #0a0b14;
@@ -76,9 +82,6 @@ button { font: inherit; color: inherit; }
   background: rgba(10, 11, 20, 0.86); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--hairline);
 }
-.site-brand { display: inline-flex; align-items: center; gap: 8px; color: var(--fg); font-weight: 700; letter-spacing: 0.01em; }
-.site-brand:hover { text-decoration: none; }
-.site-logo { width: 18px; height: 18px; color: var(--accent); }
 .site-nav { display: flex; gap: 2px; padding-left: 12px; border-left: 1px solid var(--hairline); overflow-x: auto; scrollbar-width: none; }
 .site-nav a { color: var(--fg-2); font-size: 13px; padding: 4px 10px; border-radius: 8px; white-space: nowrap; }
 .site-nav a:hover { color: var(--fg); background: var(--surface-strong); text-decoration: none; }
@@ -97,10 +100,11 @@ button { font: inherit; color: inherit; }
   display: flex; flex-direction: column; gap: 4px;
 }
 .site-foot a { color: var(--fg-2); }
+.site-foot .site-foot-brand { align-self: flex-start; margin-bottom: 10px; }
 
 @media (max-width: 640px) {
   .site-top { gap: 10px; }
-  .site-brand span { display: none; }
+  .site-top .ob-word { display: none; }
   .site-nav { padding-left: 8px; }
   .site-main { padding-top: 20px; }
 }

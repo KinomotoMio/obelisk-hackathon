@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="51" height="64" viewBox="13 0 51 64" fill="none" aria-hidden="true">
+  <path d="M 17 63 L 51.9 1.5 A 15 15 0 0 1 62.5 12.1 Z" fill="#c4b5fd" opacity="0.55"/>
+  <polygon points="17,63 63,24 63,40" fill="#a78bfa" opacity="0.5"/>
+  <path d="M 17 63 L 62.5 51.9 A 15 15 0 0 1 48 63 Z" fill="#6366f1" opacity="0.5"/>
+  <polygon points="17,9 15.2,15 14.3,63 19.7,63 18.8,15" fill="#f5f3ee"/>
+</svg>
