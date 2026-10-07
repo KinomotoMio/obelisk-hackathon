@@ -49,6 +49,7 @@ async function facts(args: string[], deps: SkillChainDeps) {
   return {
     holder: chain.holder,
     network: chain.network,
+    networkName: chain.networkName,
     ...(chain.serviceError ? { serviceError: chain.serviceError } : {}),
     history: summary,
     skills: chain.skills,
@@ -90,9 +91,10 @@ async function render(args: string[], deps: SkillChainDeps) {
     path: out,
     holder: chain.holder,
     network: chain.network,
+    networkName: chain.networkName,
     ...(chain.serviceError ? { serviceError: chain.serviceError } : {}),
     history: { sessions: summary.sessions, activeDays: summary.activeDays, projects: summary.projects, period: summary.period },
-    dimensions: model.dimensions.map(({ label, dimensionLabel, sessions: count }) => ({ label, dimension: dimensionLabel, sessions: count })),
+    dimensions: model.dimensions.map(({ label, dimensionLabel, created, sessions: count }) => ({ label, dimension: dimensionLabel, sessions: count, ...(created ? { created: true } : {}) })),
     problems: model.problems.map((problem) => ({ title: problem.title, sessionId: problem.session.id })),
     skills: chain.skills.map((skill) => ({
       name: skill.name,
@@ -108,7 +110,7 @@ async function render(args: string[], deps: SkillChainDeps) {
     ...(model.dropped.length ? { dropped: model.dropped } : {}),
     unavailable: unavailable(),
     evidence: model.problems.map((problem) => ({ title: problem.title, prompt: evidencePrompt(problem) })),
-    next: `Tell the user the page is at ${out} and summarize it with the numbers above only. Name what is unavailable and why. Each problem's evidence can be shown privately with its \`evidence\` prompt once the user has the recruiter's wallet address.`,
+    next: `Tell the user the page is at ${out} and summarize it with the numbers above only, naming the network by \`networkName\`. Name what is unavailable and why; a dimension marked \`created\` uses a tag this run made up, so say so. Each problem's evidence can be shown privately with its \`evidence\` prompt once the user has the recruiter's wallet address.`,
   };
 }
 

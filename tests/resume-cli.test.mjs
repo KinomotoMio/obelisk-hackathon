@@ -82,6 +82,7 @@ test('resume render: numbers come from the index and the chain, ids that do not 
       { tag: 'v1:task/debug', sessions: [OCT, SEP, 'not-a-session'] },
       { tag: 'v1:domain/backend', sessions: [OCT] },
       { tag: 'v1:artifact/report', sessions: ['not-a-session'] },
+      { tag: 'user:domain/音乐制作', sessions: [SEP] },
     ],
     problems: [{ title: '找出部署笔记里的数据库主机', summary: '读配置并给出一句话结论 <script>alert(1)</script>', tags: ['v1:task/debug'], sessionId: OCT, messages: { from: 1, to: 2 } }],
     skills: ['ai-resume'],
@@ -91,17 +92,26 @@ test('resume render: numbers come from the index and the chain, ids that do not 
   const out = join(alice.home, 'out', 'resume.html');
   const rendered = await alice.ok('resume', 'render', file, '--out', out);
   assert.equal(rendered.path, out);
-  assert.deepEqual(rendered.dimensions, [{ label: '调试与排障', dimension: '任务类型', sessions: 2 }, { label: '后端与数据', dimension: '技术领域', sessions: 1 }]);
+  assert.deepEqual(rendered.dimensions, [
+    { label: '调试与排障', dimension: '任务类型', sessions: 2 },
+    { label: '后端与数据', dimension: '技术领域', sessions: 1 },
+    { label: '音乐制作', dimension: '技术领域', sessions: 1, created: true },
+  ]);
+  assert.equal(rendered.networkName, 'BOT Chain 测试网');
   assert.deepEqual(rendered.dropped.map((entry) => entry.sessionId), ['not-a-session', 'not-a-session']);
   assert.deepEqual(rendered.skills.map((skill) => [skill.name, skill.invocations, skill.derived, skill.smoothRate, skill.judged]), [['ai-resume', 5, 1, 0.5, 2]]);
   assert.equal(rendered.evidence[0].prompt, `/obelisk-share 把 session「找出部署笔记里的数据库主机」（${OCT}）第 1–2 条分享给 <招聘方的钱包地址>，限 1 次，24 小时内有效`);
 
   const html = readFileSync(out, 'utf8');
   assert.match(html, /<title>AI 能力履历<\/title>/);
-  assert.match(html, /2 个 session/);
+  assert.match(html, /<b>2<\/b><span>个 session/);
+  assert.match(html, /数据可在<span class="net">BOT Chain 测试网<\/span>核对/, 'the network in Chinese');
+  assert.ok(!html.includes('testnet (968)'));
+  assert.match(html, /<span class="new">新建<\/span>音乐制作/, 'a made-up tag shows its label marked 新建');
+  assert.match(html, /<svg class="radar"[^>]*aria-label="能力维度：调试与排障 2 个 session/, 'three dimensions draw a radar');
   assert.match(html, />5<\/td>/, 'real invocations from the chain');
   assert.match(html, /铸造记录 ↗/);
-  assert.match(html, /50%<div class="muted small">判断 2 次/, 'the success rate from judged reports');
+  assert.match(html, /50%<\/span><div class="note">判断 2 次/, 'the success rate from judged reports');
   assert.match(html, /各能力维度不显示顺利率/, 'and why dimensions have none');
   assert.ok(!html.includes('<script>alert'), 'agent-written text is escaped');
   assert.ok(html.includes('&lt;b&gt;bold&lt;/b&gt;'));
