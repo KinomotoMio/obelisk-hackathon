@@ -1,0 +1,92 @@
+{
+  "schema": "obelisk.playground.scenario/1",
+  "name": "daily-use-08-builder-01",
+  "title": "测试网日常工作续篇 · 项目构建者",
+  "network": {
+    "serviceUrl": "https://obelisk-service.kinomotomiovo.workers.dev",
+    "chainId": 968
+  },
+  "defaults": {
+    "harness": "codex",
+    "timeoutMinutes": 8
+  },
+  "roles": [
+    {
+      "id": "builder-01",
+      "label": "模拟角色：项目构建者",
+      "skills": [
+        "obelisk",
+        "obelisk-skill-assets",
+        "obelisk-distill"
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "id": "install-1",
+      "role": "builder-01",
+      "title": "用户选用市场方法",
+      "cli": [
+        "skill",
+        "fetch",
+        "8198ffb1d25bc5900824dc730bdbb4985b2284b9d470165bee4f5704402ebfd4",
+        "--harness",
+        "codex",
+        "--confirm"
+      ]
+    },
+    {
+      "id": "task-1",
+      "role": "builder-01",
+      "title": "读书笔记别停在计划上了。帮我做一个能在浏览器直接打开的小原型",
+      "prompt": "$ai-building-collaboration 读书笔记别停在计划上了。帮我做一个能在浏览器直接打开的小原型，可以填书名和摘录、保存到本机、看到列表，不要登录和标签搜索。把怎么打开写清楚。 请把产物保存在当前项目。",
+      "scenes": [
+        "v1:task/planning"
+      ]
+    },
+    {
+      "id": "install-2",
+      "role": "builder-01",
+      "title": "用户选用市场方法",
+      "cli": [
+        "skill",
+        "fetch",
+        "5f3bbfab2a818e8cbdbc2f87f28f266fb6cc6e6682f55a54de92a820d9aa9495",
+        "--harness",
+        "codex",
+        "--confirm"
+      ]
+    },
+    {
+      "id": "task-2",
+      "role": "builder-01",
+      "title": "帮我检查刚做的小原型，重点看看空内容、刷新后数据还在不在、书",
+      "prompt": "$evidence-led-bug-report 帮我检查刚做的小原型，重点看看空内容、刷新后数据还在不在、书名里带尖括号这些情况。发现问题就修一下，把实际检查过的和没检查的分开记下来。 请把产物保存在当前项目。",
+      "scenes": [
+        "v1:task/planning"
+      ]
+    },
+    {
+      "id": "install-3",
+      "role": "builder-01",
+      "title": "用户选用市场方法",
+      "cli": [
+        "skill",
+        "fetch",
+        "5c448b5cc0ed4b80c157a2224698d6d3e2c01c7134373c6dc6749d5fe274876a",
+        "--harness",
+        "codex",
+        "--confirm"
+      ]
+    },
+    {
+      "id": "task-3",
+      "role": "builder-01",
+      "title": "我想把现在这个小工具发给朋友试试，帮我写一段简短介绍，说明它",
+      "prompt": "$evidence-grounded-value-writing 我想把现在这个小工具发给朋友试试，帮我写一段简短介绍，说明它现在能做什么、有哪些限制，以及我希望他们反馈什么，别把未来功能写进去。 请把产物保存在当前项目。",
+      "scenes": [
+        "v1:task/planning"
+      ]
+    }
+  ]
+}

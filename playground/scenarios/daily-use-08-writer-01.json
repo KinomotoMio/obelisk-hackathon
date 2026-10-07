@@ -1,0 +1,70 @@
+{
+  "schema": "obelisk.playground.scenario/1",
+  "name": "daily-use-08-writer-01",
+  "title": "测试网日常工作续篇 · 社团组织者",
+  "network": {
+    "serviceUrl": "https://obelisk-service.kinomotomiovo.workers.dev",
+    "chainId": 968
+  },
+  "defaults": {
+    "harness": "codex",
+    "timeoutMinutes": 8
+  },
+  "roles": [
+    {
+      "id": "writer-01",
+      "label": "模拟角色：社团组织者",
+      "skills": [
+        "obelisk",
+        "obelisk-skill-assets",
+        "obelisk-distill"
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "id": "install-1",
+      "role": "writer-01",
+      "title": "用户选用市场方法",
+      "cli": [
+        "skill",
+        "fetch",
+        "8198ffb1d25bc5900824dc730bdbb4985b2284b9d470165bee4f5704402ebfd4",
+        "--harness",
+        "codex",
+        "--confirm"
+      ]
+    },
+    {
+      "id": "task-1",
+      "role": "writer-01",
+      "title": "我想给社团做一个活动报名小页面，第一版只有活动介绍和报名意向",
+      "prompt": "$ai-building-collaboration 我想给社团做一个活动报名小页面，第一版只有活动介绍和报名意向，不收钱。我们三个人周末能各拿出两小时，帮我写个现实一点的分工和交付计划。 请把产物保存在当前项目。",
+      "scenes": [
+        "v1:task/planning"
+      ]
+    },
+    {
+      "id": "install-2",
+      "role": "writer-01",
+      "title": "用户选用市场方法",
+      "cli": [
+        "skill",
+        "fetch",
+        "5c448b5cc0ed4b80c157a2224698d6d3e2c01c7134373c6dc6749d5fe274876a",
+        "--harness",
+        "codex",
+        "--confirm"
+      ]
+    },
+    {
+      "id": "task-2",
+      "role": "writer-01",
+      "title": "帮我把这个活动报名页的计划写成一段给社团同学看的介绍，让他们",
+      "prompt": "$evidence-grounded-value-writing 帮我把这个活动报名页的计划写成一段给社团同学看的介绍，让他们知道我们准备解决什么问题、目前还没做好什么，再加三个值得提前问他们的问题。 请把产物保存在当前项目。",
+      "scenes": [
+        "v1:task/planning"
+      ]
+    }
+  ]
+}

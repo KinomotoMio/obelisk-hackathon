@@ -1,0 +1,92 @@
+{
+  "schema": "obelisk.playground.scenario/1",
+  "name": "daily-use-08-designer-01",
+  "title": "测试网日常工作续篇 · 设计师",
+  "network": {
+    "serviceUrl": "https://obelisk-service.kinomotomiovo.workers.dev",
+    "chainId": 968
+  },
+  "defaults": {
+    "harness": "codex",
+    "timeoutMinutes": 8
+  },
+  "roles": [
+    {
+      "id": "designer-01",
+      "label": "模拟角色：设计师",
+      "skills": [
+        "obelisk",
+        "obelisk-skill-assets",
+        "obelisk-distill"
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "id": "install-1",
+      "role": "designer-01",
+      "title": "用户选用市场方法",
+      "cli": [
+        "skill",
+        "fetch",
+        "608430d0d29afeb96f59ffc1ae04e33b6ec7315fde7f4ddd3640fdd6c48895ce",
+        "--harness",
+        "codex",
+        "--confirm"
+      ]
+    },
+    {
+      "id": "task-1",
+      "role": "designer-01",
+      "title": "访谈提纲已经有了，帮我把失物招领的纸面想法做成一个能直接打开",
+      "prompt": "$small-project-evidence-loop 访谈提纲已经有了，帮我把失物招领的纸面想法做成一个能直接打开的 HTML 草图，放三件明确标为示例的物品，能看详情和返回列表就行，不收真实联系方式。 请把产物保存在当前项目。",
+      "scenes": [
+        "v1:task/planning"
+      ]
+    },
+    {
+      "id": "install-2",
+      "role": "designer-01",
+      "title": "用户选用市场方法",
+      "cli": [
+        "skill",
+        "fetch",
+        "11e1a23f42ad60ae9d6fc6ff534e3bca216f80585b12f1e531777013b2e9b307",
+        "--harness",
+        "codex",
+        "--confirm"
+      ]
+    },
+    {
+      "id": "task-2",
+      "role": "designer-01",
+      "title": "这个原型先取消填写手机号，改成线下联系失物招领处。帮我把现有",
+      "prompt": "$standards-change-inventory-review 这个原型先取消填写手机号，改成线下联系失物招领处。帮我把现有说明、任务卡和观察表一起对齐，列出哪些内容因此改了。 请把产物保存在当前项目。",
+      "scenes": [
+        "v1:task/planning"
+      ]
+    },
+    {
+      "id": "install-3",
+      "role": "designer-01",
+      "title": "用户选用市场方法",
+      "cli": [
+        "skill",
+        "fetch",
+        "5c448b5cc0ed4b80c157a2224698d6d3e2c01c7134373c6dc6749d5fe274876a",
+        "--harness",
+        "codex",
+        "--confirm"
+      ]
+    },
+    {
+      "id": "task-3",
+      "role": "designer-01",
+      "title": "作品集还没做真实试用，帮我把这轮设计过程整理成一页项目说明，",
+      "prompt": "$evidence-grounded-value-writing 作品集还没做真实试用，帮我把这轮设计过程整理成一页项目说明，讲清问题、我做的选择、已有产物和接下来要验证的事。 请把产物保存在当前项目。",
+      "scenes": [
+        "v1:task/planning"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "schema": "obelisk.playground.scenario/1",
+  "name": "daily-use-08-job-seeker-01",
+  "title": "测试网日常工作续篇 · 求职者",
+  "network": {
+    "serviceUrl": "https://obelisk-service.kinomotomiovo.workers.dev",
+    "chainId": 968
+  },
+  "defaults": {
+    "harness": "codex",
+    "timeoutMinutes": 8
+  },
+  "roles": [
+    {
+      "id": "job-seeker-01",
+      "label": "模拟角色：求职者",
+      "skills": [
+        "obelisk",
+        "obelisk-skill-assets",
+        "obelisk-distill"
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "id": "install-1",
+      "role": "job-seeker-01",
+      "title": "用户选用市场方法",
+      "cli": [
+        "skill",
+        "fetch",
+        "3feece437dcc9073593ce19407d043622eacc885b677ec4c7d6db6a76e4e65c9",
+        "--harness",
+        "codex",
+        "--confirm"
+      ]
+    },
+    {
+      "id": "task-1",
+      "role": "job-seeker-01",
+      "title": "如果面试官问为什么用 SQLite 而不是 MySQL，我该",
+      "prompt": "$evidence-grounded-job-materials 如果面试官问为什么用 SQLite 而不是 MySQL，我该怎么解释？结合我现有项目经历写一个一分钟回答，哪些是当时的选择、哪些只是现在的理解要分开。 请把产物保存在当前项目。",
+      "scenes": [
+        "v1:task/planning"
+      ]
+    },
+    {
+      "id": "install-2",
+      "role": "job-seeker-01",
+      "title": "用户选用市场方法",
+      "cli": [
+        "skill",
+        "fetch",
+        "608430d0d29afeb96f59ffc1ae04e33b6ec7315fde7f4ddd3640fdd6c48895ce",
+        "--harness",
+        "codex",
+        "--confirm"
+      ]
+    },
+    {
+      "id": "task-2",
+      "role": "job-seeker-01",
+      "title": "我还没有真的找同学试系统。帮我准备一封约同学周末试用的短消息",
+      "prompt": "$small-project-evidence-loop 我还没有真的找同学试系统。帮我准备一封约同学周末试用的短消息，再把试用需要提前准备的东西列一下，不要替我发出去。 请把产物保存在当前项目。",
+      "scenes": [
+        "v1:task/planning"
+      ]
+    },
+    {
+      "id": "install-3",
+      "role": "job-seeker-01",
+      "title": "用户选用市场方法",
+      "cli": [
+        "skill",
+        "fetch",
+        "5c448b5cc0ed4b80c157a2224698d6d3e2c01c7134373c6dc6749d5fe274876a",
+        "--harness",
+        "codex",
+        "--confirm"
+      ]
+    },
+    {
+      "id": "task-3",
+      "role": "job-seeker-01",
+      "title": "帮我把这些项目材料收成一页投递前检查清单，哪些表述有事实支持",
+      "prompt": "$evidence-grounded-value-writing 帮我把这些项目材料收成一页投递前检查清单，哪些表述有事实支持、哪些容易说大了，给我几个具体替换写法。 请把产物保存在当前项目。",
+      "scenes": [
+        "v1:task/planning"
+      ]
+    }
+  ]
+}
