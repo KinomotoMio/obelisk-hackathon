@@ -205,7 +205,7 @@ test('scenario files are checked before anything runs', () => {
     return true;
   });
   const smoke = loadScenario(join(import.meta.dirname, '..', 'playground', 'scenarios', 'smoke.json'));
-  assert.deepEqual(smoke.scenario.roles.map((r) => r.harness), ['claude-code', 'codex']);
+  assert.deepEqual(smoke.scenario.roles.map((r) => r.harness), ['codex', 'codex']);
 });
 
 test('codex-login prepares one shared Codex sign-in and prints the command for the owner', async () => {
