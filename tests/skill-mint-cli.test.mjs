@@ -6,7 +6,8 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 import { skillBodyFromMarkdown, skillFingerprint } from '../packages/core/src/skills.ts';
 import { supported } from './chain-cli-fakes.mjs';
@@ -112,6 +113,34 @@ test('a changed draft of a minted Skill publishes a new version; a derived Skill
     const orphan = await alice.run('skill', 'mint', 'orphan');
     assert.equal(orphan.status, 1);
     assert.match(orphan.json.error, /Parent Skill never-minted is not minted .*obelisk skill mint never-minted/);
+  } finally {
+    service.close();
+  }
+});
+
+test('deriving from someone else\'s minted Skill (#20): read it without installing, save with its id as parent, mint records it', { skip }, async () => {
+  const service = await startFakeSkillService();
+  try {
+    const { alice, bob } = setupPeople(service);
+    await alice.ok('wallet', 'create');
+    const minted = await alice.mint({ ...probeDraft, name: 'ai-resume', body: '# AI resume\n\nCollect the evidence first.' });
+
+    assert.match(minted.author, /^0x[0-9a-fA-F]{40}$/);
+    // What obelisk-distill does for "在 Skill #1「ai-resume」v1 的基础上改出一个新版本": a fetch preview.
+    const parent = await bob.ok('skill', 'fetch', '1', '--version', '1', '--name', 'ai-resume-designer-portfolio');
+    assert.equal(parent.preview, true);
+    assert.equal(parent.body, '# AI resume\n\nCollect the evidence first.');
+    assert.equal(parent.skill.skillId, '1');
+    assert.equal(parent.skill.author, minted.author);
+    assert.equal(existsSync(join(bob.home, '.claude', 'skills', 'ai-resume-designer-portfolio')), false, 'a preview installs nothing');
+
+    await bob.ok('wallet', 'create');
+    await bob.saveDraft({ ...probeDraft, name: 'ai-resume-designer-portfolio', body: '# AI resume for a designer portfolio\n\nCollect the evidence first.\n\nLead with the work samples.', parent: { skillId: '1' }, provenance: [] });
+    const preview = await bob.ok('skill', 'mint', 'ai-resume-designer-portfolio');
+    assert.deepEqual({ skillId: preview.parent.skillId, author: preview.parent.author }, { skillId: '1', author: minted.author });
+    await bob.ok('skill', 'mint', 'ai-resume-designer-portfolio', '--confirm', preview.fingerprint);
+    assert.equal(service.skills[1].parentSkillId, 1n, 'the parent is written on chain');
+    assert.equal((await bob.ok('skill', 'show', 'ai-resume-designer-portfolio')).parent.skillId, '1');
   } finally {
     service.close();
   }
