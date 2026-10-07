@@ -253,3 +253,26 @@ test('per-scene results for many scenes are sent whole, over several reports, an
     service.close();
   }
 });
+
+test('a completed real Playground run can be judged immediately, but a resumed session still waits', { skip }, async () => {
+  const service = await startFakeSkillService();
+  try {
+    const bob = await bobWithHistory(service);
+    installFakeHarness(bob);
+    const id = '7d1c2e30-0000-4000-8000-00000000a001';
+    const file = join(bob.home, '.claude', 'projects', '-tmp-probe', `${id}.jsonl`);
+    const rows = readFileSync(file, 'utf8').trim().split('\n').map(JSON.parse);
+    const ended = Date.now() - 2000;
+    rows.forEach((row, i) => { row.timestamp = new Date(ended - (rows.length - 1 - i) * 1000).toISOString(); });
+    const save = () => writeFileSync(file, rows.map(JSON.stringify).join('\n') + '\n');
+    save();
+    assert.equal((await bob.ok('usage', 'judge')).status, 'nothing_to_judge');
+    const proof = join(bob.home, 'completed-run.json');
+    writeFileSync(proof, JSON.stringify({ schema: 'obelisk.playground.provenance/1', run: { dryRun: false, status: 'succeeded', endedAt: new Date(ended).toISOString() }, steps: [{ status: 'succeeded', endedAt: new Date(ended).toISOString(), sessions: [{ obeliskId: id }] }] }));
+    assert.equal((await bob.ok('usage', 'judge', '--completed-run', proof)).invocations, 2);
+    rows.push({ ...rows.at(-1), uuid: 'a0000000-0000-4000-8000-000000000012', timestamp: new Date(ended + 5000).toISOString(), message: { role: 'assistant', content: [{ type: 'text', text: 'The session resumed with another change.' }] } });
+    save();
+    await bob.ok('--build');
+    assert.equal((await bob.ok('usage', 'judge', '--completed-run', proof)).status, 'nothing_to_judge');
+  } finally { await service.close(); }
+});

@@ -1,0 +1,35 @@
+{
+  "schema": "obelisk.playground.scenario/1",
+  "name": "selected-skill-use-04",
+  "title": "用户选用协作 Skill 完成日常项目安排",
+  "network": {
+    "serviceUrl": "https://obelisk-service.kinomotomiovo.workers.dev",
+    "chainId": 968
+  },
+  "defaults": {
+    "harness": "codex",
+    "timeoutMinutes": 8
+  },
+  "roles": [
+    {
+      "id": "builder-01",
+      "label": "模拟角色：项目构建者",
+      "skills": [
+        "obelisk",
+        "obelisk-skill-assets",
+        "obelisk-distill"
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "id": "builder-selected-use",
+      "role": "builder-01",
+      "title": "用选中的协作方法安排下一次项目验收",
+      "prompt": "$ai-building-collaboration 今天临时多了一个需求：读书笔记要能按标签找。我还是只能抽半小时看进展，帮我看看现有计划怎么调整，把今天能交付的、要推迟的、需要我选的事情写成一页，存进项目。",
+      "scenes": [
+        "v1:task/planning"
+      ]
+    }
+  ]
+}

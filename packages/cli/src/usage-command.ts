@@ -27,7 +27,7 @@ import { loadWallet } from '../../core/src/wallet.ts';
 import { skillService, type SkillChainDeps } from './skill-mint-command.ts';
 import { runUsageJudgeCommand } from './usage-judge-command.ts';
 
-export const USAGE_USAGE = 'Usage: obelisk usage status | enable [--confirm] | disable | report [--if-due] | judge [--harness codex|claude] [--limit <n>] [--batch <n>] [--model <name>] [--confirm]';
+export const USAGE_USAGE = 'Usage: obelisk usage status | enable [--confirm] | disable | report [--if-due] | judge [--harness codex|claude] [--limit <n>] [--batch <n>] [--model <name>] [--completed-run <provenance.json>] [--confirm]';
 
 /** How long a report signature stays valid for the relay. */
 const REPORT_DEADLINE_SECONDS = 600;

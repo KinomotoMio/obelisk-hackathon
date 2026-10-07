@@ -1,0 +1,70 @@
+{
+  "schema": "obelisk.playground.scenario/1",
+  "name": "selected-use-05-maintainer-01",
+  "title": "模拟用户选用市场方法完成日常工作 · 维护者",
+  "network": {
+    "serviceUrl": "https://obelisk-service.kinomotomiovo.workers.dev",
+    "chainId": 968
+  },
+  "defaults": {
+    "harness": "codex",
+    "timeoutMinutes": 8
+  },
+  "roles": [
+    {
+      "id": "maintainer-01",
+      "label": "模拟角色：维护者",
+      "skills": [
+        "obelisk",
+        "obelisk-skill-assets",
+        "obelisk-distill"
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "id": "install-1",
+      "role": "maintainer-01",
+      "title": "产品操作：选用并安装市场方法",
+      "cli": [
+        "skill",
+        "fetch",
+        "004aa60e2b3d0f55569b67d0fe7ca0d7a215fd546d227e0164a9733f179adc39",
+        "--harness",
+        "codex",
+        "--confirm"
+      ]
+    },
+    {
+      "id": "use-1",
+      "role": "maintainer-01",
+      "title": "把方法用于自己的项目",
+      "prompt": "$evidence-based-issue-handoff 我明天要把这个问题交给另一位同学，帮我把现在查到的现象、复现方式和没弄清的地方整理成一份可以直接贴进 issue 的说明。 保存到项目里。",
+      "scenes": [
+        "v1:task/writing"
+      ]
+    },
+    {
+      "id": "install-2",
+      "role": "maintainer-01",
+      "title": "产品操作：选用并安装市场方法",
+      "cli": [
+        "skill",
+        "fetch",
+        "8198ffb1d25bc5900824dc730bdbb4985b2284b9d470165bee4f5704402ebfd4",
+        "--harness",
+        "codex",
+        "--confirm"
+      ]
+    },
+    {
+      "id": "use-2",
+      "role": "maintainer-01",
+      "title": "把方法用于自己的项目",
+      "prompt": "$ai-building-collaboration 这周末我不在，帮我整理一下这个项目哪些事情别人可以继续处理、哪些改动最好等我回来确认，写成一份简短交接。 保存到项目里。",
+      "scenes": [
+        "v1:task/planning"
+      ]
+    }
+  ]
+}

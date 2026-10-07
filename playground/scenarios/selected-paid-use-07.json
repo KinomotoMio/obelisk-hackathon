@@ -1,0 +1,35 @@
+{
+  "schema": "obelisk.playground.scenario/1",
+  "name": "selected-paid-use-07",
+  "title": "已购买的协作方法用于作品集审阅",
+  "network": {
+    "serviceUrl": "https://obelisk-service.kinomotomiovo.workers.dev",
+    "chainId": 968
+  },
+  "defaults": {
+    "harness": "codex",
+    "timeoutMinutes": 8
+  },
+  "roles": [
+    {
+      "id": "designer-01",
+      "label": "模拟角色：设计师",
+      "skills": [
+        "obelisk",
+        "obelisk-skill-assets",
+        "obelisk-distill"
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "id": "use-purchased-method",
+      "role": "designer-01",
+      "title": "使用已购买安装的版本安排今晚审阅",
+      "prompt": "$ai-building-half-hour-review 我今晚只剩半小时看作品集，帮我从现有材料里挑出最该看的三件事，哪些我现在可以决定、哪些要等真正找同学试过再说，保存成一页审阅笔记。",
+      "scenes": [
+        "v1:task/planning"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "schema": "obelisk.playground.scenario/1",
+  "name": "selected-use-06-builder",
+  "title": "构建者复用衍生方法与原型验证方法",
+  "network": {
+    "serviceUrl": "https://obelisk-service.kinomotomiovo.workers.dev",
+    "chainId": 968
+  },
+  "defaults": {
+    "harness": "codex",
+    "timeoutMinutes": 8
+  },
+  "roles": [
+    {
+      "id": "builder-01",
+      "label": "模拟角色：项目构建者",
+      "skills": [
+        "obelisk",
+        "obelisk-skill-assets",
+        "obelisk-distill"
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "id": "install-1",
+      "role": "builder-01",
+      "title": "安装所选方法",
+      "cli": [
+        "skill",
+        "fetch",
+        "dae270f439ec7c53bbcaf4968c8e22c4b611178a35554166ba86eb9f93a5dcab",
+        "--harness",
+        "codex",
+        "--confirm"
+      ]
+    },
+    {
+      "id": "use-1",
+      "role": "builder-01",
+      "title": "处理项目范围与试用安排",
+      "prompt": "$scope-change-handoff 读书笔记第一版先不要标签搜索了，只保留记录和列表。帮我把之前的安排收拢一下，哪些旧决定要作废、哪些任务可以继续，写给接手的搭档看。 保存到项目里。",
+      "scenes": [
+        "v1:task/planning"
+      ]
+    },
+    {
+      "id": "install-2",
+      "role": "builder-01",
+      "title": "安装所选方法",
+      "cli": [
+        "skill",
+        "fetch",
+        "608430d0d29afeb96f59ffc1ae04e33b6ec7315fde7f4ddd3640fdd6c48895ce",
+        "--harness",
+        "codex",
+        "--confirm"
+      ]
+    },
+    {
+      "id": "use-2",
+      "role": "builder-01",
+      "title": "处理项目范围与试用安排",
+      "prompt": "$small-project-evidence-loop 我还不知道同学会不会愿意用这个读书笔记工具。先别开发更多功能，帮我设计一次十分钟的试用，怎么观察他们记录和找回摘录，给我一个能填的记录表。 保存到项目里。",
+      "scenes": [
+        "v1:task/planning"
+      ]
+    }
+  ]
+}

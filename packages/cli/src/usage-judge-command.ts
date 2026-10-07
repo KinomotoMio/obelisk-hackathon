@@ -1,7 +1,7 @@
 // Copyright (C) 2026 tommy0103 and contributors.
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// `obelisk usage judge [--harness codex|claude] [--limit <n>] [--batch <n>] [--model <name>] [--confirm]` (#25).
+// `obelisk usage judge [--harness codex|claude] [--limit <n>] [--batch <n>] [--model <name>] [--completed-run <provenance.json>] [--confirm]` (#25).
 //
 // Has the user's own AI coding assistant judge the scenes and outcome of
 // Skill invocations that will be reported (minted or fetched versions), a
@@ -11,7 +11,7 @@
 // be run again after an interruption; `obelisk usage report` then carries
 // their scenes and outcomes.
 
-import { accessSync, constants } from 'node:fs';
+import { accessSync, constants, readFileSync } from 'node:fs';
 import { delimiter, join } from 'node:path';
 
 import { withSkillInvocations } from '../../core/src/core.ts';
@@ -31,7 +31,7 @@ import { buildJudgePrompt, JUDGE_PROMPT_VERSION, parseJudgeOutput, runJudgeHarne
 import { reportableFingerprints } from '../../core/src/usage-report.ts';
 import type { UsageDeps } from './usage-command.ts';
 
-export const USAGE_JUDGE_USAGE = 'Usage: obelisk usage judge [--harness codex|claude] [--limit <n>] [--batch <n>] [--model <name>] [--confirm]';
+export const USAGE_JUDGE_USAGE = 'Usage: obelisk usage judge [--harness codex|claude] [--limit <n>] [--batch <n>] [--model <name>] [--completed-run <provenance.json>] [--confirm]';
 
 const DEFAULT_LIMIT = 20;
 const DEFAULT_BATCH = 5;
@@ -43,6 +43,7 @@ interface JudgeOptions {
   batch: number;
   model: string | null;
   confirm: boolean;
+  completedRun: string | null;
 }
 
 function onPath(command: string, env: NodeJS.ProcessEnv): boolean {
@@ -67,7 +68,26 @@ function pickHarness(requested: JudgeHarness | null, env: NodeJS.ProcessEnv): Ju
 
 const HARNESS_NAME: Record<JudgeHarness, string> = { claude: 'Claude Code', codex: 'Codex' };
 
+/** A finished headless run can be judged without the interactive quiet window. */
+function completedSessions(file: string | null): Map<string, number> {
+  if (!file) return new Map();
+  const proof = JSON.parse(readFileSync(file, 'utf8'));
+  if (proof?.schema !== 'obelisk.playground.provenance/1' || proof.run?.dryRun !== false ||
+      proof.run?.status !== 'succeeded' || !Number.isFinite(Date.parse(proof.run?.endedAt)) || !Array.isArray(proof.steps)) {
+    throw new Error('--completed-run requires a successfully finished, real Playground run');
+  }
+  const sessions = new Map<string, number>();
+  for (const step of proof.steps) {
+    if (step.status !== 'succeeded' || !Number.isFinite(Date.parse(step.endedAt))) continue;
+    for (const session of step.sessions ?? []) {
+      if (typeof session.obeliskId === 'string') sessions.set(session.obeliskId, Date.parse(step.endedAt) + 999);
+    }
+  }
+  return sessions;
+}
+
 async function judge(options: JudgeOptions, deps: UsageDeps) {
+  const completed = completedSessions(options.completedRun);
   const env = deps.env ?? process.env;
   const paths = resolveObeliskPaths({ env });
   const harness = pickHarness(options.harness, env);
@@ -98,7 +118,9 @@ async function judge(options: JudgeOptions, deps: UsageDeps) {
       const record = annotations.invocations[invocation.messageUuid];
       if (record?.judgment?.promptVersion === JUDGE_PROMPT_VERSION && record.fingerprint === invocation.fingerprint) continue;
       const slice = readInvocationSlice(db, invocation);
-      if (!isSettled(slice.sessionLastAt, now)) continue;
+      const endedAt = completed.get(invocation.sessionId);
+      const completedHere = endedAt !== undefined && slice.sessionLastAt !== null && Date.parse(slice.sessionLastAt) <= endedAt;
+      if (!isSettled(slice.sessionLastAt, now) && !completedHere) continue;
       waiting += 1;
       if (candidates.length < options.limit) candidates.push({ invocation, slice });
     }
@@ -116,6 +138,7 @@ async function judge(options: JudgeOptions, deps: UsageDeps) {
     options.limit !== DEFAULT_LIMIT ? ` --limit ${options.limit}` : '',
     options.batch !== DEFAULT_BATCH ? ` --batch ${options.batch}` : '',
     options.model ? ` --model ${options.model}` : '',
+    options.completedRun ? ` --completed-run '${options.completedRun.replace(/'/g, "'\\''")}'` : '',
   ].join('');
 
   if (items.length === 0) {
@@ -127,6 +150,7 @@ async function judge(options: JudgeOptions, deps: UsageDeps) {
       action: `Judge ${items.length} Skill invocation(s) with ${HARNESS_NAME[harness]} on this computer`,
       harness,
       invocations: items.length,
+      completedRun: options.completedRun,
       pending,
       runs,
       skills: Object.fromEntries(bySkill),
@@ -185,6 +209,7 @@ async function judge(options: JudgeOptions, deps: UsageDeps) {
     status: failure ? 'partial' : results.length === 0 ? 'nothing_judged' : 'judged',
     harness,
     judged: results.length,
+    completedRun: options.completedRun,
     ...(skipped > 0 ? { skipped } : {}),
     remaining,
     results,
@@ -198,7 +223,7 @@ async function judge(options: JudgeOptions, deps: UsageDeps) {
 }
 
 export async function runUsageJudgeCommand(args: string[], deps: UsageDeps = {}): Promise<unknown> {
-  const options: JudgeOptions = { harness: null, limit: DEFAULT_LIMIT, batch: DEFAULT_BATCH, model: null, confirm: false };
+  const options: JudgeOptions = { harness: null, limit: DEFAULT_LIMIT, batch: DEFAULT_BATCH, model: null, confirm: false, completedRun: null };
   for (let i = 0; i < args.length; i++) {
     const flag = args[i];
     if (flag === '--confirm') { options.confirm = true; continue; }
@@ -207,6 +232,7 @@ export async function runUsageJudgeCommand(args: string[], deps: UsageDeps = {})
     if (flag === '--harness' && (value === 'claude' || value === 'codex')) options.harness = value;
     else if (flag === '--limit' && /^[1-9]\d{0,3}$/.test(value)) options.limit = Number(value);
     else if (flag === '--batch' && /^[1-9]\d?$/.test(value) && Number(value) <= MAX_BATCH) options.batch = Number(value);
+    else if (flag === '--completed-run') options.completedRun = value;
     else if (flag === '--model' && /^[\w.:/-]{1,80}$/.test(value)) options.model = value;
     else throw new Error(USAGE_JUDGE_USAGE);
     i++;

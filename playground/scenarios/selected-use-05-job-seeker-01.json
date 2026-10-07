@@ -1,0 +1,70 @@
+{
+  "schema": "obelisk.playground.scenario/1",
+  "name": "selected-use-05-job-seeker-01",
+  "title": "模拟用户选用市场方法完成日常工作 · 求职者",
+  "network": {
+    "serviceUrl": "https://obelisk-service.kinomotomiovo.workers.dev",
+    "chainId": 968
+  },
+  "defaults": {
+    "harness": "codex",
+    "timeoutMinutes": 8
+  },
+  "roles": [
+    {
+      "id": "job-seeker-01",
+      "label": "模拟角色：求职者",
+      "skills": [
+        "obelisk",
+        "obelisk-skill-assets",
+        "obelisk-distill"
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "id": "install-1",
+      "role": "job-seeker-01",
+      "title": "产品操作：选用并安装市场方法",
+      "cli": [
+        "skill",
+        "fetch",
+        "3feece437dcc9073593ce19407d043622eacc885b677ec4c7d6db6a76e4e65c9",
+        "--harness",
+        "codex",
+        "--confirm"
+      ]
+    },
+    {
+      "id": "use-1",
+      "role": "job-seeker-01",
+      "title": "把方法用于自己的项目",
+      "prompt": "$evidence-grounded-job-materials 我准备投一家做校园产品的小公司。帮我把社团报名项目介绍改成适合发给招聘方的一小段消息，写得像学生自己说的，没测过的效果就别写。 保存到项目里。",
+      "scenes": [
+        "v1:task/writing"
+      ]
+    },
+    {
+      "id": "install-2",
+      "role": "job-seeker-01",
+      "title": "产品操作：选用并安装市场方法",
+      "cli": [
+        "skill",
+        "fetch",
+        "608430d0d29afeb96f59ffc1ae04e33b6ec7315fde7f4ddd3640fdd6c48895ce",
+        "--harness",
+        "codex",
+        "--confirm"
+      ]
+    },
+    {
+      "id": "use-2",
+      "role": "job-seeker-01",
+      "title": "把方法用于自己的项目",
+      "prompt": "$small-project-evidence-loop 面试官可能问我怎么知道报名系统好用。我们还没正式做用户测试，帮我准备一个现在能诚实回答的版本，再列一份周末找两个同学就能执行的验证计划。 保存到项目里。",
+      "scenes": [
+        "v1:task/planning"
+      ]
+    }
+  ]
+}

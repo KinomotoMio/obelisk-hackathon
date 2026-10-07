@@ -1,0 +1,70 @@
+{
+  "schema": "obelisk.playground.scenario/1",
+  "name": "mainnet-selected-use-02",
+  "title": "主网：另一位用户选用协作与原型验证方法",
+  "network": {
+    "serviceUrl": "https://obelisk-service-mainnet.kinomotomiovo.workers.dev",
+    "chainId": 677
+  },
+  "defaults": {
+    "harness": "codex",
+    "timeoutMinutes": 8
+  },
+  "roles": [
+    {
+      "id": "mainnet-designer",
+      "label": "模拟角色：主网设计者",
+      "skills": [
+        "obelisk",
+        "obelisk-skill-assets",
+        "obelisk-distill"
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "id": "install-1",
+      "role": "mainnet-designer",
+      "title": "安装所选市场方法",
+      "cli": [
+        "skill",
+        "fetch",
+        "8198ffb1d25bc5900824dc730bdbb4985b2284b9d470165bee4f5704402ebfd4",
+        "--harness",
+        "codex",
+        "--confirm"
+      ]
+    },
+    {
+      "id": "use-1",
+      "role": "mainnet-designer",
+      "title": "为社团活动准备可执行安排",
+      "prompt": "$ai-building-collaboration 我想做一个社团活动报名页，第一版只收姓名和联系方式，不做支付。帮我写个适合周末两天完成的计划，把哪些我来决定、哪些可以交给你整理清楚。 保存到项目里。",
+      "scenes": [
+        "v1:task/planning"
+      ]
+    },
+    {
+      "id": "install-2",
+      "role": "mainnet-designer",
+      "title": "安装所选市场方法",
+      "cli": [
+        "skill",
+        "fetch",
+        "2a4f68c72caae4806cfef2b1a91526e1da6d07ad982f731cbc6c7f57f61bf86b",
+        "--harness",
+        "codex",
+        "--confirm"
+      ]
+    },
+    {
+      "id": "use-2",
+      "role": "mainnet-designer",
+      "title": "为社团活动准备可执行安排",
+      "prompt": "$ai-building-half-hour-review 我现在只有半小时，报名页还只是计划，帮我列一份今天能看完的审阅清单，重点是收集哪些信息、怎么提醒参与者、哪些还不能说已经做好。 保存到项目里。",
+      "scenes": [
+        "v1:task/planning"
+      ]
+    }
+  ]
+}

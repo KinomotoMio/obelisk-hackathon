@@ -1,0 +1,70 @@
+{
+  "schema": "obelisk.playground.scenario/1",
+  "name": "selected-use-05-designer-01",
+  "title": "模拟用户选用市场方法完成日常工作 · 设计师",
+  "network": {
+    "serviceUrl": "https://obelisk-service.kinomotomiovo.workers.dev",
+    "chainId": 968
+  },
+  "defaults": {
+    "harness": "codex",
+    "timeoutMinutes": 8
+  },
+  "roles": [
+    {
+      "id": "designer-01",
+      "label": "模拟角色：设计师",
+      "skills": [
+        "obelisk",
+        "obelisk-skill-assets",
+        "obelisk-distill"
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "id": "install-1",
+      "role": "designer-01",
+      "title": "产品操作：选用并安装市场方法",
+      "cli": [
+        "skill",
+        "fetch",
+        "608430d0d29afeb96f59ffc1ae04e33b6ec7315fde7f4ddd3640fdd6c48895ce",
+        "--harness",
+        "codex",
+        "--confirm"
+      ]
+    },
+    {
+      "id": "use-1",
+      "role": "designer-01",
+      "title": "把方法用于自己的项目",
+      "prompt": "$small-project-evidence-loop 失物招领原型还没有找人试过。帮我把访谈提纲压缩成同学愿意花十分钟回答的版本，顺便做一个可以直接填的观察记录表。 保存到项目里。",
+      "scenes": [
+        "v1:task/writing"
+      ]
+    },
+    {
+      "id": "install-2",
+      "role": "designer-01",
+      "title": "产品操作：选用并安装市场方法",
+      "cli": [
+        "skill",
+        "fetch",
+        "8198ffb1d25bc5900824dc730bdbb4985b2284b9d470165bee4f5704402ebfd4",
+        "--harness",
+        "codex",
+        "--confirm"
+      ]
+    },
+    {
+      "id": "use-2",
+      "role": "designer-01",
+      "title": "把方法用于自己的项目",
+      "prompt": "$ai-building-collaboration 我这周只有两个晚上能做作品集，帮我从现在的草图和访谈准备里挑出最值得先补的内容，排一下这两个晚上，别把还没访谈写成已经验证。 保存到项目里。",
+      "scenes": [
+        "v1:task/planning"
+      ]
+    }
+  ]
+}
