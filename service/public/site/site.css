@@ -1,0 +1,107 @@
+/* Shared shell of Obelisk's public pages (/market #35, /preview #33): colors,
+   type, top bar and footer. The same visual language as the web reader
+   (public/reader/style.css) and the App (app/src/renderer/styles/base.css).
+   Each page links this file first, then its own stylesheet, and copies the
+   top bar and footer markup below.
+
+   <header class="site-top">
+     <a class="site-brand" href="/market"><svg class="site-logo" …/>Obelisk</a>
+     <nav class="site-nav" aria-label="页面">
+       <a href="/market" aria-current="page">Skill 市场</a>
+       <a href="/preview">项目预览</a>
+     </nav>
+     <span class="site-net" data-site-network hidden></span>
+   </header>
+   <main class="site-main">…</main>
+   <footer class="site-foot">…</footer>
+
+   site.js fills [data-site-network] from GET /v1/chain. */
+
+:root {
+  --bg: #0a0b14;
+  --bg-2: #11131f;
+  --panel: rgba(17, 19, 31, 0.86);
+  --surface: rgba(255, 255, 255, 0.03);
+  --surface-strong: rgba(255, 255, 255, 0.06);
+  --surface-hi: rgba(255, 255, 255, 0.09);
+  --fg: rgba(255, 255, 255, 0.92);
+  --fg-2: rgba(255, 255, 255, 0.72);
+  --muted: rgba(255, 255, 255, 0.5);
+  --hairline: rgba(255, 255, 255, 0.08);
+  --accent: #a78bfa;
+  --accent-2: #c4b5fd;
+  --accent-soft: rgba(167, 139, 250, 0.12);
+  --ok: #4ade80;
+  --ok-soft: rgba(74, 222, 128, 0.12);
+  --danger: #f87171;
+  --danger-soft: rgba(248, 113, 113, 0.12);
+  --warn: #fbbf24;
+  --warn-soft: rgba(251, 191, 36, 0.14);
+  --chain: #38bdf8;
+  --chain-soft: rgba(56, 189, 248, 0.12);
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Inter', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace;
+  --gutter: max(16px, env(safe-area-inset-left));
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  color: var(--fg);
+  font: 14px/1.6 var(--font-sans);
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(80% 60% at 100% 0%, rgba(236, 72, 153, 0.10), transparent 55%),
+    radial-gradient(70% 60% at 0% 100%, rgba(99, 102, 241, 0.12), transparent 60%),
+    linear-gradient(to bottom, var(--bg) 0%, var(--bg-2) 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 0 var(--gutter);
+}
+a { color: var(--accent-2); text-decoration: none; }
+a:hover { text-decoration: underline; }
+button { font: inherit; color: inherit; }
+[hidden] { display: none !important; }
+.mono { font-family: var(--font-mono); font-size: 12.5px; }
+.muted { color: var(--muted); }
+.fg2 { color: var(--fg-2); }
+
+.site-top {
+  position: sticky; top: 0; z-index: 20;
+  margin: 0 calc(-1 * var(--gutter));
+  padding: 10px var(--gutter);
+  display: flex; align-items: center; gap: 14px;
+  background: rgba(10, 11, 20, 0.86); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--hairline);
+}
+.site-brand { display: inline-flex; align-items: center; gap: 8px; color: var(--fg); font-weight: 700; letter-spacing: 0.01em; }
+.site-brand:hover { text-decoration: none; }
+.site-logo { width: 18px; height: 18px; color: var(--accent); }
+.site-nav { display: flex; gap: 2px; padding-left: 12px; border-left: 1px solid var(--hairline); overflow-x: auto; scrollbar-width: none; }
+.site-nav a { color: var(--fg-2); font-size: 13px; padding: 4px 10px; border-radius: 8px; white-space: nowrap; }
+.site-nav a:hover { color: var(--fg); background: var(--surface-strong); text-decoration: none; }
+.site-nav a[aria-current="page"] { color: var(--fg); background: var(--accent-soft); font-weight: 600; }
+.site-net {
+  margin-left: auto; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+  font-size: 12px; color: var(--chain); background: var(--chain-soft); border-radius: 999px; padding: 2px 10px;
+}
+.site-net::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+.site-main { width: 100%; max-width: 1120px; margin: 0 auto; padding: 32px 0 48px; flex: 1; }
+
+.site-foot {
+  width: 100%; max-width: 1120px; margin: 0 auto; padding: 20px 0 28px;
+  border-top: 1px solid var(--hairline); font-size: 12.5px; color: var(--muted);
+  display: flex; flex-direction: column; gap: 4px;
+}
+.site-foot a { color: var(--fg-2); }
+
+@media (max-width: 640px) {
+  .site-top { gap: 10px; }
+  .site-brand span { display: none; }
+  .site-nav { padding-left: 8px; }
+  .site-main { padding-top: 20px; }
+}
