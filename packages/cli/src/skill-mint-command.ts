@@ -284,7 +284,9 @@ async function mint(name: string, confirmed: string | null, deps: SkillChainDeps
       bodyBytes,
     };
     const notes = {
-      visibility: 'The Skill body is stored publicly on the Obelisk online service: anyone can fetch it and check it against the on-chain fingerprint.',
+      visibility: deps.licensed
+        ? 'The service stores the body behind signed access checks. The author can retrieve it; buyers need a valid usage receipt. Metadata and the on-chain fingerprint remain public.'
+        : 'The Skill body is stored publicly on the Obelisk online service: anyone can fetch it and check it against the on-chain fingerprint.',
       fee: 'Paid by the Obelisk online service; this wallet is not charged.',
       ...(warnings.length > 0 ? { warnings } : {}),
       next: `Show this preview to the user. Only after they confirm, run \`obelisk skill mint ${name} --confirm ${fingerprint}\`.`,

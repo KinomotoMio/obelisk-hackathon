@@ -1,0 +1,148 @@
+{
+  "schema": "obelisk.testnet-settlement-evidence/1",
+  "network": 968,
+  "market": "0x69a63ceCB9753CAe115Ae9a272586568e871d360",
+  "parentSkill": 10,
+  "derivedSkill": 14,
+  "fingerprint": "2a4f68c72caae4806cfef2b1a91526e1da6d07ad982f731cbc6c7f57f61bf86b",
+  "purchase": {
+    "transaction": "0x86f58b4cc59bbddf4a7be36cf7dfda853609148f9309570b3267b03846a50e31",
+    "requestId": "2095da04-4041-45f9-bd7f-b8eac9d5fdb7"
+  },
+  "use": {
+    "transaction": "0x688ad19595e7fdb1ca8177fc9e7d793a6f5b72dab83e3225de35a617ecca2209",
+    "requestId": "d1ffc92d-3903-4dd0-8e93-16a4ff4bbd4a"
+  },
+  "income": {
+    "original": {
+      "chainId": 968,
+      "contract": "0x69a63ceCB9753CAe115Ae9a272586568e871d360",
+      "wallet": "0xc644A12e084Cf1d10A2F900D2DA650063f5B44F1",
+      "platform": "0x2f8A318ad91cBa234Af92ad6029F9bE395a20F9f",
+      "totalWei": "190000000000000",
+      "total": "0.00019",
+      "testnet": true,
+      "count": "1",
+      "rows": [
+        {
+          "receiptId": "1",
+          "offerId": "2",
+          "buyer": "0x6640773539e914Da9f1D04056DBCD3c301fE2f2F",
+          "paidWei": "1000000000000000",
+          "timestamp": 1791402449,
+          "incomeWei": "190000000000000",
+          "directWei": "0",
+          "derivedWei": "190000000000000",
+          "transaction": "0x86f58b4cc59bbddf4a7be36cf7dfda853609148f9309570b3267b03846a50e31",
+          "allocations": [
+            {
+              "recipient": "0x2f8A318ad91cBa234Af92ad6029F9bE395a20F9f",
+              "amountWei": "50000000000000",
+              "skillId": "0"
+            },
+            {
+              "recipient": "0x055bFeae1781F53B189493F4F3605A247e676383",
+              "amountWei": "760000000000000",
+              "skillId": "14"
+            },
+            {
+              "recipient": "0xc644A12e084Cf1d10A2F900D2DA650063f5B44F1",
+              "amountWei": "190000000000000",
+              "skillId": "10"
+            }
+          ]
+        }
+      ],
+      "nextBefore": null
+    },
+    "derived": {
+      "chainId": 968,
+      "contract": "0x69a63ceCB9753CAe115Ae9a272586568e871d360",
+      "wallet": "0x055bFeae1781F53B189493F4F3605A247e676383",
+      "platform": "0x2f8A318ad91cBa234Af92ad6029F9bE395a20F9f",
+      "totalWei": "760000000000000",
+      "total": "0.00076",
+      "testnet": true,
+      "count": "1",
+      "rows": [
+        {
+          "receiptId": "1",
+          "offerId": "2",
+          "buyer": "0x6640773539e914Da9f1D04056DBCD3c301fE2f2F",
+          "paidWei": "1000000000000000",
+          "timestamp": 1791402449,
+          "incomeWei": "760000000000000",
+          "directWei": "760000000000000",
+          "derivedWei": "0",
+          "transaction": "0x86f58b4cc59bbddf4a7be36cf7dfda853609148f9309570b3267b03846a50e31",
+          "allocations": [
+            {
+              "recipient": "0x2f8A318ad91cBa234Af92ad6029F9bE395a20F9f",
+              "amountWei": "50000000000000",
+              "skillId": "0"
+            },
+            {
+              "recipient": "0x055bFeae1781F53B189493F4F3605A247e676383",
+              "amountWei": "760000000000000",
+              "skillId": "14"
+            },
+            {
+              "recipient": "0xc644A12e084Cf1d10A2F900D2DA650063f5B44F1",
+              "amountWei": "190000000000000",
+              "skillId": "10"
+            }
+          ]
+        }
+      ],
+      "nextBefore": null
+    },
+    "platform": {
+      "chainId": 968,
+      "contract": "0x69a63ceCB9753CAe115Ae9a272586568e871d360",
+      "wallet": "0x2f8A318ad91cBa234Af92ad6029F9bE395a20F9f",
+      "platform": "0x2f8A318ad91cBa234Af92ad6029F9bE395a20F9f",
+      "totalWei": "50000000000000",
+      "total": "0.00005",
+      "testnet": true,
+      "count": "1",
+      "rows": [
+        {
+          "receiptId": "1",
+          "offerId": "2",
+          "buyer": "0x6640773539e914Da9f1D04056DBCD3c301fE2f2F",
+          "paidWei": "1000000000000000",
+          "timestamp": 1791402449,
+          "incomeWei": "50000000000000",
+          "directWei": "0",
+          "derivedWei": "0",
+          "transaction": "0x86f58b4cc59bbddf4a7be36cf7dfda853609148f9309570b3267b03846a50e31",
+          "allocations": [
+            {
+              "recipient": "0x2f8A318ad91cBa234Af92ad6029F9bE395a20F9f",
+              "amountWei": "50000000000000",
+              "skillId": "0"
+            },
+            {
+              "recipient": "0x055bFeae1781F53B189493F4F3605A247e676383",
+              "amountWei": "760000000000000",
+              "skillId": "14"
+            },
+            {
+              "recipient": "0xc644A12e084Cf1d10A2F900D2DA650063f5B44F1",
+              "amountWei": "190000000000000",
+              "skillId": "10"
+            }
+          ]
+        }
+      ],
+      "nextBefore": null
+    }
+  },
+  "checks": {
+    "publicBodyLocked": true,
+    "installedBodyFingerprintMatches": true,
+    "otherWalletBorrowedReceiptRejected": true,
+    "samePurchaseRequestReturnsSameTransaction": true
+  },
+  "classification": "Testnet operator-reviewed settlement using a real AI-produced derivative; not autonomous purchase or operating revenue."
+}
