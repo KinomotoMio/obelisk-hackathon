@@ -16,6 +16,7 @@
 //   POST /v1/shares/:id/revoke          sender-signed RevokeShare -> relayed, transaction kept with the share
 //   GET  /s/:shareId, /activate         the web reader page (public/reader, #10)
 //   GET  /market/…, /preview/…          public web pages (public/<page>/index.html; SITE_PAGES)
+//   GET  /v1/skills                     minted Skills, newest first, for the market (market.ts)
 //   GET  /v1/skills/:ref                minted Skill version + stored body (skills.ts)
 //   POST /v1/skills/:fingerprint/content store a minted version's body (skills.ts)
 //   GET  /v1/skills/:id/lineage         the family tree a Skill belongs to (skills.ts)
@@ -31,6 +32,7 @@ import { localDevChain, type ServiceChainConfig } from './chains.ts';
 import { parseAddressParam, parseContractParam, readKey, readNonce, readTransaction } from './reads.ts';
 import type { Relayer, RelayRecord } from './relayer.ts';
 import { createShare, MAX_SHARE_BODY_BYTES, openShare, parseShareId, readShare, revokeShare, type ShareDeps, type ShareStore } from './shares.ts';
+import { readSkillList } from './market.ts';
 import { handleSkillRoute, type SkillContentStore } from './skills.ts';
 import { handleUsageRoute, type UsageTrendStore } from './usage.ts';
 
@@ -207,6 +209,7 @@ export async function handleRequest(request: Request, deps: AppDeps): Promise<Re
     if (parts[0] !== 'v1') throw new RequestError(404, 'not_found', `No route for ${request.method} ${pathname}`);
     const route = parts.slice(1);
 
+    if (request.method === 'GET' && route.length === 1 && route[0] === 'skills') return json(await readSkillList(deps, new URL(request.url).searchParams));
     const usageResult = await handleUsageRoute(request, route, deps);
     if (usageResult !== null) return json(usageResult);
     const skillResult = await handleSkillRoute(request, route, deps);
