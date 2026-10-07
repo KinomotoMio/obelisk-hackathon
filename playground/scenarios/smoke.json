@@ -1,0 +1,28 @@
+{
+  "schema": "obelisk.playground.scenario/1",
+  "name": "smoke",
+  "title": "冒烟：两个角色各说一句话，各跑一条 obelisk 命令",
+  "network": { "serviceUrl": null, "chainId": 968 },
+  "defaults": { "maxTurns": 3, "timeoutMinutes": 5 },
+  "roles": [
+    { "id": "A", "label": "作者 A", "harness": "claude-code", "skills": ["obelisk", "obelisk-distill"] },
+    { "id": "B", "label": "用户 B", "harness": "codex", "skills": ["obelisk", "obelisk-distill"] }
+  ],
+  "steps": [
+    {
+      "id": "a-hello",
+      "role": "A",
+      "title": "A 在 Claude Code 里查看场景词表",
+      "prompt": "运行 `obelisk skill scenes`，用一句话告诉我词表版本和有几个维度。",
+      "fake": { "commands": [["skill", "scenes"]] }
+    },
+    { "id": "a-skills", "role": "A", "title": "A 查看自己的 Skill 库", "cli": ["skill", "list"] },
+    {
+      "id": "b-hello",
+      "role": "B",
+      "title": "B 在 Codex 里查看场景词表",
+      "prompt": "运行 `obelisk skill scenes`，用一句话告诉我词表版本和有几个维度。",
+      "fake": { "commands": [["skill", "scenes"]] }
+    }
+  ]
+}
