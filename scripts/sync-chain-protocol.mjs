@@ -21,15 +21,15 @@ export const chainProtocolPath = join(repoRoot, 'packages', 'core', 'src', 'chai
 
 const CONTRACTS = ['KeyRegistry', 'ShareRegistry', 'SkillRegistry', 'UsageStats'];
 
-export function renderChainProtocol() {
-  const eip712 = readFileSync(join(chainDir, 'eip712.ts'), 'utf8').replace(/\r\n/g, '\n');
+export function renderChainProtocol(fromDir = chainDir) {
+  const eip712 = readFileSync(join(fromDir, 'eip712.ts'), 'utf8').replace(/\r\n/g, '\n');
   const lines = eip712.split('\n');
   let headerEnd = 0;
   while (headerEnd < lines.length && lines[headerEnd].startsWith('//') && /SPDX|Copyright/.test(lines[headerEnd])) headerEnd++;
 
-  const deployments = readdirSync(join(chainDir, 'deployments'))
+  const deployments = readdirSync(join(fromDir, 'deployments'))
     .filter((name) => /^[0-9]+\.json$/.test(name))
-    .map((name) => JSON.parse(readFileSync(join(chainDir, 'deployments', name), 'utf8')))
+    .map((name) => JSON.parse(readFileSync(join(fromDir, 'deployments', name), 'utf8')))
     .filter((record) => record.complete === true)
     .sort((a, b) => a.chainId - b.chainId);
   const pinned = {};

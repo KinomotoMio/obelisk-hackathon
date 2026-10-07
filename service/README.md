@@ -317,13 +317,15 @@ How to read the fields:
 
 | Name | Kind | Meaning |
 | --- | --- | --- |
-| `CHAIN_ID` | var | `968` (testnet, default) or `677` (mainnet, once `chain/deployments/677.json` is committed) |
+| `CHAIN_ID` | var | `968` (testnet, default) or `677` (mainnet, once `chain/deployments/677.json` is committed and `npm run sync:chain` has pinned it; see the runbook in [`chain/README.md`](../chain/README.md#switching-to-mainnet-5)) |
 | `RPC_URL` | var, optional | overrides the chain's public RPC |
 | `RELAYER_PRIVATE_KEY` | secret | relay wallet key; never commit it |
 | `RELAY_LIMIT_PER_SIGNER_HOURLY`, `RELAY_LIMIT_GLOBAL_HOURLY` | var, optional | relay limits |
 
 Contract addresses come from `chain/deployments/<chainId>.json`, and only a
-record with `complete: true` is used. To change contracts, redeploy them and
+record with `complete: true` is used. The service reads them from the copy
+`npm run sync:chain` pins in `packages/core/src/chain-protocol.ts`, the same
+copy the CLI checks the service against. To change contracts, redeploy them and
 commit the record. Do not hard-code addresses.
 
 ## Deploy

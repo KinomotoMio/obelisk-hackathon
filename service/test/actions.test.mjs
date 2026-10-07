@@ -8,6 +8,7 @@ import { encodeFunctionData } from 'viem';
 
 import { parseRelayRequest, RELAY_ACTIONS, RequestError } from '../src/actions.ts';
 import { handleRequest } from '../src/app.ts';
+import { pinnedDeployments } from '../../packages/core/src/chain-protocol.ts';
 import { resolveChainConfig } from '../src/chains.ts';
 import { HourlyRateLimiter } from '../src/limits.ts';
 import { CONTRACT_ABIS } from '../src/relayer.ts';
@@ -84,6 +85,21 @@ test('the testnet service config reads addresses from the committed deployment r
   assert.throws(() => resolveChainConfig({ CHAIN_ID: '677' }), /No complete deployment/);
   assert.throws(() => resolveChainConfig({ CHAIN_ID: '1' }), /Unsupported CHAIN_ID/);
   assert.throws(() => resolveChainConfig({ CHAIN_ID: '31337' }), /LOCAL_CONTRACTS/);
+});
+
+test('mainnet is served as soon as its deployment is committed and synced, with no code change', () => {
+  // What `npm run sync:chain` adds to chain-protocol.ts once chain/deployments/677.json is complete.
+  const contracts = { KeyRegistry: '0x0000000000000000000000000000000000000a01', ShareRegistry: '0x0000000000000000000000000000000000000a02', SkillRegistry: '0x0000000000000000000000000000000000000a03', UsageStats: '0x0000000000000000000000000000000000000a04' };
+  pinnedDeployments[677] = { chainId: 677, contracts };
+  try {
+    const config = resolveChainConfig({ CHAIN_ID: '677' });
+    assert.equal(config.chain.id, 677);
+    assert.equal(config.rpcUrl, 'https://rpc.botchain.ai');
+    assert.equal(config.explorerUrl, 'https://scan.botchain.ai');
+    assert.deepEqual(config.contracts, contracts);
+  } finally {
+    delete pinnedDeployments[677];
+  }
 });
 
 test('/v1/chain gives a browser wallet the public RPC, never the configured RPC_URL', async () => {

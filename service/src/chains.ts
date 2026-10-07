@@ -4,11 +4,15 @@
 // Which chain this deployment of the service talks to, and where the Obelisk
 // contracts live on it. viem has no built-in BOT Chain, so both networks are
 // defined here. Contract addresses are never hard-coded: they come from the
-// committed `chain/deployments/<chainId>.json` records (only `complete` ones).
+// committed `chain/deployments/<chainId>.json` records (only `complete` ones),
+// as `npm run sync:chain` pins them in packages/core/src/chain-protocol.ts,
+// the same copy the CLI and the App check the service against. So once
+// chain/deployments/677.json is committed and synced, CHAIN_ID=677 works
+// without a code change here.
 
 import { defineChain, getAddress, type Address, type Chain } from 'viem';
 
-import testnetDeployment from '../../chain/deployments/968.json' with { type: 'json' };
+import { pinnedDeployments } from '../../packages/core/src/chain-protocol.ts';
 
 export const CONTRACT_NAMES = ['KeyRegistry', 'ShareRegistry', 'SkillRegistry', 'UsageStats'] as const;
 export type ContractName = (typeof CONTRACT_NAMES)[number];
@@ -46,8 +50,16 @@ interface DeploymentRecord {
   contracts: Partial<Record<string, { address: string }>>;
 }
 
-// Mainnet (677) joins this list once #5 commits chain/deployments/677.json.
-const committedDeployments: readonly DeploymentRecord[] = [testnetDeployment];
+/** Every complete committed deployment, by chain id (mainnet 677 once #5 lands). */
+function committedDeployment(chainId: number): DeploymentRecord | null {
+  const pinned = pinnedDeployments[chainId];
+  if (!pinned) return null;
+  return {
+    chainId,
+    complete: true,
+    contracts: Object.fromEntries(Object.entries(pinned.contracts).map(([name, address]) => [name, { address }])),
+  };
+}
 
 const knownChains: readonly Chain[] = [botMainnet, botTestnet];
 
@@ -95,7 +107,7 @@ export function resolveChainConfig(env: ChainEnv): ServiceChainConfig {
   }
   const chain = knownChains.find((candidate) => candidate.id === chainId);
   if (!chain) throw new Error(`Unsupported CHAIN_ID ${env.CHAIN_ID}; expected 968 (testnet) or 677 (mainnet)`);
-  const record = committedDeployments.find((candidate) => candidate.chainId === chainId && candidate.complete);
+  const record = committedDeployment(chainId);
   if (!record) throw new Error(`No complete deployment of the Obelisk contracts is committed for chain ${chainId}`);
   return {
     chain,
