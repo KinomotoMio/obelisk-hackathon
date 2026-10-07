@@ -38,6 +38,21 @@ export function networkNameZh(chainId: number): string {
   return NETWORK_NAMES_ZH[chainId] ?? `未知网络（${chainId}）`;
 }
 
+// The block explorers of the BOT Chain networks, as service/src/chains.ts
+// defines them. Links are built from the chain id rather than taken from
+// whatever URL a service reports, so a page never sends the user to a site
+// the service chose.
+const NETWORK_EXPLORERS: Record<number, string> = {
+  677: 'https://scan.botchain.ai',
+  968: 'https://scan.bohr.life',
+};
+
+/** The explorer page of `address` on `chainId`, or null for a chain without an explorer. */
+export function explorerAddressUrl(chainId: number, address: string): string | null {
+  const base = NETWORK_EXPLORERS[chainId];
+  return base ? `${base}/address/${address}` : null;
+}
+
 export function resolveServiceUrl(env: NodeJS.ProcessEnv = process.env): string {
   const raw = env['OBELISK_SERVICE_URL']?.trim() || DEFAULT_SERVICE_URL;
   if (!raw) {
