@@ -48,7 +48,7 @@ Obelisk 赛前就是一个开源的本地工具：把 Claude Code、Codex 等 AI
 | [/market/stage-2](https://obelisk-service.kinomotomiovo.workers.dev/market/stage-2) | 阶段 2 预览：上架定价、收入沿族谱怎么分、收入面板、按上下文付费 | 标明「阶段 2 预览」，数字都标「示例」；从某个 Skill 打开（`?skill=<编号>`）时，分成用它在链上的真实族谱 |
 | [/preview](https://obelisk-service.kinomotomiovo.workers.dev/preview) | 项目预览：9 步演示闭环，同一步里并排显示各角色看到的画面，下方是链上时间线 | 目前是**示意内容**，页面上三处标明；Playground 正式跑完后换成真实运行 |
 | `/s/<分享编号>` | 私密分享的网页阅读页：用浏览器钱包打开、在页面里解密、整页水印；不是指定的人看到拒绝页 | 需要一个分享链接，见下面第 3 种方式 |
-| `/runs/<运行编号>` | Playground 运行记录：剧本进度、事件、关键截图、出处记录，每笔交易旁标出链上核对结果 | **还没有上线**：代码已在 `hackathon`（[#32](https://github.com/KinomotoMio/obelisk-hackathon/issues/32)），要等 Worker 重新部署并发布一次真实运行 |
+| `/runs/<运行编号>` | Playground 运行记录：剧本进度、事件、关键截图、出处记录，每笔交易旁标出链上核对结果 | 页面和交易核对接口已上线；正式完整运行数据仍待发布（[#32](https://github.com/KinomotoMio/obelisk-hackathon/issues/32)） |
 
 ### 2. 在链上核对
 
@@ -89,7 +89,7 @@ obelisk --build                         # 每个角色第一次进入时，用�
 | 四个合约、在线服务、代付上链、网页阅读页 | `/market/stage-2` 的价格、分成比例、收入（阶段 2 才实现） |
 | `/market` 和 Skill 页上的调用量、钱包数、场景、顺利率、族谱，读自链上 | `/preview` 的画面和数据，直到 Playground 正式跑完 |
 | CLI、App、给 AI 用的 skill：分享、沉淀、铸造、取用、判断、上报、衍生、履历 | `docs/vision/mockups/` 下的界面示意，以及仓库里标「演示数据」的截图 |
-| Playground 的流水线（两次真实的 Codex 冒烟运行） | Playground 的演示数据：**还没有正式跑**，见 [演示脚本](demo-script.md#两个还没定的前提) |
+| Playground 的流水线（两次真实的 Codex 冒烟运行） | Playground 的演示数据：**还没有正式跑**，见 [演示脚本](demo-script.md#发布与演示安排) |
 
 愿景和现状之间每一项差距及原因，见 [第 2 轮 · 愿景和现状的差距](../testing/round-02.md#三愿景和现状的差距)。评审时常见的质疑和回答见 [问答准备](qa.md)。
 

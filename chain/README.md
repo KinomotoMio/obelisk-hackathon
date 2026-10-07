@@ -134,29 +134,46 @@ contracts were verified this way on 2026-10-07, for example
 
 ## Switching to mainnet (#5)
 
+Release order (confirmed 2026-10-08): finish and verify the contracts and
+business flows on testnet first, record the accepted Git commit, contract
+list, compiler settings and ABI, then deploy that version on mainnet.
+Changes to contracts or business logic require another testnet acceptance
+before updating the release version. Network deployment records and runtime
+configuration are recorded separately.
+
+Keep the existing testnet Worker and Playground data available for the demo.
+Prepare and deploy a separate mainnet Worker with its own network
+configuration and storage bindings; do not change the testnet Worker's
+`CHAIN_ID` or overwrite its data. The mainnet Worker configuration is still
+to be implemented. Mainnet verification uses a small number of real business
+operations; bulk Playground runs remain on testnet and are labeled as such.
+
 Mainnet is chain id 677, RPC `https://rpc.botchain.ai`, explorer
 <https://scan.botchain.ai/>. One address, `0x2f8A318ad91cBa234Af92ad6029F9bE395a20F9f`,
 both deploys the contracts and relays for the online service (its key is the
 Hardhat keystore entry and the Worker's `RELAYER_PRIVATE_KEY`). The deploy
-uses about 4.2M gas, which is about 0.084 BOT at 20 gwei. Each relayed action
-costs about 0.004 BOT. Ask for at least 0.5 BOT.
+uses about 4.2M gas, which is about 0.084 BOT at 20 gwei for the current four
+contracts. Relayed action costs vary with the operation and storage writes;
+estimate each operation and reserve a budget for the chosen mainnet checks.
+Any additional market contract must enter the testnet acceptance and the
+final deployment list before the release version is fixed.
 
 | # | Who | Step |
 | --- | --- | --- |
 | 1 | Owner | Get mainnet BOT sent to `0x2f8A…0F9f` and check it arrived: `curl -s -X POST https://rpc.botchain.ai -H 'content-type: application/json' -d '{"jsonrpc":"2.0","id":1,"method":"eth_getBalance","params":["0x2f8A318ad91cBa234Af92ad6029F9bE395a20F9f","latest"]}'` |
 | 2 | Owner | `cd chain && npm run deploy:mainnet` and enter the keystore password. If it stops for any reason, run it again: it resumes. It is done when it prints `Wrote …/deployments/677.json` (`complete: true`). |
 | 3 | Agent | `npm run verify:mainnet` in `chain/` (no key), then open the four `#code` links it prints. |
-| 4 | Agent | Run `npm run sync:chain` at the repository root, then `node --test tests/chain-protocol-sync.test.mjs` and `cd service && npm test`. Set `"CHAIN_ID": "677"` in `service/wrangler.jsonc`, then commit `chain/deployments/677.json`, `packages/core/src/chain-protocol.ts` and `wrangler.jsonc`, and push. No other code changes: the service and CLI read the addresses from the synced copy. |
-| 5 | Owner | `cd service && npm run deploy` (already logged in to `wrangler`; the relayer secret stays the same). Then `curl https://obelisk-service.kinomotomiovo.workers.dev/v1/health` should show `"chainId": 677` and the relayer's balance. |
-| 6 | Agent | Rebuild the CLI and the App from the pushed commit (`npm run build:cli`, App build). A CLI built before step 4 refuses a service on 677 with "which this CLI has no deployment for". Then run a CLI smoke test on mainnet: wallet activate, skill mint, usage report, share send and revoke. Record the transaction links for the submission. |
+| 4 | Agent | Run `npm run sync:chain` at the repository root, then `node --test tests/chain-protocol-sync.test.mjs` and `cd service && npm test`. Record `chain/deployments/677.json`, the synced `packages/core/src/chain-protocol.ts`, and the separate mainnet Worker configuration. Keep the default testnet Worker configuration on 968. The service and CLI read addresses from the synced copy. |
+| 5 | Owner | Deploy the separate mainnet Worker using its prepared configuration and configure its relayer secret. Its `/v1/health` must show `chainId: 677` and a funded relayer; the existing testnet Worker's health must still show 968. Record both URLs. |
+| 6 | Agent | Rebuild the CLI and the App from the recorded version (`npm run build:cli`, App build). A CLI built before step 4 refuses a service on 677 with "which this CLI has no deployment for". Use the mainnet service URL and an isolated data directory for the selected small business smoke test. Record transaction links and actual fees for the submission. |
 
 What does not carry over from the testnet: encryption keys (each wallet runs
 `obelisk wallet activate` again on mainnet), minted Skills (mint them again;
 local records of testnet mints stay, but they are not reported on 677),
-shares, and usage totals. The Playground scenarios set `chainId: 968`
-(`playground/scenarios/`), so change them as well if the Playground should
-run on mainnet. To roll back, set `CHAIN_ID` back to `"968"` and deploy the
-Worker again.
+shares, and usage totals. Keep bulk Playground scenarios on `chainId: 968`
+and the testnet service URL. Any small mainnet verification scenario must
+explicitly select 677 and the separate mainnet service URL. Preserve the
+testnet environment when changing or rolling back the mainnet deployment.
 
 ## Outputs for the online service and CLI
 

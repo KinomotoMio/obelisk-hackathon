@@ -2,7 +2,7 @@
 
 > 草稿，对应 [KinomotoMio/obelisk-hackathon#37](https://github.com/KinomotoMio/obelisk-hackathon/issues/37) 和 [#5](https://github.com/KinomotoMio/obelisk-hackathon/issues/5)。参与主网部署协作的项目需要补充可核验的 **BOT Chain Mainnet 区块浏览器链接、交易记录，以及合约或应用地址**（选手手册 §5.2）。只部署到测试网不算有效部署（§5.1.2）。
 >
-> **现状：主网还没有部署**（等待主网 BOT，见 #5）。下面主网部分的 `待填` 在部署后填写；测试网部分是现在实际在用的地址。
+> **现状：主网还没有部署**。按 2026-10-08 确认的顺序，先在测试网完成本轮功能和合约验收，固定代码版本，再部署主网并跑少量真实业务验证。路演和大量 Playground 数据保留在测试网，两网使用独立的 Worker。下面主网部分的 `待填` 在部署后填写。
 
 ## 网络
 
@@ -50,7 +50,7 @@
 | Playground 运行记录 | `待填`（在线服务地址下的 `/runs/<运行编号>`） | 演示数据从哪次运行来、每笔交易的链上核对结果；需要发布一次真实运行（[#32](https://github.com/KinomotoMio/obelisk-hackathon/issues/32)） |
 | 项目预览 | `待填`（在线服务地址下的 `/preview`） | 演示闭环逐步播放；换成真实运行后，每笔交易链接到浏览器 |
 
-测试网上，以上页面都在 `https://obelisk-service.kinomotomiovo.workers.dev` 下（`/runs` 还没有部署）；代付钱包是 [`0x2f8A318ad91cBa234Af92ad6029F9bE395a20F9f`](https://scan.bohr.life/address/0x2f8A318ad91cBa234Af92ad6029F9bE395a20F9f)，主网沿用同一个地址（[#5](https://github.com/KinomotoMio/obelisk-hackathon/issues/5)）。
+测试网上，以上页面都在 `https://obelisk-service.kinomotomiovo.workers.dev` 下，`/runs` 页面和 `/v1/txs` 已于 2026-10-07 部署并验证；正式 Playground 运行数据仍待发布。测试网代付钱包是 [`0x2f8A318ad91cBa234Af92ad6029F9bE395a20F9f`](https://scan.bohr.life/address/0x2f8A318ad91cBa234Af92ad6029F9bE395a20F9f)。主网使用独立的 Worker，其服务地址和代付配置在发布时记录。
 
 ### 测试网上已有的交易示例
 
@@ -67,9 +67,9 @@
 
 测试网上还没有衍生 Skill（`parentSkillId` 不为空的铸造）；本地链上已验证过（[#20](https://github.com/KinomotoMio/obelisk-hackathon/issues/20)）。
 
-## 演示中产生的交易
+## 主网验证交易（按预算选取）
 
-每一笔都是用户在本机签名、由在线服务代付提交的。演示时按 [演示脚本](demo-script.md) 的顺序记录，交易哈希填进下表。
+每一笔都是用户在本机签名、由在线服务代付提交的。下面列出可选的验证操作；根据预算选取能够证明真实业务可用的一组，填写对应哈希，不要求把整套路演和所有 Playground 调用重跑到主网。未执行的操作注明未执行，不用测试网交易填进主网列。
 
 | 演示步骤 | 合约 · 方法 | 谁签名 | 主网交易 |
 | --- | --- | --- | --- |
@@ -87,12 +87,14 @@ C 打开转发链接被拒绝这一步不产生交易：服务按链上规则拒
 
 ## 部署前后检查
 
+- [ ] 测试网完成本轮功能和合约验收，包括收入分账及 Playground 的真实 AI 数据；记录验收范围和结果
+- [ ] 固定发布提交、最终合约清单、编译参数和 ABI；新增市场合约如纳入本轮，必须先在测试网验收并更新部署清单
 - [ ] 拿到主网 BOT（#5），代付钱包有余额
 - [ ] `cd chain && npm run deploy:mainnet`，提交生成的 `chain/deployments/677.json`
 - [ ] `npm run verify:mainnet`，在 scan.botchain.ai 上确认四个合约都显示已验证
 - [ ] `npm run sync:chain`，把主网地址写进 `packages/core/src/chain-protocol.ts`（CLI 只信任这里固定的地址），重新构建 CLI 和 App
-- [ ] 在线服务的 `CHAIN_ID` 改为 677（`service/wrangler.jsonc`），重新部署 Worker；`/v1/health` 返回 `chainId: 677`，代付钱包有余额
-- [ ] 测试网上的数据不会带过去：每个钱包重新 `obelisk wallet activate`，Skill 重新铸造，分享和使用统计从零开始
-- [ ] Playground 剧本里的 `chainId` 改为 677（`playground/scenarios/*.json` 目前写的是 968）
-- [ ] 按演示脚本跑一遍，把交易哈希填进上表
+- [ ] 准备并部署独立的主网 Worker，配置 `CHAIN_ID: 677` 和独立的数据绑定；主网 `/v1/health` 返回 677，原测试网 Worker 仍返回 968，记录两个地址
+- [ ] 主网验证使用独立的数据目录及主网服务地址：仅为参与主网验证的钱包重新激活、重新铸造所需 Skill；测试网记录和数据继续保留
+- [ ] 大量 Playground 数据和主要演示剧本保持测试网 968；如用剧本验证主网，另建少量操作的主网剧本并明确选择主网服务
+- [ ] 跑预算内选定的主网业务验证，把交易哈希填进上表并记录实际费用
 - [ ] 逐个打开上面的链接，确认能访问

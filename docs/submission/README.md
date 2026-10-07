@@ -77,7 +77,7 @@
 | --- | --- |
 | 队名与成员；项目是否另起中文名 | 本页、[run-guide.md](run-guide.md) |
 | 拿到主网 BOT，部署并部署 Worker | [mainnet.md · 部署前后检查](mainnet.md#部署前后检查) |
-| Playground 演示要什么效果、在哪条链上跑 | [demo-script.md · 两个还没定的前提](demo-script.md#两个还没定的前提) |
+| Playground 的角色、任务和场景；网络已确定为测试网 | [demo-script.md · 发布与演示安排](demo-script.md#发布与演示安排) |
 | 第 4 步怎么讲：另沉淀一个 Skill，还是照实说明履历 Skill 是写好的 | [demo-script.md · 每一步现在的状态](demo-script.md#每一步现在的状态) |
 | 演示视频的时长和上传位置；讲解人与操作人分工 | [demo-script.md](demo-script.md#演示视频) |
 | 和上游 Obelisk 的关系怎么介绍；队内测试的参与人数 | [qa.md](qa.md) |

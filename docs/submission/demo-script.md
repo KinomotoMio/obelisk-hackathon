@@ -1,5 +1,7 @@
 # 演示脚本
 
+> **2026-10-08 调整**：先积累真实历史资产、模拟市场搜索与使用，并从发生时记录重要过程；以下九步和讲述时间表是候选，不作为大量数据的前置或预设结果。#31 从实际数据中选故事，#45/#46 积累数据，#47 提供素材。模拟用户发言使用自然日常请求；显式格式/计量诊断和操作 SOP 不作为自然使用样本。
+
 > 对应 [KinomotoMio/obelisk-hackathon#37](https://github.com/KinomotoMio/obelisk-hackathon/issues/37)。完整流程来自 [路线图 · 阶段 1 · 黑客松演示](../vision/07-roadmap.md#阶段-1--黑客松演示)，这里按评审的时间重新排了顺序，并标出每一步现在能不能跑。
 >
 > 状态依据：`hackathon` 分支 [`ab16eb4`](https://github.com/KinomotoMio/obelisk-hackathon/commit/ab16eb4)，以及 2026-10-07 下午在线服务和测试网上的实际情况。
@@ -19,25 +21,25 @@
 - **可运行链接**：公开网页，评委用浏览器打开，不用安装，见 [运行说明](run-guide.md#1-不安装打开公开网页)。
 - **现场**：提前把每一步跑到「只差最后一下」，台上只做最能说明问题的几个瞬间（下表标「现场」），其余展示已经跑出来的结果，并说明是预先跑好的。
 
-## 两个还没定的前提
+## 发布与演示安排
 
-这两件事决定了演示用哪条链、第 5 步展示什么数据，都要 owner 决定。下文凡是受影响的地方都标了出来。
+2026-10-08 已确认：先在测试网完成本轮功能、合约和 Playground 的真实闭环，固定验收版本后部署主网并跑少量真实验证。主网和测试网使用独立 Worker，主要演示和大量数据保留在测试网。下面区分已确定的安排与仍待完成的工作。
 
 ### 主网
 
 [#5](https://github.com/KinomotoMio/obelisk-hackathon/issues/5)
 
-- **现状**：没有部署。部署地址 `0x2f8A…0F9f` 在主网上的余额为 0，等主办方发放主网 BOT。切换的代码和文档已经就绪，BOT 到账后约 30 分钟可以完成（[chain/README.md · Switching to mainnet](../../chain/README.md#switching-to-mainnet-5)、[主网材料 · 部署前后检查](mainnet.md#部署前后检查)）。
-- **对演示的影响**：在线服务一次只连一条链。切到主网后，`/market` 等页面只显示主网数据，测试网上的钱包激活、Skill、分享、统计都不会带过去。所以**所有链上步骤（第 1、3、4、6、7、8 步）都要在主网上重新跑一遍**，演示视频也要在切换之后录。CLI 和 App 要在 `npm run sync:chain` 之后重新构建，旧版本会拒绝连接主网服务。
-- **如果截止前拿不到主网 BOT**：只能在测试网上演示，并在开场明确说出来。赛道要求只有主网部署算数（选手手册 §5.1.2），这一项会缺失。
+- **现状**：尚未部署。先完成测试网验收和版本固定，再按 [部署流程](../../chain/README.md#switching-to-mainnet-5) 发布；独立主网 Worker 配置仍待实现。
+- **对演示的影响**：主网部署不覆盖测试网 Worker。主要流程、Playground 数据和演示视频在测试网完成，明确标注网络；主网地址、源码验证和少量真实业务交易单独出示。两网使用各自的服务地址和数据目录，CLI 和 App 在同步主网部署记录后重新构建。
+- **提交边界**：测试网上的操作不能填进主网部署证明；手册没有要求整批演示数据全部跑在主网。参与部署协作仍需提交可核验的主网材料（选手手册 §5.2）。
 
 ### Playground 的真实运行
 
 [#31](https://github.com/KinomotoMio/obelisk-hackathon/issues/31)、[#32](https://github.com/KinomotoMio/obelisk-hackathon/issues/32)
 
-- **现状**：流水线已经打通（角色隔离、Codex 执行器、出处记录、截图、发布、网页运行页），只做过两次 Codex 冒烟运行，没有链上交易。**「演示闭环」剧本还没有写**，`playground/scenarios/` 里只有 `smoke.json`；没有发布过任何真实运行；`/runs` 页面和 `/v1/txs` 链上核对接口还没有部署。
+- **现状**：流水线已经打通（角色隔离、Codex 执行器、出处记录、截图、发布、网页运行页），只做过两次 Codex 冒烟运行，没有链上交易。**「演示闭环」剧本还没有写**，`playground/scenarios/` 里只有 `smoke.json`；没有发布过正式的完整运行；`/runs` 页面和 `/v1/txs` 已于 2026-10-07 部署并验证。
 - **受影响的**：第 5 步「对比两个履历 Skill 的实测场景、调用量和顺利率」；`/preview` 从「示意内容」换成「真实运行」；App 里「来源：Playground」的「查看产生方法」。
-- **要决定的**：演示要什么效果（几个模拟用户、调用多少次、哪些场景、两个履历 Skill 的差异要多明显），在哪条链上跑（按 [09 · 运行环境](../vision/09-playground.md#运行环境)，对外展示的数据应在主网上跑）。决定之后的步骤：写剧本 → 跑 → `npm run playground -- publish <运行编号>` → 提交 `service/public/runs/<运行编号>/` → 填 `service/public/preview/story.json` 的 `run.provenance` 和各步的 `playgroundStep` → 重新部署 Worker。
+- **已确定的**：正式演示数据在测试网跑，见 [09 · 本轮数据积累方式](../vision/09-playground.md#本轮数据积累方式2026-10-08-确认)。任务配置记录角色、自然请求和预算，保留实际结果，不预设顺利率差异。先校准执行与计量，再从真实历史发现资产、模拟市场使用、持续记录和扩量。每批运行可以独立发布；路演故事从这些数据中选择，选好后再填项目预览与现场片段，不需要先写固定九步剧情。
 - **还没做、演示时要口头说明的**：链上的统计不区分数据是否来自 Playground（[09 · 上线步骤](../vision/09-playground.md#上线步骤) G5 第 2、3 项）。
 
 ## 每一步现在的状态
@@ -60,8 +62,8 @@
 
 | 页面 | 状态 |
 | --- | --- |
-| [/preview](https://obelisk-service.kinomotomiovo.workers.dev/preview) 项目预览（[#33](https://github.com/KinomotoMio/obelisk-hackathon/issues/33)） | ✅ 已上线：9 步、7 个角色、链上时间线，手机可用。⚠ 目前是**示意内容**，页面上三处标明；换成真实运行只需替换数据，见 [上面](#playground-的真实运行)。线上版本还没有「查看这次运行的记录」链接（这部分在 `6876f24`，待重新部署） |
-| `/runs/<运行编号>` Playground 运行记录（[#32](https://github.com/KinomotoMio/obelisk-hackathon/issues/32)） | ⚠ 代码已在 `hackathon`，**线上返回 404**：要重新部署 Worker，并至少发布一次真实运行。在那之前可以用 `npm run playground -- fixture <目录>` 生成标明「示例数据」的运行，或用 `npm run playground -- serve` 在本机查看 |
+| [/preview](https://obelisk-service.kinomotomiovo.workers.dev/preview) 项目预览（[#33](https://github.com/KinomotoMio/obelisk-hackathon/issues/33)） | ✅ 已上线：9 步、7 个角色、链上时间线，手机可用。⚠ 目前是**示意内容**，页面上三处标明；运行记录链接的代码已随 2026-10-07 的 Worker 更新部署，仍需发布正式运行并替换预览数据，见 [上面](#playground-的真实运行)。 |
+| `/runs/<运行编号>` Playground 运行记录（[#32](https://github.com/KinomotoMio/obelisk-hackathon/issues/32)） | ✅ `/runs` 页面和 `/v1/txs` 接口已上线并验证。⚠ 正式完整运行数据尚未发布；在那之前可以用 `npm run playground -- fixture <目录>` 生成标明「示例数据」的运行，或用 `npm run playground -- serve` 在本机查看。 |
 
 ## 6 分钟版（全体展示）
 
