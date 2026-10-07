@@ -316,7 +316,6 @@ function registerHandlers() {
   ipcMain.handle('skills:chain-detail', (_event, skillId) => (chainSkills[skillId]
     ? { ok: true, skill: chainSkills[skillId] }
     : { ok: false, error: { code: 'unknown_skill', message: `No minted Skill ${skillId}` } }));
-  ipcMain.handle('playground:info', () => ({ dir: null }));
   ipcMain.handle('playground:skill-sources', () => []);
   ipcMain.handle('db:getSessions', () => Object.keys(sessions).map(sessionSummary));
   ipcMain.handle('db:getSessionsByIds', (_event, ids) => ids.filter(id => sessions[id]).map(sessionSummary));

@@ -23,7 +23,6 @@ import { resolveGlobalShortcut } from './keyboard-shortcuts.mjs';
 import { sourceLabel } from './source-catalog.mjs';
 import { loadSkills } from './skill-data.js';
 import { loadShares, shareState } from './share-data.js';
-import { LIST_POLL_MS, loadPlaygroundRuns, playgroundState, runningCount } from './playground-data.js';
 import { DISTILL_EXAMPLE_PROMPT } from './skill-prompts.mjs';
 import PromptCopyButton from './components/PromptCopyButton.vue';
 import PromptCopyToast from './components/PromptCopyToast.vue';
@@ -35,7 +34,6 @@ let searchTimer = null;
 let stopSourceUpdates = null;
 let stopSkillUpdates = null;
 let stopShareUpdates = null;
-let playgroundTimer = null;
 
 const routeSession = computed(() => {
   return getSessionSummary(route.params.id);
@@ -49,7 +47,6 @@ const totalMemoryCount = computed(() => state.memories.length);
 const sessionCount = computed(() => state.sessions.length);
 const skillCount = computed(() => state.skills.length);
 const shareCount = computed(() => shareState.shares.length);
-const playgroundRunning = computed(() => runningCount());
 
 const currentRouteType = computed(() => {
   const name = route.name;
@@ -59,7 +56,6 @@ const currentRouteType = computed(() => {
   if (name === 'Settings') return 'settings';
   if (name === 'SkillList' || name === 'SkillDetail' || name === 'MintedSkill') return 'skills';
   if (name === 'ShareList') return 'share';
-  if (name === 'PlaygroundList' || name === 'PlaygroundRun') return 'playground';
   return 'memory';
 });
 
@@ -116,10 +112,6 @@ const windowTitle = computed(() => {
     scopeText = `Skill · ${route.params.name}`;
   } else if (route.name === 'MintedSkill') {
     scopeText = `Skill · #${route.params.skillId}`;
-  } else if (route.name === 'PlaygroundList') {
-    scopeText = 'Playground';
-  } else if (route.name === 'PlaygroundRun') {
-    scopeText = `Playground · ${route.params.runId}`;
   } else if (route.name?.startsWith('Session')) {
     if (route.name === 'SessionDetail' || route.name === 'SubagentDetail') {
       const s = routeSession.value;
@@ -160,8 +152,6 @@ function handleSidebarRoute(routeName) {
     router.push('/skills');
   } else if (routeName === 'share') {
     router.push('/share');
-  } else if (routeName === 'playground') {
-    router.push('/playground');
   } else {
     router.push('/memory');
   }
@@ -240,9 +230,6 @@ onMounted(() => {
   stopSkillUpdates = window.obelisk?.onSkillsUpdated?.(() => loadSkills()) ?? null;
   loadShares();
   stopShareUpdates = window.obelisk?.onSharesUpdated?.(() => loadShares()) ?? null;
-  // The sidebar shows a running Playground run; the runner gives no signal.
-  loadPlaygroundRuns();
-  playgroundTimer = setInterval(loadPlaygroundRuns, LIST_POLL_MS);
 });
 onUnmounted(() => {
   window.removeEventListener('keydown', handleGlobalKeydown);
@@ -253,7 +240,6 @@ onUnmounted(() => {
   stopSkillUpdates = null;
   stopShareUpdates?.();
   stopShareUpdates = null;
-  clearInterval(playgroundTimer);
   clearTimeout(searchTimer);
 });
 
@@ -442,21 +428,6 @@ provide('recapGenerateOpen', recapGenerateOpen);
             </svg>
             <span class="label">Recap</span>
           </button>
-          <button
-            v-if="playgroundState.configured"
-            class="sidebar-item"
-            :class="{ active: currentRouteType === 'playground' }"
-            data-sidebar="playground"
-            @click="handleSidebarRoute('playground')"
-          >
-            <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="8" cy="8" r="5.5"/>
-              <path d="M6.6 5.6l3.6 2.4-3.6 2.4z"/>
-            </svg>
-            <span class="label">Playground</span>
-            <span v-if="playgroundRunning" class="badge live" title="有运行正在进行">运行中</span>
-            <span v-else class="badge">{{ playgroundState.runs.length }}</span>
-          </button>
         </div>
 
         <div class="sidebar-section projects" v-if="currentRouteType === 'sessions' || currentRouteType === 'memory'">
@@ -596,12 +567,6 @@ provide('recapGenerateOpen', recapGenerateOpen);
               <span v-if="route.name === 'Settings'" class="crumb terminal">Settings</span>
               <span v-if="route.name === 'SkillList'" class="crumb terminal">Skill</span>
               <span v-if="route.name === 'ShareList'" class="crumb terminal">Share</span>
-              <span v-if="route.name === 'PlaygroundList'" class="crumb terminal">Playground</span>
-              <template v-if="route.name === 'PlaygroundRun'">
-                <router-link class="crumb" to="/playground">Playground</router-link>
-                <span class="crumb-sep">/</span>
-                <span class="crumb terminal">{{ route.params.runId }}</span>
-              </template>
               <router-link v-if="route.name === 'SkillDetail' || route.name === 'MintedSkill'" class="crumb" to="/skills">Skill</router-link>
               <template v-if="route.name === 'SkillDetail' || route.name === 'MintedSkill'">
                 <span class="crumb-sep">/</span>

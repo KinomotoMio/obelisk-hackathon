@@ -23,7 +23,7 @@ import { describeSceneTag, SCENE_DIMENSIONS } from '../../../packages/core/src/s
 import { networkNameZh, ObeliskServiceClient, resolveServiceUrl } from '../../../packages/core/src/obelisk-service.ts';
 import { readChainSkill } from './skill-market.ts';
 import { CaptureUsageError, parseCaptureArgs, runCapture, type CaptureRequest } from './capture.ts';
-import { displayDir, listRuns, readRun, readScreenshot, resolvePlaygroundDir, skillSources } from './playground-runs.ts';
+import { publishedRunPage, resolvePlaygroundDir, skillSources } from './playground-runs.ts';
 import { storedSessionCursor } from '../../../packages/core/src/provider-indexing.ts';
 import { createBuiltinProviderRegistry } from '../../../packages/core/src/providers/builtins.ts';
 import {
@@ -1053,38 +1053,28 @@ ipcMain.handle('skills:chain-detail', async (_, skillId) => {
 });
 
 // --- Playground runs (#32) ---
-// Read-only: the Playground runner (#31) writes each run's provenance record,
-// events, and screenshots; the App shows them as they happen.
-// playground-runs.ts validates the files; a renderer-supplied run id or file
-// name cannot leave the run's directory.
+// The 「来源：Playground」 marks on a Skill come from the runner's local records
+// (read-only; playground-runs.ts validates them). A run is shown on the web,
+// not in the App: 查看产生方法 opens its published page on the online service
+// the CLI uses, in the browser.
 
 // Resolved on every call: the runner may write its first run while the App is open.
 const playgroundDir = () => resolvePlaygroundDir(process.env);
 
-ipcMain.handle('playground:info', () => {
-  const dir = playgroundDir();
-  return { dir: dir ? displayDir(dir, os.homedir()) : null };
-});
-ipcMain.handle('playground:runs', () => {
-  const dir = playgroundDir();
-  return dir ? listRuns(dir) : [];
-});
-ipcMain.handle('playground:run', (_, runId) => {
-  const dir = playgroundDir();
-  return dir ? readRun(dir, runId) : null;
-});
-ipcMain.handle('playground:screenshot', (_, runId, file) => {
-  const dir = playgroundDir();
-  return dir ? readScreenshot(dir, runId, file) : { ok: false, error: 'invalid' };
-});
 ipcMain.handle('playground:skill-sources', (_, query) => {
   const dir = playgroundDir();
   return dir ? skillSources(dir, query) : [];
 });
-ipcMain.handle('playground:reveal-record', (_, runId) => {
-  const dir = playgroundDir();
-  const run = dir ? readRun(dir, runId) : null;
-  if (dir && run?.record) shell.showItemInFolder(path.join(dir, 'runs', run.id, 'provenance.json'));
+ipcMain.handle('playground:open-run', async (_, runId) => {
+  let serviceUrl: string;
+  try {
+    serviceUrl = resolveServiceUrl(process.env);
+  } catch (error) {
+    return { ok: false, reason: 'service_url', message: (error as Error).message };
+  }
+  const page = await publishedRunPage(serviceUrl, runId);
+  if (page.ok) await shell.openExternal(page.url);
+  return page;
 });
 
 // --- Private shares (#12) ---

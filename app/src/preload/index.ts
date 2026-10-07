@@ -74,14 +74,10 @@ contextBridge.exposeInMainWorld('obelisk', {
     ipcRenderer.on('obelisk:skills-updated', listener);
     return () => ipcRenderer.removeListener('obelisk:skills-updated', listener);
   },
-  playgroundInfo: () => invoke('playground:info'),
-  playgroundRuns: () => invoke('playground:runs'),
-  playgroundRun: (runId: string) => invoke('playground:run', runId),
-  playgroundScreenshot: (runId: string, file: string) => invoke('playground:screenshot', runId, file),
   playgroundSkillSources: (query: { chainId: number; skillId: string; name?: string | null; fingerprints?: string[] }) => (
     invoke('playground:skill-sources', query)
   ),
-  playgroundRevealRecord: (runId: string) => invoke('playground:reveal-record', runId),
+  playgroundOpenRun: (runId: string) => invoke('playground:open-run', runId),
   sharesList: () => invoke('shares:list'),
   sharesRecipient: (address: string) => invoke('shares:recipient', address),
   onSharesUpdated: (callback: () => void) => {

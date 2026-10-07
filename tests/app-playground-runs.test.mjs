@@ -3,21 +3,13 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { appendFileSync, copyFileSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { copyFileSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { homedir, tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import {
-  checkEvent,
-  displayDir,
-  listRuns,
-  readRun,
-  readScreenshot,
-  resolvePlaygroundDir,
-  skillSources,
-} from '../app/src/main/playground-runs.ts';
+import { listRuns, resolvePlaygroundDir, skillSources } from '../app/src/main/playground-runs.ts';
 import { repoRoot } from './cli-test-helpers.mjs';
-import { BROKEN_RUN, liveRun, LIVE_RUN, SKILL_ID, SKILL_NAME, txHash, writePlaygroundFixture, writeRun } from './app-playground-fixtures.mjs';
+import { BROKEN_RUN, liveRun, LIVE_RUN, SKILL_ID, SKILL_NAME, writePlaygroundFixture, writeRun } from './app-playground-fixtures.mjs';
 
 function tempDir(t) {
   const dir = mkdtempSync(join(tmpdir(), 'obelisk-playground-'));
@@ -34,17 +26,14 @@ test('the Playground home is the runner\'s, and the default one counts once it h
   assert.equal(resolvePlaygroundDir({ OBELISK_PLAYGROUND_HOME: 'relative' }, some), null);
   assert.equal(resolvePlaygroundDir({}, none), null);
   assert.equal(resolvePlaygroundDir({}, some), join(homedir(), '.obelisk-hackathon', 'playground'));
-  assert.equal(displayDir(join('/home/u', '.obelisk-hackathon', 'playground'), '/home/u'), join('~', '.obelisk-hackathon', 'playground'));
-  assert.equal(displayDir('/srv/runs', '/home/u'), '/srv/runs');
 });
 
-test('the runner\'s example record and events are read as they are written', (t) => {
+test('the runner\'s example record is read as it is written', (t) => {
   const dir = tempDir(t);
   const runId = 'run-20261007T131000Z-7f3a';
   mkdirSync(join(dir, 'runs', runId), { recursive: true });
   copyFileSync(join(repoRoot, 'playground', 'examples', 'provenance.example.json'), join(dir, 'runs', runId, 'provenance.json'));
-  copyFileSync(join(repoRoot, 'playground', 'examples', 'events.example.jsonl'), join(dir, 'runs', runId, 'events.jsonl'));
-  const run = readRun(dir, runId);
+  const [run] = listRuns(dir);
   assert.equal(run.error, null);
   assert.equal(run.record.run.scenario.title, '冒烟：沉淀并铸造一个 Skill');
   assert.equal(run.record.run.network.chainId, 968);
@@ -52,11 +41,6 @@ test('the runner\'s example record and events are read as they are written', (t)
   assert.equal(run.record.steps[0].scenes[0].label, '求职与实习');
   assert.equal(run.record.steps[1].transactions[0].command, 'skill mint');
   assert.equal(run.record.totals.transactions, 2);
-  assert.equal(run.events.length, 7);
-  assert.equal(run.skipped, 0);
-  assert.equal(run.events[2].session.obeliskId, '5b9e0c1e-0000-4000-8000-000000000001');
-  assert.equal(run.events[5].transaction.hash, `0x${'3f'.repeat(32)}`);
-  assert.equal(run.events[6].status, 'succeeded');
 });
 
 test('runs are listed newest first, with an unreadable record listed last with the reason', (t) => {
@@ -71,72 +55,17 @@ test('runs are listed newest first, with an unreadable record listed last with t
   assert.ok(runs[0].updatedAt > 0);
 });
 
-test('a run is read with its events in order, leaving a half-written last line for later', (t) => {
-  const dir = fixture(t);
-  appendFileSync(join(dir, 'runs', LIVE_RUN, 'events.jsonl'), '{"schema":"obelisk.playground.event/1","seq":99,"te');
-  const run = readRun(dir, LIVE_RUN);
-  assert.equal(run.events.length, 18);
-  assert.equal(run.skipped, 0);
-  assert.deepEqual(run.events.map(event => event.seq), Array.from({ length: 18 }, (_, i) => i + 1));
-  assert.equal(run.events[3].transaction.hash, txHash('share'));
-  assert.equal(run.events[5].exitCode, 1);
-  assert.equal(run.events[7].screenshot.file, 'screenshots/b-open.png');
-});
-
-test('event lines that do not follow the schema are counted, not shown', (t) => {
-  const dir = fixture(t);
-  const base = { schema: 'obelisk.playground.event/1', runId: LIVE_RUN, at: '2026-10-07T00:00:00Z', stepId: null, role: null, text: 'x', data: {} };
-  appendFileSync(join(dir, 'runs', LIVE_RUN, 'events.jsonl'), [
-    'not json',
-    JSON.stringify({ ...base, seq: 0, type: 'note' }),
-    JSON.stringify({ ...base, seq: 30, type: 'unknown' }),
-    '',
-  ].join('\n'));
-  const run = readRun(dir, LIVE_RUN);
-  assert.equal(run.events.length, 18);
-  assert.equal(run.skipped, 3);
-  // Data that does not have its type's shape is dropped; the line is kept as text.
-  const event = checkEvent({ ...base, seq: 1, type: 'transaction', role: '../A', text: '<b>plain</b>', data: { hash: '0x12' } });
-  assert.equal(event.text, '<b>plain</b>');
-  assert.equal(event.role, null);
-  assert.equal(event.transaction, undefined);
-});
-
-test('a record that breaks the runner\'s schema is rejected with the first problem', (t) => {
+test('a record that breaks the runner\'s schema is listed with the first problem', (t) => {
   const dir = fixture(t);
   const { record, events } = liveRun();
   record.totals.sessions = 99;
   writeRun(dir, 'run-totals', { record, events });
-  assert.match(readRun(dir, 'run-totals').error, /^totals: must match/);
-
   const second = liveRun();
   second.record.steps[2].screenshots[0].file = 'screenshots/../../secret.png';
   writeRun(dir, 'run-path', second);
-  assert.equal(readRun(dir, 'run-path').error, 'screenshot file is not in the expected format');
-});
-
-test('run ids from the renderer cannot leave the runs directory', (t) => {
-  const dir = fixture(t);
-  assert.equal(readRun(dir, `../runs/${LIVE_RUN}`), null);
-  assert.equal(readRun(dir, '.'), null);
-  assert.equal(readRun(dir, 12), null);
-  assert.equal(readRun(dir, 'missing'), null);
-});
-
-test('screenshots are read only when a step lists them and they stay inside the run', (t) => {
-  const dir = fixture(t);
-  const shot = readScreenshot(dir, LIVE_RUN, 'screenshots/b-open.png');
-  assert.equal(shot.ok, true);
-  assert.match(shot.dataUrl, /^data:image\/png;base64,iVBOR/);
-  assert.deepEqual(readScreenshot(dir, LIVE_RUN, '../run-20261006T090000Z-dry/provenance.json'), { ok: false, error: 'invalid' });
-  assert.deepEqual(readScreenshot(dir, LIVE_RUN, 'screenshots/not-listed.png'), { ok: false, error: 'unknown' });
-
-  const outside = join(dir, 'secret.png');
-  writeFileSync(outside, 'secret');
-  const listed = join(dir, 'runs', LIVE_RUN, 'screenshots', 'a-distill-mint.png');
-  rmSync(listed);
-  symlinkSync(outside, listed);
-  assert.deepEqual(readScreenshot(dir, LIVE_RUN, 'screenshots/a-distill-mint.png'), { ok: false, error: 'outside' });
+  const byId = Object.fromEntries(listRuns(dir).map((run) => [run.id, run]));
+  assert.match(byId['run-totals'].error, /^totals: must match/);
+  assert.equal(byId['run-path'].error, 'screenshot file is not in the expected format');
 });
 
 test('a minted Skill lists the runs on its chain whose steps name it', (t) => {

@@ -2,7 +2,7 @@
 <!-- SPDX-License-Identifier: AGPL-3.0-only -->
 
 <script setup>
-import { computed, ref, watch } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { state } from '../store.js';
 import { fmtListTime } from '../utils.js';
@@ -122,6 +122,25 @@ watch(skill, async (value) => {
     playgroundSources.value = [];
   }
 });
+// 查看产生方法: the run's published page on the online service, in the browser.
+// A run that only exists on this machine has no page yet; say how to publish it.
+const runPages = reactive({});
+async function openRunPage(runId) {
+  runPages[runId] = { state: 'opening', note: null };
+  let page;
+  try {
+    page = await window.obelisk.playgroundOpenRun(runId);
+  } catch (error) {
+    page = { ok: false, reason: 'unreachable', message: String(error?.message || error) };
+  }
+  const notes = {
+    unpublished: `这次运行还没有发布到网页。在 Obelisk 仓库里运行 ${page.command} 发布后，部署在线服务即可打开。`,
+    unreachable: '连不上在线服务，暂时打不开这次运行的网页。',
+    service_url: page.message,
+    invalid: '这次运行的 id 不能用作网页地址。',
+  };
+  runPages[runId] = { state: page.ok ? 'opened' : 'failed', note: page.ok ? null : notes[page.reason] ?? '打不开这次运行的网页。' };
+}
 function showPlaygroundSource() {
   document.querySelector('[data-panel="playground-source"]')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
@@ -224,18 +243,22 @@ function errorText(failure) {
           这个 Skill 出现在 Playground 的模拟运行里<template v-if="playground.mintedBy.length">：由{{ playground.mintedBy.join('、') }} 铸造</template>，涉及 {{ playground.roles }} 个模拟用户、{{ playground.sessions }} 个 session。这里的调用数据包含这些运行上报的记录；链上的统计暂时不区分是否来自 Playground。
         </p>
         <div class="source-runs">
-          <router-link
-            v-for="source in playgroundSources"
-            :key="source.id"
-            class="source-run"
-            :data-source-run="source.id"
-            :to="{ name: 'PlaygroundRun', params: { runId: source.id } }"
-          >
-            <span class="source-run-title">{{ source.title }}</span>
-            <span class="mono source-run-time">{{ fmtListTime(source.startedAt) }}</span>
-            <span class="source-run-status" :class="runStatus({ run: source }).tone">{{ runStatus({ run: source }).label }}</span>
-            <span class="source-run-go">查看出处记录 →</span>
-          </router-link>
+          <template v-for="source in playgroundSources" :key="source.id">
+            <button
+              type="button"
+              class="source-run"
+              :data-source-run="source.id"
+              :disabled="runPages[source.id]?.state === 'opening'"
+              title="在浏览器中打开这次运行的网页：步骤、事件、截图，以及链上核对过的交易"
+              @click="openRunPage(source.id)"
+            >
+              <span class="source-run-title">{{ source.title }}</span>
+              <span class="mono source-run-time">{{ fmtListTime(source.startedAt) }}</span>
+              <span class="source-run-status" :class="runStatus({ run: source }).tone">{{ runStatus({ run: source }).label }}</span>
+              <span class="source-run-go">{{ runPages[source.id]?.state === 'opening' ? '正在打开…' : '查看产生方法 ↗' }}</span>
+            </button>
+            <p v-if="runPages[source.id]?.note" class="source-run-note" :data-source-note="source.id">{{ runPages[source.id].note }}</p>
+          </template>
         </div>
       </section>
 
@@ -450,8 +473,10 @@ function errorText(failure) {
 .source-run {
   display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; gap: 14px; align-items: center;
   padding: 8px 12px; border-radius: 8px; border: 1px solid var(--hairline); background: rgba(255,255,255,0.02);
-  color: var(--fg); text-decoration: none; font-size: var(--text-base); transition: background 0.1s, border-color 0.1s;
+  color: var(--fg); text-decoration: none; font: inherit; font-size: var(--text-base); text-align: left; width: 100%; cursor: pointer;
+  transition: background 0.1s, border-color 0.1s;
 }
+.source-run:disabled { cursor: progress; }
 .source-run:hover { background: var(--surface-strong); border-color: var(--hairline-strong); }
 .source-run-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .source-run-time { font-size: 11px; color: var(--muted); }
@@ -460,6 +485,7 @@ function errorText(failure) {
 .source-run-status.danger { color: var(--danger); }
 .source-run-status.warn { color: var(--warn); }
 .source-run-go { font-size: var(--text-sm); color: var(--accent-2); }
+.source-run-note { margin: -2px 0 4px; padding: 0 12px; font-size: var(--text-sm); color: var(--warn); line-height: 1.6; }
 .grid-2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
 @container (max-width: 820px) {
   .grid-2 { grid-template-columns: minmax(0, 1fr); }
