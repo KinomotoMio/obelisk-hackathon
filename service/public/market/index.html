@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#0a0b14">
+  <meta name="description" content="铸造在 BOT Chain 上的 Skill：真实调用量、钱包数、实测场景与顺利率、族谱，都可以在链上核对。">
+  <title>Skill 市场 · Obelisk</title>
+  <link rel="icon" href="/site/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/site/site.css">
+  <link rel="stylesheet" href="/market/market.css">
+  <script type="module" src="/market/app.js"></script>
+</head>
+<body>
+  <header class="site-top">
+    <a class="site-brand" href="/market">
+      <svg class="site-logo" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 15 7v14.5H9V7z" fill="currentColor" opacity=".9"/><path d="M6.5 21.5h11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <span>Obelisk</span>
+    </a>
+    <nav class="site-nav" aria-label="页面">
+      <a href="/market" aria-current="page">Skill 市场</a>
+      <a href="/preview">项目预览</a>
+    </nav>
+    <span class="site-net" data-site-network hidden></span>
+  </header>
+
+  <main id="app" class="site-main" aria-live="polite">
+    <noscript><p>这个页面需要启用 JavaScript 才能从链上读取数据。</p></noscript>
+  </main>
+
+  <footer class="site-foot">
+    <p>调用量、钱包数、场景、顺利率和族谱都读自 BOT Chain 上的合约，经 Obelisk 在线服务读取，任何人都可以在区块浏览器里核对。标「阶段 2 预览」和「示例」的内容还没有上线。</p>
+    <p>Obelisk 只读取链上的公开记录，不会向你索要私钥或助记词。</p>
+  </footer>
+</body>
+</html>

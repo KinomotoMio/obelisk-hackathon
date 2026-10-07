@@ -52,3 +52,24 @@ test('the shared shell builds no markup from strings and loads nothing from else
     assert.doesNotMatch(source, /https?:\/\/(?!www\.w3\.org)/, `${file} loads nothing from another origin`);
   }
 });
+
+test('the market page uses the shared shell, builds no markup from strings, and labels every stage 2 figure', () => {
+  const dir = new URL('../public/market/', import.meta.url);
+  const html = readFileSync(new URL('index.html', dir), 'utf8');
+  assert.match(html, /<link rel="stylesheet" href="\/site\/site\.css">\s*<link rel="stylesheet" href="\/market\/market\.css">/);
+  assert.match(html, /<script type="module" src="\/market\/app\.js"><\/script>/);
+  assert.match(html, /<a href="\/market" aria-current="page">Skill 市场<\/a>/);
+  for (const file of readdirSync(dir)) {
+    const source = readFileSync(new URL(file, dir), 'utf8');
+    if (file.endsWith('.js')) assert.doesNotMatch(source, /innerHTML|outerHTML|insertAdjacentHTML|document\.write|eval\(|new Function/, file);
+    assert.doesNotMatch(source, /(?:src|href)=["']https?:|fetch\(['"`]https?:|url\(['"]?https?:/, `${file} loads nothing from another origin`);
+  }
+  const stage2 = readFileSync(new URL('stage2.js', dir), 'utf8');
+  assert.match(stage2, /'阶段 2 预览'/);
+  assert.match(stage2, /h\('div', \{ class: 'kpi-label' \}, label, example\(\)\)/, 'each income card is labeled 示例');
+  assert.match(stage2, /'0\.5 BOT \/ 次', example\(\)/, 'the example price is labeled');
+  assert.match(stage2, /表中金额和时间都是示例，没有对应的真实交易/, 'the income table says its rows are examples');
+  assert.doesNotMatch(stage2, /href: [^)]*tx\//, 'no example row links to a transaction');
+  assert.match(readFileSync(new URL('split.js', dir), 'utf8'), /'示例'/);
+  assert.match(readFileSync(new URL('api.js', dir), 'utf8'), /fetch\(path, \{ headers: \{ accept: 'application\/json' \} \}\)/, 'reads go to this service only');
+});
