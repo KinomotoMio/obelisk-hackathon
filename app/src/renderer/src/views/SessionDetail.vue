@@ -2,7 +2,7 @@
 <!-- SPDX-License-Identifier: AGPL-3.0-only -->
 
 <script setup>
-import { ref, shallowRef, computed, reactive, onMounted, onBeforeUnmount, onUnmounted, nextTick, watch } from 'vue';
+import { ref, shallowRef, computed, reactive, onMounted, onBeforeUnmount, onUnmounted, nextTick, watch, defineAsyncComponent } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { state, FOLDER_SVG, getSessionSummary } from '../store.js';
 import {
@@ -40,6 +40,10 @@ const session = computed(() => (
   liveSessionMetadata.value || getSessionSummary(props.id)
 ));
 const messages = shallowRef([]);
+// 分享 (#12): the dialog numbers messages by their position in `messages`.
+// Loaded on first use, so opening a session does not wait for it.
+const ShareSessionDialog = defineAsyncComponent(() => import('../components/ShareSessionDialog.vue'));
+const shareOpen = ref(false);
 const timelineItems = shallowRef([]);
 const loading = ref(false);
 const timelineReady = ref(false);
@@ -509,6 +513,17 @@ function navigateToSubagent(agentId) {
               <span class="dot"></span>
               <span>{{ session.git_branch }}</span>
             </template>
+            <button
+              class="session-share-btn"
+              :disabled="!messages.length"
+              title="把这段 session 分享给一个钱包地址，只有它能打开"
+              @click="shareOpen = true"
+            >
+              <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M8 2.5v7.5M5 5.5l3-3 3 3M3.5 9v3a1.5 1.5 0 0 0 1.5 1.5h6a1.5 1.5 0 0 0 1.5-1.5V9"/>
+              </svg>
+              <span>分享</span>
+            </button>
           </div>
         </div>
 
@@ -559,6 +574,13 @@ function navigateToSubagent(agentId) {
       </button>
     </div>
 
+    <ShareSessionDialog
+      v-if="shareOpen && session"
+      :session="{ id: props.id, title: session.title }"
+      :messages="messages"
+      @close="shareOpen = false"
+    />
+
     <Transition name="toast">
       <div v-if="showFontHint" class="font-toast">
         ⌘ +/- to adjust font size
@@ -600,6 +622,18 @@ function navigateToSubagent(agentId) {
   left: 0;
   width: 100%;
 }
+/* Always rendered and no taller than the meta line, so the header keeps its
+   height while messages load (the timeline is positioned below it). */
+.session-share-btn {
+  margin: -4px 0 -4px auto; height: 24px; padding: 0 10px; border-radius: 5px;
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: var(--font-sans); font-size: var(--text-sm); color: var(--fg-2);
+  border: 1px solid var(--hairline-strong); background: var(--surface);
+  transition: all 0.1s;
+}
+.session-share-btn svg { width: 13px; height: 13px; }
+.session-share-btn:disabled { opacity: 0.4; }
+.session-share-btn:hover:not(:disabled) { color: var(--fg); background: var(--surface-strong); border-color: rgba(167,139,250,0.35); }
 .font-toast {
   position: fixed;
   bottom: 48px;
