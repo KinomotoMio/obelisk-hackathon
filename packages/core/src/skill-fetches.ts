@@ -19,6 +19,8 @@ const FETCHED_SKILLS_SCHEMA = 1;
 
 export interface SkillFetchRecord {
   name: string;
+  /** Description captured at fetch time; absent in older records. */
+  description?: string;
   fingerprint: string;
   chainId: number;
   skillId: string;

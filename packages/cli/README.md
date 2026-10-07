@@ -57,14 +57,14 @@ including ones never invoked, and every load.
 fingerprint, birth scenes (in the current vocabulary version), and parent
 Skill. The online service relays the signed `MintSkill` (or `PublishVersion`
 for a Skill minted before), pays the fee, and stores the body publicly.
-`obelisk skill fetch` installs a minted version into Claude Code (#17) after
+`obelisk skill fetch` installs a minted version into Claude Code or Codex (#17, #43) after
 checking the served body against its on-chain fingerprint.
 
 ```bash
 obelisk skill mint <name>                             # preview: what goes on chain
 obelisk skill mint <name> --confirm <fingerprint>     # sign the previewed version; the service pays
 obelisk skill fetch <skill id | fingerprint> [--version <n>]   # preview, with the full body
-obelisk skill fetch <fingerprint> --confirm [--name <name>] [--project <dir>]
+obelisk skill fetch <fingerprint> --confirm [--name <name>] [--project <dir>] [--harness claude|codex]
 ```
 
 Both need a confirmation that names the previewed fingerprint, so a draft or
@@ -74,6 +74,11 @@ chain again. Fetched Skills go to `~/.claude/skills/<name>/SKILL.md` (or
 `<dir>/.claude/skills` with `--project`), and each install is recorded in
 `<data dir>/skills/fetched-skills.json`, so `obelisk skill invocations` counts
 their uses as uses of the minted version (`state: "fetched"`).
+Use `--harness codex` on both preview and confirmation to install into
+`~/.agents/skills/<name>/SKILL.md`, or `<dir>/.agents/skills` with `--project`.
+The default remains `claude`. Fetch records retain the served description for
+usage judgment. Re-fetch an older installation to populate its description;
+this does not mint or report a new invocation.
 
 ## Usage reporting
 

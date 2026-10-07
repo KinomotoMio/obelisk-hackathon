@@ -149,3 +149,28 @@ test('fetch refuses to overwrite a foreign Skill, to install a body that does no
     service.close();
   }
 });
+
+test('Codex fetch previews and installs in native project and user Skill directories', { skip }, async () => {
+  const service = await startFakeSkillService();
+  try {
+    const { alice, bob } = setupPeople(service);
+    await alice.ok('wallet', 'create');
+    await alice.mint(probeDraft);
+    const project = join(bob.home, 'work');
+    const target = join(project, '.agents', 'skills', 'fingerprint-probe', 'SKILL.md');
+    const preview = await bob.ok('skill', 'fetch', probeFp, '--harness', 'codex', '--project', project);
+    assert.equal(preview.installTo, target);
+    assert.match(preview.next, /--harness codex/);
+    assert.equal(existsSync(target), false);
+    const installed = await bob.ok('skill', 'fetch', probeFp, '--harness', 'codex', '--project', project, '--confirm');
+    assert.equal(installed.installedTo, target);
+    assert.equal(skillFingerprint(skillBodyFromMarkdown(readFileSync(target, 'utf8'))), probeFp);
+    assert.match(installed.next, /\$fingerprint-probe/);
+    const global = await bob.ok('skill', 'fetch', probeFp, '--harness', 'codex', '--confirm');
+    assert.equal(global.installedTo, join(bob.home, '.agents', 'skills', 'fingerprint-probe', 'SKILL.md'));
+    const records = JSON.parse(readFileSync(join(bob.skillsDir, 'fetched-skills.json'), 'utf8')).fetches;
+    assert.equal(records.at(-1).description, probeDraft.description);
+    const invalid = await bob.run('skill', 'fetch', probeFp, '--harness', 'unknown');
+    assert.equal(invalid.status, 1);
+  } finally { service.close(); }
+});

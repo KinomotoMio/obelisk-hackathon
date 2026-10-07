@@ -4,9 +4,9 @@
 // `obelisk skill fetch <skill id | fingerprint> [--confirm]` (#17, vision 03 K5).
 //
 // Fetches a minted Skill version's body from the online service, checks it
-// against the fingerprint recorded on chain, and installs it as a Claude Code
-// Skill (~/.claude/skills/<name>/SKILL.md, or <project>/.claude/skills with
-// --project). Without --confirm it only previews: the body is another
+// against the fingerprint recorded on chain, and installs it for the selected
+// harness (Claude .claude/skills by default, Codex .agents/skills), globally
+// or under --project. Without --confirm it only previews: the body is another
 // author's instructions, so the user sees it before Claude Code can follow
 // it. The next step names the exact fingerprint to install. Each install is
 // recorded in the local library (skill-fetches.ts), so later invocations are
@@ -31,7 +31,7 @@ import { fingerprintFromBytes32, fingerprintToBytes32 } from '../../core/src/ski
 import { fetchInstalledAt, recordSkillFetch } from '../../core/src/skill-fetches.ts';
 import { skillService, type SkillChainDeps } from './skill-mint-command.ts';
 
-export const SKILL_FETCH_USAGE = 'Usage: obelisk skill fetch <skill id | fingerprint> [--version <n>] [--name <name>] [--project <dir>] [--confirm]';
+export const SKILL_FETCH_USAGE = 'Usage: obelisk skill fetch <skill id | fingerprint> [--version <n>] [--name <name>] [--project <dir>] [--harness claude|codex] [--confirm]';
 
 const NAME_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
@@ -39,7 +39,8 @@ function envOf(deps: SkillChainDeps): NodeJS.ProcessEnv {
   return deps.env ?? process.env;
 }
 
-function claudeSkillsDir(deps: SkillChainDeps, project: string | null): string {
+function harnessSkillsDir(deps: SkillChainDeps, project: string | null, harness: 'claude' | 'codex'): string {
+  if (harness === 'codex') return join(project === null ? (envOf(deps)['HOME']?.trim() || homedir()) : resolve(deps.cwd ?? process.cwd(), project), '.agents', 'skills');
   if (project !== null) return join(resolve(deps.cwd ?? process.cwd(), project), '.claude', 'skills');
   const env = envOf(deps);
   const configDir = env['CLAUDE_CONFIG_DIR']?.trim() || join(env['HOME']?.trim() || homedir(), '.claude');
@@ -60,6 +61,7 @@ interface FetchOptions {
   name: string | null;
   project: string | null;
   confirm: boolean;
+  harness: 'claude' | 'codex';
 }
 
 async function fetchSkill(ref: string, options: FetchOptions, deps: SkillChainDeps) {
@@ -93,7 +95,7 @@ async function fetchSkill(ref: string, options: FetchOptions, deps: SkillChainDe
   if (name.length > 64 || !NAME_RE.test(name)) throw new Error(`--name must be 1-64 lowercase letters, digits, and single hyphens (got ${JSON.stringify(name)})`);
 
   const skillsDir = resolveObeliskPaths({ env: envOf(deps) }).skillsDir;
-  const installDir = join(claudeSkillsDir(deps, options.project), name);
+  const installDir = join(harnessSkillsDir(deps, options.project, options.harness), name);
   const installTo = join(installDir, 'SKILL.md');
   const existing = await readOptional(installTo);
   const existingFingerprint = existing === null ? null : skillFingerprint(skillBodyFromMarkdown(existing));
@@ -120,9 +122,11 @@ async function fetchSkill(ref: string, options: FetchOptions, deps: SkillChainDe
     network: networkLabel(chain.chainId),
     explorer: { author: info.explorer.author },
   };
+  const harnessName = options.harness === 'codex' ? 'Codex' : 'Claude Code';
   const flags = [
     options.name ? ` --name ${name}` : '',
     options.project !== null ? ` --project ${JSON.stringify(options.project)}` : '',
+    ` --harness ${options.harness}`,
   ].join('');
   const warnings = findDynamicSkillContent(body).map((item) =>
     `The body contains ${item}, which Claude Code rewrites at load time, so its invocations will not be recognized as this version.`);
@@ -130,7 +134,7 @@ async function fetchSkill(ref: string, options: FetchOptions, deps: SkillChainDe
   if (!options.confirm) {
     return {
       preview: true,
-      action: replaces ? `Replace the installed ${name} with ${label}` : existing !== null ? `${label} is already installed` : `Install ${label} into Claude Code`,
+      action: replaces ? `Replace the installed ${name} with ${label}` : existing !== null ? `${label} is already installed` : `Install ${label} into ${harnessName}`,
       name,
       description,
       skill: summary,
@@ -138,7 +142,7 @@ async function fetchSkill(ref: string, options: FetchOptions, deps: SkillChainDe
       installTo,
       ...(replaces ? { replaces } : {}),
       body,
-      trust: `These instructions were written by ${info.author}. Claude Code follows them whenever the Skill is used; show the user what the body asks for before installing.`,
+      trust: `These instructions were written by ${info.author}. ${harnessName} follows them whenever the Skill is used; show the user what the body asks for before installing.`,
       ...(warnings.length > 0 ? { warnings } : {}),
       next: `Show this preview to the user. Only after they confirm, run \`obelisk skill fetch ${fingerprint} --confirm${flags}\`.`,
     };
@@ -164,6 +168,7 @@ async function fetchSkill(ref: string, options: FetchOptions, deps: SkillChainDe
     versionIndex: info.version.index,
     author: info.author,
     installedTo: installTo,
+    description,
     fetchedAt: (deps.now?.() ?? new Date()).toISOString(),
   });
   return {
@@ -174,14 +179,14 @@ async function fetchSkill(ref: string, options: FetchOptions, deps: SkillChainDe
     installedTo: installTo,
     ...(replaces ? { replaced: replaces } : {}),
     recorded: true,
-    next: `Installed for Claude Code as ${name}${options.project === null ? ' (all projects)' : ' (this project only)'}. Use it by asking for what it does or with /${name}; if Claude Code does not list it, start a new session. Its uses show up in \`obelisk skill invocations ${name}\`.`,
+    next: `Installed for ${harnessName} as ${name}${options.project === null ? ' (all projects)' : ' (this project only)'}. Use it by asking for what it does or with ${options.harness === 'codex' ? '$' : '/'}${name}; if ${harnessName} does not list it, start a new session. Its uses show up in \`obelisk skill invocations ${name}\`.`,
   };
 }
 
 export async function runSkillFetchCommand(args: string[], deps: SkillChainDeps = {}): Promise<unknown> {
   const [ref, ...rest] = args;
   if (!ref || ref.startsWith('--')) throw new Error(SKILL_FETCH_USAGE);
-  const options: FetchOptions = { version: null, name: null, project: null, confirm: false };
+  const options: FetchOptions = { version: null, name: null, project: null, confirm: false, harness: 'claude' };
   for (let i = 0; i < rest.length; i++) {
     const flag = rest[i];
     const value = rest[i + 1];
@@ -189,6 +194,7 @@ export async function runSkillFetchCommand(args: string[], deps: SkillChainDeps 
     if (value === undefined) throw new Error(SKILL_FETCH_USAGE);
     if (flag === '--version' && /^[1-9]\d{0,8}$/.test(value)) options.version = Number(value);
     else if (flag === '--name') options.name = value;
+    else if (flag === '--harness' && (value === 'codex' || value === 'claude')) options.harness = value;
     else if (flag === '--project') options.project = value;
     else throw new Error(SKILL_FETCH_USAGE);
     i++;
