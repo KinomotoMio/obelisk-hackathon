@@ -16,7 +16,7 @@
 // model and the outcome reach the provenance record.
 
 import { spawn, spawnSync } from 'node:child_process';
-import { createWriteStream } from 'node:fs';
+import { createWriteStream, existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { repoRoot } from './home.ts';
@@ -106,7 +106,9 @@ function adapterFor(req: HarnessRequest): Adapter {
     'exec', '--json', '--skip-git-repo-check',
     '-C', req.cwd,
     '-s', 'workspace-write',
+    // The role's Obelisk data, and the step directory where the obelisk shim logs its calls.
     '--add-dir', req.obeliskHome,
+    '--add-dir', req.logDir,
     '-c', 'sandbox_workspace_write.network_access=true',
     ...(req.model ? ['-m', req.model] : []),
     req.prompt,
@@ -124,6 +126,19 @@ function adapterFor(req: HarnessRequest): Adapter {
       }
     },
   };
+}
+
+/**
+ * `codex exec --json` does not say which model ran; the session file it
+ * wrote in the role's own CODEX_HOME does (turn_context). Null if not found.
+ */
+export function codexSessionModel(codexHome: string | undefined, threadId: string): string | null {
+  if (!codexHome) return null;
+  const sessions = join(codexHome, 'sessions');
+  if (!existsSync(sessions)) return null;
+  const file = (readdirSync(sessions, { recursive: true }) as string[]).find((name) => name.endsWith(`${threadId}.jsonl`));
+  if (!file) return null;
+  return /"model":"([^"]+)"/.exec(readFileSync(join(sessions, file), 'utf8'))?.[1] ?? null;
 }
 
 const versions = new Map<string, string | null>();
@@ -181,5 +196,6 @@ export async function runHarness(req: HarnessRequest): Promise<HarnessResult> {
   if (timedOut) result.error = `timed out after ${Math.round(req.timeoutMs / 60000)} min`;
   else if (code !== 0 && code !== null && !result.error) result.error = `${req.kind} exited with ${code}`;
   if (!result.error && result.sessions.length === 0) result.error = `${req.kind} reported no session`;
+  if (req.kind === 'codex' && !result.model && result.sessions[0]) result.model = codexSessionModel(req.env['CODEX_HOME'], result.sessions[0].id);
   return result;
 }

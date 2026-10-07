@@ -159,12 +159,14 @@ test('Codex runs in the role with a shared auth file linked in and its own wordi
   const homes = readFileSync(join(fx.seen, 'obelisk-home.txt'), 'utf8').trim().split('\n');
   assert.equal(homes.at(-1), process.env.HOME, 'the shim gives obelisk the real HOME back');
   assert.equal(seen.argv[0], 'exec');
-  assert.equal(seen.argv[seen.argv.indexOf('--add-dir') + 1], b.obeliskHome);
+  assert.deepEqual(seen.argv.flatMap((arg, i) => (seen.argv[i - 1] === '--add-dir' ? [arg] : [])).slice(0, 1), [b.obeliskHome]);
+  assert.equal(seen.argv.filter((arg) => arg === '--add-dir').length, 2, 'Codex may also write the step\'s command log');
   assert.equal(seen.argv.at(-1), '$obelisk 用这个 Skill');
   const step = provenance.steps[0];
   assert.equal(step.status, 'succeeded');
   assert.deepEqual(step.sessions, [{ source: 'codex', id: 'thread-codex-1', obeliskId: 'codex:thread-codex-1' }]);
   assert.equal(step.harness.maxTurns, null, 'codex exec has no turn limit; the timeout bounds it');
+  assert.equal(step.harness.model, 'codex-test-model', 'read from the session file in the role\'s CODEX_HOME');
 });
 
 test('a run without sign-in configured stops before starting anything', async () => {

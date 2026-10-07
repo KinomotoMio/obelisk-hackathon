@@ -65,7 +65,11 @@ const say = (v) => process.stdout.write(JSON.stringify(v) + '\\n');
 ${kind === 'claude'
     ? `say({ type: 'system', subtype: 'init', session_id: 'sess-claude-1', model: 'claude-test-model' });
 say({ type: 'result', subtype: mint.status === 0 ? 'success' : 'error_during_execution', is_error: mint.status !== 0, result: 'ok' });`
-    : `say({ type: 'thread.started', thread_id: 'thread-codex-1' });
+    : `const { mkdirSync } = await import('node:fs');
+const day = process.env.CODEX_HOME + '/sessions/2026/10/07';
+mkdirSync(day, { recursive: true });
+writeFileSync(day + '/rollout-2026-10-07T00-00-00-thread-codex-1.jsonl', JSON.stringify({ type: 'turn_context', payload: { model: 'codex-test-model' } }) + '\\n');
+say({ type: 'thread.started', thread_id: 'thread-codex-1' });
 say({ type: 'turn.completed', usage: {} });`}
 `;
   const claude = script(join(bin, 'claude'), harnessBody('claude'));
