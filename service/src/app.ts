@@ -140,6 +140,7 @@ export const SITE_PAGES: Readonly<Record<string, string>> = {
   preview: '/preview/index.html',
   runs: '/runs/index.html',
   operations: '/operations/index.html',
+  docs: '/docs/index.html',
 };
 
 /** The reader's policy (same origin only, never framed), revalidated on each visit. */

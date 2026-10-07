@@ -1,0 +1,35 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><title>文档与安装 · Obelisk</title><meta name="description" content="Obelisk 黑客松版本的项目说明、在线演示与 Agent 安装指引。"><link rel="icon" href="/site/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="/site/site.css"><link rel="stylesheet" href="/docs/docs.css"><script type="module" src="/docs/app.js"></script></head><body><header class="site-top">
+    <a class="ob-brand" href="/market" aria-label="Obelisk">
+      <img class="ob-mark" src="/site/logo.svg" alt="" width="19" height="23">
+      <span class="ob-word" aria-hidden="true"><span class="ob-word-a">Obe</span><img class="ob-word-l" src="/site/wordmark-l.svg" alt="" width="7" height="21"><span class="ob-word-b">isk</span></span>
+    </a>
+    <nav class="site-nav" aria-label="页面">
+      <a href="/market">Skill 市场</a>
+      <a href="/preview">项目预览</a>
+      <a href="/runs">运行记录</a>
+      <a href="/docs" aria-current="page">文档与安装</a>
+    </nav>
+    <span class="site-net" data-site-network hidden></span>
+  </header><main class="site-main docs-main"><section class="docs-hero"><p class="eyebrow">OBELISK · HACKATHON EDITION</p><h1>让真实工作，成为<br>下一次创造的上下文。</h1><p class="lead">从会话里找回经验，沉淀成 Skill，用真实使用证明价值，再让分享与衍生带来回报。</p><p class="slogan">AI-Native should be context native first.</p><div class="actions"><a class="primary" href="#install">复制安装 Prompt</a><a href="/preview">看看演示 →</a><a href="https://github.com/KinomotoMio/obelisk-hackathon" target="_blank" rel="noopener noreferrer">查看源码 ↗</a></div></section>
+<div class="docs-layout"><aside><a href="#start">先体验</a><a href="#concept">它能做什么</a><a href="#install">交给 Agent 安装</a><a href="#next">安装之后</a><a href="#networks">测试网与主网</a><a href="#team">团队与上游</a></aside><div class="docs-body">
+<section id="start"><p class="eyebrow">01 / EXPLORE</p><h2>不安装，也可以先看见价值</h2><div class="doc-cards"><a href="/market"><strong>Skill 市场 →</strong><p>看内容、价格、调用表现和衍生族谱，判断它是否值得使用。</p></a><a href="/preview"><strong>剧本演示 →</strong><p>按角色走过完整流程，结合真实 Skill 市场数据和运行记录。示意步骤与示例金额以页面标注为准。</p></a><a href="https://obelisk-service.kinomotomiovo.workers.dev/runs"><strong>Playground 运行记录 →</strong><p>模拟角色，真实 AI 执行，测试网交易。打开任务过程与实际产物。</p></a></div></section>
+<section id="concept"><p class="eyebrow">02 / CONTEXT</p><h2>知识付费，从描述走向证据</h2><div class="doc-cards"><article><h3>找回真实发生过的事</h3><p>Obelisk 在本地索引 AI 编程会话，让 Agent 按需检索消息、工具调用与结果，回答能够追溯到原始上下文。</p></article><article><h3>把经验变成可复用的 Skill</h3><p>从历史中沉淀方法，留下出处、作者、版本和内容指纹。衍生关系形成族谱，让最初的分享者继续获得认可。</p></article><article><h3>用真实使用帮助选择</h3><p>买家关注内容价值、价格与使用表现。顺利率统计顺利、返工和失败；无法判断的结果不进入分母，样本量同时展示。</p></article><article><h3>让分享的人一起受益</h3><p>创作者选择免费或定价发布。购买与分成连接作者、上游贡献者和平台；创作者在自己的 App 中查看收入，平台从运营视角核对分配。</p></article></div><p class="callout">分享你的知识，让更多人从中受益，也让你和最初愿意分享的人得到回报。</p></section>
+<section id="install"><p class="eyebrow">03 / INSTALL</p><h2>复制给 Agent，安装黑客松版本</h2><p>把下面的文字交给有终端访问能力的 Claude Code、Codex 或其他 coding agent，<strong>不是直接粘贴到终端执行</strong>。默认进入独立的测试网环境，不覆盖已有 Obelisk。</p><div class="prompt-head"><span>中文安装 Prompt</span><button type="button" data-copy="prompt-zh">复制 Prompt</button></div><pre id="prompt-zh">帮我在本机安装 Obelisk 黑客松版本：
+https://github.com/KinomotoMio/obelisk-hackathon
+使用 hackathon 分支，先阅读 README.md、AGENTS.md 和 scripts/hackathon-env.sh，检查本机依赖。
+在独立目录检出代码，按照 scripts/hackathon-env.sh 建立隔离环境。
+默认使用测试网。不要覆盖我的全局 Obelisk、已有 ~/.obelisk 数据或其他项目的 skills。
+安装完成后，告诉我如何进入这个环境、建立本地索引，并从该环境启动 Agent 或桌面 App。
+先完成本地安装与只读检查；任何上传、公开分享或链上交易都在我明确提出时再执行。</pre><details><summary>English installation prompt</summary><div class="prompt-head"><span>For your coding agent</span><button type="button" data-copy="prompt-en">Copy prompt</button></div><pre id="prompt-en">Set up the Obelisk hackathon build locally from:
+https://github.com/KinomotoMio/obelisk-hackathon
+Use the hackathon branch. Read README.md, AGENTS.md and scripts/hackathon-env.sh and check the local prerequisites first.
+Check out the code in a separate directory and use scripts/hackathon-env.sh to create the isolated environment.
+Default to testnet. Preserve my global Obelisk installation, existing ~/.obelisk data and other projects&#x27; skills.
+Then explain how to enter the environment, index my local history and launch an agent or the desktop app from it.
+Complete local setup and read-only checks first. Only upload, publish or send on-chain transactions when I explicitly request them.</pre></details><p id="copy-status" role="status" aria-live="polite"></p><p class="note">本仓库包含赛事链上扩展；官网的通用安装指向上游发行版。环境脚本目前面向具备 POSIX shell 的开发环境，会下载依赖并构建 CLI 与 skills。安装无需我们的私钥或云服务凭据。</p></section>
+<section id="next"><p class="eyebrow">04 / FIRST STEPS</p><h2>从一句日常请求开始</h2><ol><li>让 Agent 完成本地安装，按提示进入隔离环境并建立会话索引。</li><li>在这个环境启动 Agent，试着说：“帮我看看这个项目最近在忙什么，有没有值得保留下来的方法？”</li><li>审阅它找到的会话与 Skill 草稿。确认内容和分享范围后，再决定是否铸造、发布或分享。</li></ol><details><summary>已有本地代码？手动进入环境</summary><pre>sh scripts/hackathon-env.sh
+source ~/.obelisk-hackathon/env.sh a testnet
+obelisk --build</pre><p>角色 A / B 有独立的数据目录、Skill 库和钱包。CLI 与从该终端启动的 App 使用相同环境；已运行的 App 需要重新启动。</p></details></section>
+<section id="networks"><p class="eyebrow">05 / NETWORKS</p><h2>两张网络，各有用途</h2><div class="doc-cards"><article><h3>测试网 · 968</h3><p>丰富的 Playground 数据、角色体验与流程演示。适合第一次安装和尝试。</p><a href="https://obelisk-service.kinomotomiovo.workers.dev/market">打开测试网市场 ↗</a></article><article><h3>主网 · 677</h3><p>赛事主网部署与实际业务记录。交易消耗真实 BOT；本页的安装 Prompt 仍默认测试网。</p><a href="https://obelisk-service-mainnet.kinomotomiovo.workers.dev/market">打开主网市场 ↗</a></article></div><p class="note">两网的合约、服务和数据相互独立。顶部网络标识表示当前网页所在的网络。</p></section>
+<section id="team"><p class="eyebrow">06 / PEOPLE</p><h2>一起，把想法做出来</h2><ul class="people"><li><a href="https://github.com/KinomotoMio">KinomotoMio</a><span>华中科技大学 · 团队发起人，创意与工程</span></li><li><a href="https://github.com/z652011350">z652011350</a><span>中国科学院大学 · 体验与价值验证</span></li><li><a href="https://github.com/Gazerrr03">Gazerrr03</a><span>深圳大学 · 视觉设计负责人</span></li><li><strong>Shen Tuo</strong><span>Hackathon / Vibe Coding 新锐</span></li><li><a href="https://github.com/tommy0103">Yuu</a><span>Obelisk 创始人 / Founder</span></li></ul><p>上游 Obelisk 由 Yuu 创立，与 KinomotoMio 共同维护。本次参赛版本在它的会话检索、显式记忆与桌面 App 基础上，增加 BOT Chain 上的知识价值流转。</p><div class="actions"><a href="https://obelisk.antinomie.org">Obelisk 官网 ↗</a><a href="https://github.com/tommy0103/obelisk">上游源码 ↗</a><a href="https://github.com/KinomotoMio/obelisk-hackathon">参赛源码 ↗</a></div></section>
+</div></div></main><footer class="site-foot"><p>Obelisk · Context-native first. 开源许可 AGPL-3.0。</p></footer></body></html>

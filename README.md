@@ -1,3 +1,95 @@
+# Obelisk · Context-native first
+
+**AI-Native should be context native first.**
+
+汉客松 S1 & ETH Wuhan 2026 参赛项目。在 [Obelisk](https://github.com/tommy0103/obelisk) 的本地会话检索与显式记忆之上，把真实 AI 工作沉淀为有出处、可复用、可计量、可变现的知识。链上的作者、版本、族谱、使用记录与收入分配，让知识付费从介绍走向证据。
+
+Our entry for ETH Wuhan 2026 builds on Obelisk's local session history and explicit memory. It turns real AI work into reusable knowledge with provenance, measurable usage and on-chain revenue sharing.
+
+## 直接体验 / Try it online
+
+无需安装即可浏览。测试网用于丰富的演示与 Playground 数据，主网提供实际部署与少量业务交易；两网数据独立。
+
+| 入口 / Entry | 链接 / Link | 内容 / What to explore |
+| --- | --- | --- |
+| 文档与安装 / Docs & setup | [在线文档 / Open docs](https://obelisk-service.kinomotomiovo.workers.dev/docs) | 项目说明与一键复制 Agent 安装 Prompt / Project guide and copyable setup prompts |
+| **主网市场 / Mainnet market** | [BOT Chain · Chain ID 677](https://obelisk-service-mainnet.kinomotomiovo.workers.dev/market) | 赛事主网入口，查看已铸造 Skill 与链上记录 / Live competition entry |
+| 剧本演示 / Guided demo | [打开演示 / Open demo](https://obelisk-service.kinomotomiovo.workers.dev/preview) | 按角色演示完整流程，包含真实 Skill 市场数据和运行记录；示意步骤与示例金额以页面标注为准 / Role-based walkthrough with live data and labeled illustrative steps |
+| 测试网市场 / Testnet market | [BOT Chain · Chain ID 968](https://obelisk-service.kinomotomiovo.workers.dev/market) | 更丰富的使用、场景与衍生记录 / Usage, scenes and derivations |
+| Playground | [运行记录与产物 / Runs and outputs](https://obelisk-service.kinomotomiovo.workers.dev/runs) | 模拟角色、真实 AI 执行、测试网交易 / Simulated roles, real AI execution, testnet transactions |
+| Obelisk 官网 / Website | [obelisk.antinomie.org](https://obelisk.antinomie.org) | 上游项目介绍与通用安装 / Upstream project and installation |
+
+## 本次参赛做了什么 / What we built
+
+- **有出处的 Skill / Skills with provenance**：从会话中沉淀方法，记录作者、内容指纹、版本与衍生族谱。
+- **用真实使用说话 / Evidence of use**：展示调用、钱包、场景及顺利率，保留失败、返工与无法判断的结果。
+- **创作者变现 / Creator earnings**：免费或定价发布，购买授权与沿族谱分账；市场关注价值与价格，创作者与平台分别核对收入。
+- **可控的上下文分享 / Controlled context sharing**：加密分享、访问限制、打开回执与撤回。
+
+上游提供会话索引、检索与桌面 App 的基础。本仓库是黑客松版本，包含 BOT Chain 合约、在线服务、链上 Skill 与分享流程、收入闭环及 Playground。上游安装包不等同于本次参赛版本。
+
+The upstream project provides the session index, retrieval and desktop foundation. This repository adds the hackathon's BOT Chain integration and demo workflows. Installing the upstream package alone does not install this hackathon build.
+
+## 复制给 Agent，安装参赛版 / Let your agent set it up
+
+将下面的 prompt 复制给有终端访问能力的 coding agent。它会使用仓库现有的隔离环境脚本；无需提供我们的部署钱包、私钥或云服务凭据。脚本目前面向具备 POSIX shell 的开发环境。
+
+**中文 prompt**
+
+```text
+帮我在本机安装 Obelisk 黑客松版本：
+https://github.com/KinomotoMio/obelisk-hackathon
+使用 hackathon 分支，先阅读 README.md、AGENTS.md 和 scripts/hackathon-env.sh，检查本机依赖。
+在独立目录检出代码，按照 scripts/hackathon-env.sh 建立隔离环境。
+默认使用测试网。不要覆盖我的全局 Obelisk、已有 ~/.obelisk 数据或其他项目的 skills。
+安装完成后，告诉我如何进入这个环境、建立本地索引，并从该环境启动 Agent 或桌面 App。
+先完成本地安装与只读检查；任何上传、公开分享或链上交易都在我明确提出时再执行。
+```
+
+**English prompt**
+
+```text
+Set up the Obelisk hackathon build locally from:
+https://github.com/KinomotoMio/obelisk-hackathon
+Use the hackathon branch. Read README.md, AGENTS.md and scripts/hackathon-env.sh and check the local prerequisites first.
+Check out the code in a separate directory and use scripts/hackathon-env.sh to create the isolated environment.
+Default to testnet. Preserve my global Obelisk installation, existing ~/.obelisk data and other projects' skills.
+Then explain how to enter the environment, index my local history and launch an agent or the desktop app from it.
+Complete local setup and read-only checks first. Only upload, publish or send on-chain transactions when I explicitly request them.
+```
+
+已有代码时的环境入口 / From an existing checkout:
+
+```sh
+sh scripts/hackathon-env.sh
+source ~/.obelisk-hackathon/env.sh a testnet
+obelisk --build
+```
+
+脚本把运行环境放在 `~/.obelisk-hackathon`，将 Agent skills 安装到它的独立 `workspace`；角色 A / B 各自有数据目录。它会安装依赖并构建本地 CLI 与 skills，App 需从该环境另行启动。详见 [环境脚本](scripts/hackathon-env.sh)。
+
+## 团队 / Team
+
+| 成员 / Member | 学校 / University | 本次分工 / Role |
+| --- | --- | --- |
+| [KinomotoMio](https://github.com/KinomotoMio) | 华中科技大学 / Huazhong University of Science and Technology | 团队发起人 · 创意与工程 / Team Lead · Concept & Engineering |
+| [z652011350](https://github.com/z652011350) | 中国科学院大学 / University of Chinese Academy of Sciences | 体验与价值验证 / Experience & Value Validation：通过测试与体验，确认 AI 产出兑现预期价值 |
+| [Gazerrr03](https://github.com/Gazerrr03) | 深圳大学 / Shenzhen University | 视觉设计负责人 / Visual Design Lead |
+| Shen Tuo | — | Hackathon / Vibe Coding 新锐 / Hackathon & Vibe Coding Newcomer |
+| [Yuu](https://github.com/tommy0103) | 上游开源项目 / Upstream open-source project | Obelisk 创始人 / Obelisk Founder |
+
+上游 Obelisk 由 **[Yuu](https://github.com/tommy0103) 创立，与 KinomotoMio 共同维护 / founded by Yuu, co-maintained with KinomotoMio**。上游维护身份与本次参赛团队分工分别表述。
+
+- 参赛仓库 / Hackathon repository: [KinomotoMio/obelisk-hackathon](https://github.com/KinomotoMio/obelisk-hackathon)
+- 上游仓库 / Upstream repository: [tommy0103/obelisk](https://github.com/tommy0103/obelisk)
+- 合约部署记录 / Contract deployments: [Mainnet 677](chain/deployments/677.json) · [Testnet 968](chain/deployments/968.json)
+- 许可证 / License: [AGPL-3.0](LICENSE)，沿用上游许可证 / inherited from upstream
+
+<details>
+<summary>上游功能与开发参考 / Upstream features and development reference</summary>
+
+以下保留上游通用介绍。安装参赛版本请使用上方隔离环境入口；这里的通用 npm 安装指向上游发行版。
+
 <div align="center">
 
 <picture>
@@ -400,3 +492,5 @@ ownership. The PR template mirrors them as per-area checklists.
 Copyright (C) 2026 tommy0103 and contributors.
 
 Obelisk is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0-only); see [LICENSE](LICENSE). Derivative works are welcome: if you distribute a modified version, please keep the per-file copyright notices intact and mark your modifications prominently with a date, as AGPL-3.0 §5 requires.
+
+</details>

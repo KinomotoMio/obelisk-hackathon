@@ -42,7 +42,7 @@ test('every path under a public page returns its index.html with the strict head
   const unbound = await handleRequest(new Request('http://service.test/market'), deps(undefined));
   assert.equal(unbound.status, 503);
   assert.equal((await unbound.json()).error.code, 'page_unavailable');
-  assert.deepEqual(Object.keys(SITE_PAGES), ['market', 'preview', 'runs', 'operations']);
+  assert.deepEqual(Object.keys(SITE_PAGES), ['market', 'preview', 'runs', 'operations', 'docs']);
 });
 
 test('the shared shell builds no markup from strings and loads nothing from elsewhere', () => {
