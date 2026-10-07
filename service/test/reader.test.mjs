@@ -99,6 +99,20 @@ test('snapshot text is split into parts the page renders as text, with redaction
   }
 });
 
+test('the reader names networks and failures in Chinese', () => {
+  assert.equal(reader.chainName(968), 'BOT Chain 测试网');
+  assert.equal(reader.chainName(677), 'BOT Chain 主网');
+  assert.equal(reader.chainName(undefined), 'BOT Chain');
+  // A message already written for people is shown as it is.
+  assert.deepEqual(reader.readableError('连不上 Obelisk 在线服务，请检查网络后重试。'), { text: '连不上 Obelisk 在线服务，请检查网络后重试。', detail: null });
+  // A service message in English becomes a Chinese sentence; the original stays as the detail.
+  assert.deepEqual(reader.readableError('The chain RPC did not answer: fetch failed'), {
+    text: 'Obelisk 在线服务返回了错误，请稍后重试。',
+    detail: 'The chain RPC did not answer: fetch failed',
+  });
+  assert.deepEqual(reader.readableError(''), { text: 'Obelisk 在线服务返回了错误，请稍后重试。', detail: null });
+});
+
 test('the service serves the reader at /s/<shareId> and /activate with its security headers', async () => {
   const html = readFileSync(new URL('../public/reader/index.html', import.meta.url), 'utf8');
   const deps = (readerPage) => ({

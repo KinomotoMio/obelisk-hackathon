@@ -10,6 +10,7 @@
 
 import {
   base64ToBytes,
+  chainName,
   decryptSnapshot,
   deriveEncryptionKey,
   formatDateTime,
@@ -17,6 +18,7 @@ import {
   openKeyPackage,
   personalSignPayload,
   providerName,
+  readableError,
   redactionLabel,
   shareNumber,
   shortAddress,
@@ -240,22 +242,31 @@ function showNoWallet() {
 
 // --- generic panels --------------------------------------------------------
 
-function refusal({ tone = 'danger', iconName = 'lock', title, text, meta = [], actions = [] }) {
+function refusal({ tone = 'danger', iconName = 'lock', title, text, detail = null, meta = [], actions = [] }) {
   show(h('section', { class: 'panel narrow denied' },
     h('div', { class: `icon ${tone}` }, icon(iconName)),
     h('h1', {}, title),
     text ? h('p', { class: 'fg2' }, text) : null,
+    detail ? h('p', { class: 'detail mono' }, detail) : null,
     actions.length ? h('div', { class: 'actions' }, actions) : null,
     meta.some(Boolean) ? h('p', { class: 'meta' }, ...meta.filter(Boolean).flatMap((part, i) => (i ? [' · ', part] : [part]))) : null,
   ));
 }
 
+/** A service failure as a callout under the steps, in the same words as showError. */
+function serviceNotice(error) {
+  const { text, detail } = readableError(error.message);
+  return { tone: 'warn', text: h('span', {}, text, detail ? h('span', { class: 'detail mono' }, detail) : null) };
+}
+
 function showError(message, retry) {
+  const { text, detail } = readableError(message);
   refusal({
     tone: 'warn',
     iconName: 'alert',
     title: '出了点问题',
-    text: message,
+    text,
+    detail,
     actions: retry ? [button('重试', retry, { primary: true })] : [],
   });
 }
@@ -410,7 +421,9 @@ function stepList(active, remaining, resume) {
       ? '这次打开之前已经记录在 BOT Chain 上，不会再消耗次数。'
       : remaining === null
         ? '签名后由 Obelisk 代付写入 BOT Chain，作为已读回执。这份分享不限打开次数。'
-        : `签名后由 Obelisk 代付写入 BOT Chain，作为已读回执。会用掉 1 次打开机会，之后还剩 ${remaining} 次。`],
+        : remaining === 0
+          ? '签名后由 Obelisk 代付写入 BOT Chain，作为已读回执。这会用掉最后 1 次打开机会。'
+          : `签名后由 Obelisk 代付写入 BOT Chain，作为已读回执。会用掉 1 次打开机会，之后还剩 ${remaining} 次。`],
     ['在本机解密并显示', '内容只在这个页面里解密，并印上你的地址作为水印。'],
   ];
   const isDone = (i) => i < active || (resume && i === 1);
@@ -626,7 +639,8 @@ function showReader(snapshot, opened) {
       h('div', { class: 'reader-head' },
         h('div', {},
           h('h1', {}, richText(snapshot.title || '未命名会话', h('span'))),
-          h('div', { class: 'sub' }, `来自 ${shortAddress(share.sender)} · 快照于 ${formatDateTime(snapshot.capturedAt)} · ${range} · ${redactionSummary(snapshot)}`),
+          h('div', { class: 'sub' }, ...[`来自 ${shortAddress(share.sender)}`, `快照于 ${formatDateTime(snapshot.capturedAt)}`, range, redactionSummary(snapshot)]
+            .filter(Boolean).flatMap((part, i) => [i ? ' · ' : null, h('span', { class: 'nowrap' }, part)])),
         ),
         h('div', { class: 'badges' }, h('span', { class: 'pill ok' }, icon('check'), '已验证：你是指定接收者'), remainingPill),
       ),
@@ -638,11 +652,14 @@ function showReader(snapshot, opened) {
       ),
       timeline,
       h('div', { class: 'receipt' },
-        h('span', {}, `已读回执已写入 BOT Chain · 第 ${opened.openCount} 次打开 · ${formatDateTime(opened.openedAt)}`),
+        h('span', {}, `已读回执已写入 ${chainName(state.chain?.chainId)} · 第 ${opened.openCount} 次打开 · ${formatDateTime(opened.openedAt)}`),
         chainLink(opened.receipt, '查看回执'),
       ),
     ),
-    h('p', { class: 'note center' }, `分享编号 #${number}（`, h('span', { class: 'mono' }, share.shareId), '）· 内容只读，水印印有你的地址、分享编号和打开时间'),
+    h('div', { class: 'note center reader-foot' },
+      h('p', {}, `分享编号 #${number} · 内容只读，水印印有你的地址、分享编号和打开时间`),
+      h('p', { class: 'mono share-id', title: '完整的分享编号，可以在区块浏览器里核对' }, share.shareId),
+    ),
   );
 }
 
@@ -686,7 +703,7 @@ async function bootActivate() {
       h('p', { class: 'fg2' }, '把这个地址发给要分享给你的人：'),
       h('p', { class: 'address mono' }, address),
       h('div', { class: 'actions' }, copy, nextPath ? h('a', { class: 'btn primary', href: nextPath }, '回到分享') : null),
-      record ? h('p', { class: 'meta' }, chainLink(record, '登记记录')) : null,
+      h('p', { class: 'meta' }, `公钥登记在 ${chainName(state.chain?.chainId)}`, record ? ' · ' : null, chainLink(record, '登记记录')),
     ));
   };
 
@@ -702,7 +719,7 @@ async function bootActivate() {
           if (key.registered) return done(address, key.explorerUrl ? { explorerUrl: key.explorerUrl } : null, true);
           activate(address, key);
         } catch (error) {
-          if (error instanceof ServiceError) return page(0, button('重试', start, { primary: true }), { tone: 'warn', text: error.message });
+          if (error instanceof ServiceError) return page(0, button('重试', start, { primary: true }), serviceNotice(error));
           const { rejected, message } = walletError(error);
           if (rejected) start(); else showError(message, start);
         }
@@ -730,7 +747,7 @@ async function bootActivate() {
         }
         done(address, body, false);
       } catch (error) {
-        if (error instanceof ServiceError) return page(1, button('重试', () => activate(address), { primary: true }), { tone: 'warn', text: error.message });
+        if (error instanceof ServiceError) return page(1, button('重试', () => activate(address), { primary: true }), serviceNotice(error));
         const { message } = walletError(error);
         page(1, button('签名并激活', () => activate(address), { primary: true }), { tone: 'warn', text: message });
       }

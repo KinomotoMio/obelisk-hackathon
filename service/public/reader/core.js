@@ -184,6 +184,26 @@ export function shortAddress(address) {
   return typeof address === 'string' && address.length > 12 ? `${address.slice(0, 6)}…${address.slice(-4)}` : String(address);
 }
 
+const CHAIN_NAMES = { 677: 'BOT Chain 主网', 968: 'BOT Chain 测试网', 31337: '本地开发链' };
+
+/** The network's Chinese name, as the App and CLI print it. */
+export function chainName(chainId) {
+  return CHAIN_NAMES[chainId] ?? 'BOT Chain';
+}
+
+const CJK = /[\u3400-\u9fff]/;
+
+/**
+ * What to tell the reader about a failure: the service's own message when it
+ * is already written for people (Chinese), else a plain Chinese sentence with
+ * the original text kept as a detail for whoever has to debug it.
+ */
+export function readableError(message, fallback = 'Obelisk 在线服务返回了错误，请稍后重试。') {
+  const text = String(message ?? '').trim();
+  if (text && CJK.test(text)) return { text, detail: null };
+  return { text: fallback, detail: text || null };
+}
+
 /** The short share number printed on the page and in the watermark. */
 export function shareNumber(shareId) {
   return `S-${shareId.slice(2, 6).toUpperCase()}`;
