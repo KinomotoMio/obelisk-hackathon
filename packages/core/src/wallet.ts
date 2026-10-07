@@ -24,12 +24,12 @@
 // ECDSA signatures here are deterministic (RFC 6979), so the same wallet
 // always derives the same key. tests/wallet.test.mjs pins a test vector.
 
-import { createPrivateKey, hkdfSync } from 'node:crypto';
+import { createHash, createPrivateKey, hkdfSync } from 'node:crypto';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 
 import { bytesToBigInt, bytesToHex, concatBytes, getAddress, hexToBytes, isAddress, numberToBytes, type Address, type Hex } from 'viem';
-import { generatePrivateKey, privateKeyToAccount, type PrivateKeyAccount } from 'viem/accounts';
+import { english, generatePrivateKey, mnemonicToAccount, privateKeyToAccount, type PrivateKeyAccount } from 'viem/accounts';
 
 import { keyRegistryTypes, obeliskDomain } from './chain-protocol.ts';
 import type { SecretStore } from './keychain.ts';
@@ -71,6 +71,15 @@ export interface WalletContext {
 export type CreateWalletStatus = 'created' | 'exists' | 'recovered';
 
 export class WalletNotFoundError extends Error {}
+
+/** wallet.json records `address`, but the keychain has no key for it. */
+export class WalletKeyMissingError extends Error {
+  readonly address: Address;
+  constructor(message: string, address: Address) {
+    super(message);
+    this.address = address;
+  }
+}
 
 export function walletKeychainAccount(dataDir: string): string {
   return resolve(dataDir);
@@ -157,8 +166,9 @@ export async function loadWallet(ctx: WalletContext): Promise<{ record: WalletRe
   ]);
   if (stored === null) {
     if (!record) throw new WalletNotFoundError(`No Obelisk wallet for ${ctx.paths.dataDir}; create one with \`obelisk wallet create\``);
-    throw new Error(
+    throw new WalletKeyMissingError(
       `${ctx.paths.walletPath} records ${record.address}, but its private key is not in the ${ctx.secrets.description} (service ${WALLET_KEYCHAIN_SERVICE}, account ${keychainAccount})`,
+      record.address,
     );
   }
   const account = accountFromStoredKey(stored);
@@ -167,6 +177,142 @@ export async function loadWallet(ctx: WalletContext): Promise<{ record: WalletRe
   const healed = newRecord(ctx, account.address);
   await writeRecord(ctx.paths.walletPath, healed);
   return { record: healed, account };
+}
+
+// --- Importing an existing wallet -------------------------------------------
+//
+// The one wallet action the App performs itself (docs/vision/01 I1): a private
+// key or recovery phrase must never pass through an AI conversation, so the
+// Settings page hands it straight to the main process, which stores it here.
+// Nothing below puts the secret, or any word of it, in an error message.
+
+export type WalletSecretKind = 'private-key' | 'mnemonic';
+
+export type InvalidWalletSecretReason =
+  | 'empty'
+  | 'private-key-format'
+  | 'mnemonic-length'
+  | 'mnemonic-word'
+  | 'mnemonic-checksum'
+  | 'unrecognized';
+
+export class InvalidWalletSecretError extends Error {
+  readonly reason: InvalidWalletSecretReason;
+  /** 1-based position of the first unknown word, for 'mnemonic-word'. */
+  readonly wordIndex: number | null;
+  constructor(reason: InvalidWalletSecretReason, message: string, wordIndex: number | null = null) {
+    super(message);
+    this.reason = reason;
+    this.wordIndex = wordIndex;
+  }
+}
+
+/** The data directory already has a different wallet; an import never replaces one. */
+export class WalletExistsError extends Error {
+  readonly address: Address;
+  constructor(message: string, address: Address) {
+    super(message);
+    this.address = address;
+  }
+}
+
+/**
+ * Recovery phrases import the first account of the standard Ethereum path,
+ * the one MetaMask and most wallets show first.
+ */
+export const MNEMONIC_DERIVATION_PATH = "m/44'/60'/0'/0/0";
+
+const MNEMONIC_LENGTHS = new Set([12, 15, 18, 21, 24]);
+const ENGLISH_INDEX = new Map(english.map((word, index) => [word, index]));
+
+// BIP-39: each word is 11 bits; the last ENT/32 bits are the start of
+// SHA-256(entropy). viem derives from any text, so a mistyped phrase would
+// silently import an empty wallet; the checksum catches it.
+function mnemonicWords(text: string): string[] {
+  const words = text.normalize('NFKD').toLowerCase().split(/\s+/u).filter(Boolean);
+  if (!MNEMONIC_LENGTHS.has(words.length)) {
+    throw new InvalidWalletSecretError('mnemonic-length', `A recovery phrase has 12, 15, 18, 21, or 24 words; this one has ${words.length}`);
+  }
+  let bits = '';
+  words.forEach((word, i) => {
+    const index = ENGLISH_INDEX.get(word);
+    if (index === undefined) {
+      throw new InvalidWalletSecretError('mnemonic-word', `Word ${i + 1} of the recovery phrase is not in the BIP-39 English word list`, i + 1);
+    }
+    bits += index.toString(2).padStart(11, '0');
+  });
+  const checksumBits = words.length / 3;
+  const entropyBits = bits.slice(0, bits.length - checksumBits);
+  const entropy = Buffer.from(entropyBits.match(/.{8}/g)!.map((byte) => parseInt(byte, 2)));
+  const digest = createHash('sha256').update(entropy).digest();
+  const expected = [...digest].map((byte) => byte.toString(2).padStart(8, '0')).join('').slice(0, checksumBits);
+  if (bits.slice(-checksumBits) !== expected) {
+    throw new InvalidWalletSecretError('mnemonic-checksum', 'The recovery phrase\'s checksum does not match; a word is probably mistyped or out of order');
+  }
+  return words;
+}
+
+/**
+ * The private key a pasted secret stands for: a 32-byte hex private key (with
+ * or without 0x) or a BIP-39 English recovery phrase.
+ */
+export function parseWalletSecret(input: string): { kind: WalletSecretKind; privateKey: Hex; address: Address } {
+  const text = typeof input === 'string' ? input.trim() : '';
+  if (!text) throw new InvalidWalletSecretError('empty', 'Enter a private key or a recovery phrase');
+  if (/^(0x)?[0-9a-fA-F]+$/.test(text)) {
+    const hex = (text.startsWith('0x') ? text : `0x${text}`).toLowerCase() as Hex;
+    if (!/^0x[0-9a-f]{64}$/.test(hex)) {
+      throw new InvalidWalletSecretError('private-key-format', 'A private key is 64 hexadecimal characters, optionally prefixed with 0x');
+    }
+    const key = BigInt(hex);
+    if (key === 0n || key >= SECP256K1_N) throw new InvalidWalletSecretError('private-key-format', 'This is not a valid secp256k1 private key');
+    return { kind: 'private-key', privateKey: hex, address: privateKeyToAccount(hex).address };
+  }
+  if (/\s/.test(text)) {
+    const words = mnemonicWords(text);
+    const account = mnemonicToAccount(words.join(' '), { path: MNEMONIC_DERIVATION_PATH });
+    const raw = account.getHdKey().privateKey;
+    if (!raw) throw new InvalidWalletSecretError('unrecognized', 'The recovery phrase did not yield a private key');
+    return { kind: 'mnemonic', privateKey: bytesToHex(raw), address: account.address };
+  }
+  throw new InvalidWalletSecretError('unrecognized', 'Enter a private key (64 hexadecimal characters) or a recovery phrase (12–24 English words)');
+}
+
+export type ImportWalletStatus = 'imported' | 'exists' | 'restored';
+
+/**
+ * Store an existing wallet's key for this data directory. Never replaces a
+ * different wallet. Importing the key wallet.json already records restores a
+ * lost keychain entry; re-running after an interruption between the keychain
+ * write and wallet.json finishes the import.
+ */
+export async function importWallet(ctx: WalletContext, secret: string): Promise<{ status: ImportWalletStatus; address: Address; kind: WalletSecretKind }> {
+  const { kind, privateKey, address } = parseWalletSecret(secret);
+  const account = walletKeychainAccount(ctx.paths.dataDir);
+  const [record, stored] = await Promise.all([
+    readRecord(ctx.paths.walletPath),
+    ctx.secrets.get(WALLET_KEYCHAIN_SERVICE, account),
+  ]);
+  if (stored !== null) {
+    const { address: storedAddress } = accountFromStoredKey(stored);
+    if (record && record.address !== storedAddress) throw mismatch(record, storedAddress, ctx);
+    if (storedAddress !== address) {
+      throw new WalletExistsError(`This data directory already has wallet ${storedAddress}; Obelisk never replaces a wallet`, storedAddress);
+    }
+    if (record) return { status: 'exists', address, kind };
+    await writeRecord(ctx.paths.walletPath, newRecord(ctx, address));
+    return { status: 'imported', address, kind };
+  }
+  if (record && record.address !== address) {
+    throw new WalletExistsError(
+      `${ctx.paths.walletPath} records wallet ${record.address}, whose key is missing from the ${ctx.secrets.description}; only that wallet's key can be imported here`,
+      record.address,
+    );
+  }
+  await ctx.secrets.add(WALLET_KEYCHAIN_SERVICE, account, `Obelisk wallet (${account})`, privateKey);
+  if (record) return { status: 'restored', address, kind };
+  await writeRecord(ctx.paths.walletPath, newRecord(ctx, address));
+  return { status: 'imported', address, kind };
 }
 
 // --- Activation --------------------------------------------------------------
