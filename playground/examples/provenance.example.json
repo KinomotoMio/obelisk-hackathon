@@ -1,0 +1,214 @@
+{
+  "schema": "obelisk.playground.provenance/1",
+  "run": {
+    "id": "run-20261007T131000Z-7f3a",
+    "scenario": {
+      "name": "smoke",
+      "title": "冒烟：沉淀并铸造一个 Skill",
+      "file": "playground/scenarios/smoke.json",
+      "sha256": "9b1c000000000000000000000000000000000000000000000000000000000000"
+    },
+    "network": {
+      "serviceUrl": "https://obelisk-service.example.workers.dev",
+      "chainId": 968
+    },
+    "startedAt": "2026-10-07T13:10:00Z",
+    "endedAt": "2026-10-07T13:16:42Z",
+    "status": "succeeded",
+    "dryRun": false,
+    "obelisk": {
+      "gitCommit": "504797c"
+    }
+  },
+  "roles": [
+    {
+      "id": "A",
+      "label": "作者 A",
+      "wallet": {
+        "address": "0x1111111111111111111111111111111111111111"
+      },
+      "harness": {
+        "kind": "claude-code",
+        "version": "2.1.292 (Claude Code)",
+        "model": "claude-sonnet-5-5"
+      }
+    },
+    {
+      "id": "U",
+      "label": "用户 U",
+      "wallet": {
+        "address": "0x2222222222222222222222222222222222222222"
+      },
+      "harness": {
+        "kind": "codex",
+        "version": "codex-cli 0.160.0",
+        "model": "gpt-6-astra"
+      }
+    }
+  ],
+  "steps": [
+    {
+      "id": "a-task",
+      "index": 0,
+      "title": "A 用 Claude Code 整理一份后端岗位履历",
+      "role": "A",
+      "action": "prompt",
+      "scenes": [
+        "v1:context/job-search",
+        "v1:artifact/resume"
+      ],
+      "status": "succeeded",
+      "startedAt": "2026-10-07T13:10:02Z",
+      "endedAt": "2026-10-07T13:12:30Z",
+      "harness": {
+        "kind": "claude-code",
+        "version": "2.1.292 (Claude Code)",
+        "model": "claude-sonnet-5-5",
+        "maxTurns": 8
+      },
+      "prompt": "根据我这个仓库的提交历史，整理一份后端岗位的项目经历",
+      "sessions": [
+        {
+          "source": "claude",
+          "id": "5b9e0c1e-0000-4000-8000-000000000001",
+          "obeliskId": "5b9e0c1e-0000-4000-8000-000000000001"
+        }
+      ],
+      "commands": [],
+      "transactions": [],
+      "artifacts": [],
+      "screenshots": [],
+      "error": null
+    },
+    {
+      "id": "a-distill-mint",
+      "index": 1,
+      "title": "A 沉淀并铸造「AI 能力履历」",
+      "role": "A",
+      "action": "prompt",
+      "scenes": [],
+      "status": "succeeded",
+      "startedAt": "2026-10-07T13:12:31Z",
+      "endedAt": "2026-10-07T13:15:10Z",
+      "harness": {
+        "kind": "claude-code",
+        "version": "2.1.292 (Claude Code)",
+        "model": "claude-sonnet-5-5",
+        "maxTurns": 30
+      },
+      "prompt": "/obelisk-distill 把我最近整理项目经历的做法沉淀成一个 Skill，然后铸造",
+      "sessions": [
+        {
+          "source": "claude",
+          "id": "5b9e0c1e-0000-4000-8000-000000000002",
+          "obeliskId": "5b9e0c1e-0000-4000-8000-000000000002"
+        }
+      ],
+      "commands": [
+        {
+          "argv": [
+            "skill",
+            "save",
+            "/tmp/obelisk-distill.x/draft.json"
+          ],
+          "exitCode": 0,
+          "startedAt": "2026-10-07T13:14:01Z",
+          "endedAt": "2026-10-07T13:14:02Z",
+          "transactions": []
+        },
+        {
+          "argv": [
+            "skill",
+            "mint",
+            "ai-capability-resume",
+            "--confirm",
+            "c0ffee"
+          ],
+          "exitCode": 0,
+          "startedAt": "2026-10-07T13:14:40Z",
+          "endedAt": "2026-10-07T13:15:05Z",
+          "transactions": [
+            "0x3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f"
+          ]
+        }
+      ],
+      "transactions": [
+        {
+          "hash": "0x3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f3f",
+          "chainId": 968,
+          "explorerUrl": null,
+          "command": "skill mint"
+        }
+      ],
+      "artifacts": [
+        {
+          "kind": "skill-draft",
+          "ref": "ai-capability-resume"
+        },
+        {
+          "kind": "skill-mint",
+          "ref": "ai-capability-resume"
+        }
+      ],
+      "screenshots": [
+        {
+          "file": "screenshots/a-distill-mint.png",
+          "caption": "铸造成功"
+        }
+      ],
+      "error": null
+    },
+    {
+      "id": "u-report",
+      "index": 2,
+      "title": "U 上报调用统计",
+      "role": "U",
+      "action": "cli",
+      "scenes": [],
+      "status": "succeeded",
+      "startedAt": "2026-10-07T13:15:11Z",
+      "endedAt": "2026-10-07T13:16:40Z",
+      "harness": null,
+      "prompt": null,
+      "sessions": [],
+      "commands": [
+        {
+          "argv": [
+            "usage",
+            "report"
+          ],
+          "exitCode": 0,
+          "startedAt": "2026-10-07T13:15:11Z",
+          "endedAt": "2026-10-07T13:16:40Z",
+          "transactions": [
+            "0xa1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+          ]
+        }
+      ],
+      "transactions": [
+        {
+          "hash": "0xa1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1",
+          "chainId": 968,
+          "explorerUrl": null,
+          "command": "usage report"
+        }
+      ],
+      "artifacts": [
+        {
+          "kind": "usage-report",
+          "ref": "0xa1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1a1"
+        }
+      ],
+      "screenshots": [],
+      "error": null
+    }
+  ],
+  "totals": {
+    "roles": 2,
+    "steps": 3,
+    "sessions": 2,
+    "commands": 3,
+    "transactions": 2,
+    "screenshots": 1
+  }
+}
