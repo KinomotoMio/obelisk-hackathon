@@ -552,6 +552,14 @@ export function renderResumeHtml(model: ResumeModel): string {
   .pill.dim { background:var(--surface-strong); color:var(--fg-2); }
   .new { display:inline-block; margin-right:5px; padding:0 5px; border-radius:4px; font-size:10.5px; font-weight:700; line-height:16px; background:var(--warn-soft); color:var(--warn); vertical-align:1px; }
   .head { display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; align-items:flex-start; padding:24px; }
+  /* Obelisk's mark and wordmark, from the official landing page (as service/public/site/brand.css). */
+  .brand { display:inline-flex; align-items:center; gap:9px; margin-bottom:14px; }
+  .brand-mark { display:block; width:15px; height:19px; }
+  .brand-word { display:inline-flex; align-items:flex-end; font-family:'Iowan Old Style','Charter','Georgia','Source Han Serif SC','Noto Serif CJK SC','Songti SC',serif; font-size:16px; font-weight:500; letter-spacing:0.01em; line-height:1; }
+  .brand-word .a, .brand-word .b { -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .brand-word .a { background-image:linear-gradient(90deg, rgba(245,243,238,0.45), #f5f3ee); }
+  .brand-word .b { background-image:linear-gradient(90deg, #f5f3ee, rgba(245,243,238,0.45)); }
+  .brand-word svg { display:block; width:5px; height:17px; margin:0 1px; }
   .head h1 { font-size:24px; font-weight:700; letter-spacing:-0.01em; }
   .headline { color:var(--fg-2); font-size:15px; margin-top:4px; max-width:720px; }
   .meta { margin-top:10px; font-size:12.5px; color:var(--muted); }
@@ -614,6 +622,8 @@ export function renderResumeHtml(model: ResumeModel): string {
     .radar .labels { fill:#16181d; }
     .radar .grid { stroke:#d6d8de; }
     .card { break-inside:avoid; }
+    .brand-word .a, .brand-word .b { background:none; color:#16181d; }
+    .brand-mark .needle { fill:#16181d; }
   }
 </style>
 </head>
@@ -621,6 +631,10 @@ export function renderResumeHtml(model: ResumeModel): string {
 <main class="page">
   <header class="card head">
     <div>
+      <div class="brand" role="img" aria-label="Obelisk">
+        <svg class="brand-mark" viewBox="13 0 51 64" fill="none" aria-hidden="true"><path d="M 17 63 L 51.9 1.5 A 15 15 0 0 1 62.5 12.1 Z" fill="#c4b5fd" opacity="0.55"/><polygon points="17,63 63,24 63,40" fill="#a78bfa" opacity="0.5"/><path d="M 17 63 L 62.5 51.9 A 15 15 0 0 1 48 63 Z" fill="#6366f1" opacity="0.5"/><polygon class="needle" points="17,9 15.2,15 14.3,63 19.7,63 18.8,15" fill="#f5f3ee"/></svg>
+        <span class="brand-word" aria-hidden="true"><span class="a">Obe</span><svg viewBox="0 0 14 46"><polygon points="7,1 5,6 4.5,45 9.5,45 9,6" fill="#c4b5fd"/></svg><span class="b">isk</span></span>
+      </div>
       <h1>AI 能力履历</h1>
       ${model.headline ? `<p class="headline">${escapeHtml(model.headline)}</p>` : ''}
       <div class="meta">${holder} · 统计范围 ${escapeHtml(period)} · 生成于 ${escapeHtml(day(model.generatedAt))}</div>
