@@ -232,6 +232,10 @@ Skill 是知识。上下文（session）是更原始的知识，保留了最纯�
 
 本项目做的，是知识付费 2.0 需要的几块基础：过程能安全地流动（[私密分享](02-private-sharing.md)），价值按真实使用计量（[真实使用](04-real-usage-and-scenarios.md)），贡献沿族谱得到回报（[市场与收益](05-market-and-revenue.md)）。
 
+知识付费 2.0 的前提是 context native：Skill 与部分 session 保留可供 AI 使用的上下文、出处和效果证据。买家判断这些价值是否值得付费；创作者与平台分别核对自己的变现收益。Playground 补充真实任务和使用证据，收益数字不能替代内容价值。
+
+**AI-Native should be context native first**
+
 如果这件事能一起做成，知识就能在 AI 时代的信息高速公路上真正流动起来。
 
 ## 设计原则
