@@ -88,6 +88,12 @@ async function main(argv: string[]) {
     process.stderr.write('OBELISK_PLAYGROUND_CLI is not set; this shim only runs inside an Obelisk Playground role.\n');
     process.exit(2);
   }
+  // The CLI restores the real HOME for the system keychain. Fetch must still
+  // install into this simulated user's workspace, never the owner's skills.
+  const workspace = process.env['OBELISK_PLAYGROUND_WORKSPACE'];
+  if (workspace && argv[0] === 'skill' && argv[1] === 'fetch' && !argv.includes('--project')) {
+    argv = [...argv, '--project', workspace];
+  }
   const startedAt = new Date().toISOString();
   const [command, args] = /\.(?:c|m)?[jt]s$/.test(cli)
     ? [process.execPath, ['--disable-warning=ExperimentalWarning', cli, ...argv]]

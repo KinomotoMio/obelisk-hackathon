@@ -60,6 +60,7 @@ export function roleEnv(
   env['CLAUDE_CODE_PROJECT_DIR_NAME'] = 'workspace';
   env['CODEX_HOME'] = role.codexDir;
   env['OBELISK_PLAYGROUND_ROLE'] = id;
+  env['OBELISK_PLAYGROUND_WORKSPACE'] = role.workspace;
   env['OBELISK_PLAYGROUND_CLI'] = cli;
   if (commandLog) env['OBELISK_PLAYGROUND_COMMAND_LOG'] = commandLog;
   if (serviceUrl) env['OBELISK_SERVICE_URL'] = serviceUrl;

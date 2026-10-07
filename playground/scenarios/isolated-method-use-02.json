@@ -1,0 +1,79 @@
+{
+  "schema": "obelisk.playground.scenario/1",
+  "name": "isolated-method-use-02",
+  "title": "修正角色安装路径后的独立选用任务；不替换前轮零调用",
+  "network": {
+    "serviceUrl": "https://obelisk-service.kinomotomiovo.workers.dev",
+    "chainId": 968
+  },
+  "defaults": {
+    "harness": "codex",
+    "timeoutMinutes": 8
+  },
+  "roles": [
+    {
+      "id": "builder-01",
+      "label": "模拟角色：项目构建者",
+      "skills": [
+        "obelisk",
+        "obelisk-skill-assets",
+        "obelisk-distill"
+      ]
+    },
+    {
+      "id": "job-seeker-01",
+      "label": "模拟角色：求职者",
+      "skills": [
+        "obelisk",
+        "obelisk-skill-assets",
+        "obelisk-distill"
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "id": "builder-install",
+      "role": "builder-01",
+      "title": "产品操作：安装用户选择的版本",
+      "cli": [
+        "skill",
+        "fetch",
+        "8198ffb1d25bc5900824dc730bdbb4985b2284b9d470165bee4f5704402ebfd4",
+        "--harness",
+        "codex",
+        "--confirm"
+      ]
+    },
+    {
+      "id": "job-install",
+      "role": "job-seeker-01",
+      "title": "产品操作：安装先前预览过的求职方法",
+      "cli": [
+        "skill",
+        "fetch",
+        "82e621269965832b5fac1d5cae3d255a5b0b4184d5b027876b8a576dbffd30c2",
+        "--harness",
+        "codex",
+        "--confirm"
+      ]
+    },
+    {
+      "id": "builder-use",
+      "role": "builder-01",
+      "title": "为半小时验收准备今天的协作安排",
+      "prompt": "我今天只能抽半小时看读书笔记项目的进展。按我选用的协作方法，帮我把今天该看什么、哪些你能继续做、哪些变化需要我拍板整理成一页，直接保存到项目里。没有实现的东西别写成已经完成。",
+      "scenes": [
+        "v1:task/planning"
+      ]
+    },
+    {
+      "id": "job-use",
+      "role": "job-seeker-01",
+      "title": "将真实项目经历整理成面试回答",
+      "prompt": "明天可能会问到社团报名那个项目。用我选的求职方法，帮我准备一段一分钟左右能说清楚的回答，再列几个我可能被追问、但目前还缺证据的地方。别把没测过的并发和效果写进去。保存成一份面试笔记。",
+      "scenes": [
+        "v1:task/writing"
+      ]
+    }
+  ]
+}
