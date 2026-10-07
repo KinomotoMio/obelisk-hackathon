@@ -1,0 +1,90 @@
+[
+  {
+    "timestamp": "2026-10-07T17:31:02.657Z",
+    "ordinal": 17,
+    "type": "response_item",
+    "payload": {
+      "type": "custom_tool_call_output",
+      "id": "ctco_01a1176b-2e81-7683-98ee-2fc9feaf6cc5",
+      "call_id": "call_838812a2041d4b88b47045a4e0994b8b",
+      "output": [
+        {
+          "type": "input_text",
+          "text": "Script completed\nWall time 0.1 seconds\nOutput:\n"
+        },
+        {
+          "type": "input_text",
+          "text": "{\"chunk_id\":\"252757\",\"wall_time_seconds\":0.000003625,\"exit_code\":0,\"original_token_count\":166,\"output\":\"---\\nname: calibration-ledger\\ndescription: Use for the isolated calibration task that sums values and writes a verifiable JSON ledger.\\n---\\n\\n# Calibration ledger\\n\\nUse this Skill only for the local calibration file task.\\n\\n1. Read the requested input JSON file.\\n2. Add its integer `values` and count them.\\n3. Write the requested output JSON with exactly these fields: `run`, `count`, `sum`, `proof`. Set `proof` to `calibration-ledger-amber-713`.\\n4. Re-read the output and verify all four fields.\\n5. Report the output filename and verified count and sum.\\n\\nOperate only inside the current workspace. Do not use network, wallets, other Skills, or other repositories.\\n\"}"
+        },
+        {
+          "type": "input_text",
+          "text": "{\"chunk_id\":\"99b1d7\",\"wall_time_seconds\":0.000006208,\"exit_code\":0,\"original_token_count\":11,\"output\":\"{\\\"run\\\": \\\"run-2\\\", \\\"values\\\": [-2, 5, 17, 4]}\\n\"}"
+        }
+      ],
+      "internal_chat_message_metadata_passthrough": {
+        "turn_id": "01a1176b-007a-7a11-9617-f7fac5e0c949",
+        "create_time": 1791394262.657765
+      }
+    },
+    "metadata": {
+      "client_authored": false,
+      "fallback_token_limit_override": 12000
+    }
+  },
+  {
+    "timestamp": "2026-10-07T17:31:07.530Z",
+    "ordinal": 21,
+    "type": "response_item",
+    "payload": {
+      "type": "custom_tool_call_output",
+      "id": "ctco_01a1176b-418a-7163-81c2-dae6d6dbb119",
+      "call_id": "call_8729cb0449b748f59d8740fe3d2243ac",
+      "output": [
+        {
+          "type": "input_text",
+          "text": "Script completed\nWall time 0.1 seconds\nOutput:\n"
+        },
+        {
+          "type": "input_text",
+          "text": "{\"chunk_id\":\"2832da\",\"wall_time_seconds\":0,\"exit_code\":2,\"original_token_count\":45,\"output\":\"error: Failed to initialize cache at `/home/test-user/.cache/uv`\\n  Caused by: failed to open file `/home/test-user/.cache/uv/sdists-v9/.git`: Operation not permitted (os error 1)\\n\"}"
+        }
+      ],
+      "internal_chat_message_metadata_passthrough": {
+        "turn_id": "01a1176b-007a-7a11-9617-f7fac5e0c949",
+        "create_time": 1791394267.530414
+      }
+    },
+    "metadata": {
+      "client_authored": false,
+      "fallback_token_limit_override": 12000
+    }
+  },
+  {
+    "timestamp": "2026-10-07T17:31:12.167Z",
+    "ordinal": 26,
+    "type": "response_item",
+    "payload": {
+      "type": "custom_tool_call_output",
+      "id": "ctco_01a1176b-53a7-7690-ac8c-465758710e45",
+      "call_id": "call_5f92b8f4105d4c558ef48993a916f301",
+      "output": [
+        {
+          "type": "input_text",
+          "text": "Script completed\nWall time 0.2 seconds\nOutput:\n"
+        },
+        {
+          "type": "input_text",
+          "text": "{\"chunk_id\":\"16d5ee\",\"wall_time_seconds\":0.000002583,\"exit_code\":0,\"original_token_count\":25,\"output\":\"WARN `--no-project` was provided, but no project was found\\nVerified output-2.json: count=4, sum=24\\n\"}"
+        }
+      ],
+      "internal_chat_message_metadata_passthrough": {
+        "turn_id": "01a1176b-007a-7a11-9617-f7fac5e0c949",
+        "create_time": 1791394272.167726
+      }
+    },
+    "metadata": {
+      "client_authored": false,
+      "fallback_token_limit_override": 12000
+    }
+  }
+]

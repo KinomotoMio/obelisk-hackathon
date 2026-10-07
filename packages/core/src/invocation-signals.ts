@@ -19,7 +19,7 @@ import type { InvocationSlice } from './invocation-slices.ts';
 import type { Signal } from './usage-buckets.ts';
 
 /** Bump when a rule changes, so stored signals are recounted. */
-export const SIGNAL_RULES_VERSION = 1;
+export const SIGNAL_RULES_VERSION = 2;
 export const REPEATED_EDIT_THRESHOLD = 3;
 
 const EDIT_TOOLS = new Set(['Edit', 'MultiEdit', 'Write', 'NotebookEdit', 'apply_patch', 'edit', 'write']);
@@ -41,7 +41,7 @@ export function isCorrection(text: string): boolean {
  */
 export function invocationSignals(slice: InvocationSlice, loadedAgainLater: boolean): Signal[] {
   const signals: Signal[] = [];
-  if (slice.events.some((event) => event.toolResults.some((result) => result.isError))) signals.push('tool-error');
+  if (slice.events.some((event) => event.toolResults.some((result) => result.isError || result.commands?.some((command) => command.exitCode !== 0)))) signals.push('tool-error');
   if (slice.events.some((event) => event.role === 'user' && (event.human || INTERRUPTION_RE.test(event.text.trim())) && isCorrection(event.text))) {
     signals.push('user-correction');
   }
