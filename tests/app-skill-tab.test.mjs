@@ -6,7 +6,9 @@ import assert from 'node:assert/strict';
 
 import {
   continueEditingPrompt,
+  derivePrompt,
   dropEvidencePrompt,
+  fetchPrompt,
   mintPrompt,
 } from '../app/src/renderer/src/skill-prompts.mjs';
 import {
@@ -36,16 +38,16 @@ function view({ versions = [], draftMinted = false } = {}) {
 
 test('the mint prompt previews first and confirms only the fingerprint reviewed in the App', () => {
   const prompt = mintPrompt(view());
-  assert.match(prompt, /^用 Obelisk 铸造 Skill 草稿「job-application-materials」。/);
-  const preview = prompt.indexOf('`obelisk skill mint job-application-materials`');
+  assert.match(prompt, /^\/obelisk-skill-assets 铸造 Skill 草稿「job-application-materials」，先给我看铸造预览。/);
+  const reviewed = prompt.indexOf(`审阅的版本指纹是 ${FP}`);
   const confirm = prompt.indexOf(`\`obelisk skill mint job-application-materials --confirm ${FP}\``);
-  assert.ok(preview > 0 && confirm > preview, prompt);
-  assert.match(prompt, /我确认之后/);
+  assert.ok(reviewed > 0 && confirm > reviewed, prompt);
+  assert.match(prompt, /等我确认/);
 });
 
 test('a Skill minted before is minted again as a new version', () => {
   const prompt = mintPrompt(view({ versions: [{ fingerprint: 'c'.repeat(64), mint: mint(0) }] }));
-  assert.match(prompt, /^用 Obelisk 铸造 Skill「job-application-materials」的新版本。/);
+  assert.match(prompt, /^\/obelisk-skill-assets 铸造 Skill「job-application-materials」的新版本，先给我看铸造预览。/);
 });
 
 test('a Skill without a draft has nothing to mint', () => {
@@ -55,19 +57,19 @@ test('a Skill without a draft has nothing to mint', () => {
 test('"去掉" names the draft and the session, by title and id', () => {
   assert.equal(
     dropEvidencePrompt(view(), { sessionId: 's-1', title: '为面试准备系统设计案例' }),
-    '用「沉淀 Skill」从草稿「job-application-materials」的证据中去掉 session「为面试准备系统设计案例」（s-1），重新起草',
+    '/obelisk-distill 从草稿「job-application-materials」的证据中去掉 session「为面试准备系统设计案例」（s-1），重新起草',
   );
   assert.equal(
     dropEvidencePrompt(view(), { sessionId: 's-2', title: null }),
-    '用「沉淀 Skill」从草稿「job-application-materials」的证据中去掉 session s-2，重新起草',
+    '/obelisk-distill 从草稿「job-application-materials」的证据中去掉 session s-2，重新起草',
   );
 });
 
 test('"继续修改" edits the draft, or starts a new draft from a minted Skill', () => {
-  assert.equal(continueEditingPrompt(view()), '用「沉淀 Skill」继续修改草稿「job-application-materials」：');
+  assert.equal(continueEditingPrompt(view()), '/obelisk-distill 继续修改草稿「job-application-materials」：');
   assert.equal(
     continueEditingPrompt(view({ versions: [{ fingerprint: FP, mint: mint(0) }], draftMinted: true })),
-    '用「沉淀 Skill」继续修改 Skill「job-application-materials」，改好后保存成新的草稿：',
+    '/obelisk-distill 继续修改 Skill「job-application-materials」，改好后保存成新的草稿：',
   );
 });
 
@@ -97,6 +99,16 @@ test('minted versions are listed newest first with a link to their transaction',
   assert.equal(explorerTxUrl(mint(0, { txHash: null })), null);
   assert.equal(explorerTxUrl(mint(0, { chainId: 31337 })), null);
   assert.equal(explorerTxUrl(mint(0, { txHash: 'javascript:alert(1)' })), null);
+});
+
+test('prompts about a minted Skill name it by Skill id and version, never by a shortened fingerprint', () => {
+  const minted = { skillId: '7', name: 'ai-resume' };
+  assert.equal(fetchPrompt(minted, 1), '/obelisk-skill-assets 取用 Skill #7「ai-resume」v2，帮我：');
+  assert.equal(
+    derivePrompt(minted, 0),
+    '/obelisk-distill 在 Skill #7「ai-resume」v1 的基础上改出一个新版本，铸造时记录父 Skill。我想改成：',
+  );
+  assert.equal(fetchPrompt({ skillId: '9', name: null }, 0), '/obelisk-skill-assets 取用 Skill #9 v1，帮我：');
 });
 
 test('the shortened fingerprint is for display only', () => {

@@ -333,7 +333,7 @@ async function run() {
   );
   await screenshot(win, 'skill-tab-empty.png');
   const distill = await clickCopy(win, '.skill-empty', '复制沉淀 Skill 的 prompt');
-  assert(distill.startsWith('用「沉淀 Skill」'), `the empty state copies a distill prompt (${distill})`);
+  assert(distill.startsWith('/obelisk-distill '), `the empty state copies a distill prompt (${distill})`);
   await js(win, `document.querySelector('.prompt-toast-close')?.click()`);
 
   // A library change shows up without a reload.
@@ -383,9 +383,8 @@ async function run() {
   const mintText = await clickCopy(win, '.skill-actions', '确认并铸造');
   const draftFingerprint = views['job-application-materials'].draft.fingerprint;
   assert(
-    mintText.includes('`obelisk skill mint job-application-materials`')
-      && mintText.includes(`\`obelisk skill mint job-application-materials --confirm ${draftFingerprint}\``)
-      && mintText.indexOf('--confirm') > mintText.indexOf('铸造预览'),
+    mintText.startsWith('/obelisk-skill-assets 铸造 Skill 草稿「job-application-materials」，先给我看铸造预览')
+      && mintText.includes(`\`obelisk skill mint job-application-materials --confirm ${draftFingerprint}\``),
     'the mint prompt previews first, then confirms the reviewed fingerprint',
   );
   // The toast that just appeared (a dismissed one may still be fading out).
@@ -397,11 +396,11 @@ async function run() {
   assert(true, 'the toast shows exactly the copied prompt');
   const dropText = await clickCopy(win, '[data-evidence="2"]', '去掉');
   assert(
-    dropText === '用「沉淀 Skill」从草稿「job-application-materials」的证据中去掉 session「把排障过程改写成技术复盘」（rollout-retro-0919），重新起草',
+    dropText === '/obelisk-distill 从草稿「job-application-materials」的证据中去掉 session「把排障过程改写成技术复盘」（rollout-retro-0919），重新起草',
     `"去掉" names the draft and the session (${dropText})`,
   );
   const editText = await clickCopy(win, '.skill-actions', '继续修改');
-  assert(editText === '用「沉淀 Skill」继续修改草稿「job-application-materials」：', `"继续修改" names the draft (${editText})`);
+  assert(editText === '/obelisk-distill 继续修改草稿「job-application-materials」：', `"继续修改" names the draft (${editText})`);
   await js(win, `document.querySelector('.prompt-toast-close')?.click()`);
   await screenshot(win, 'skill-tab-draft.png');
   await js(win, `document.querySelector('.skill-wrap').scrollTop = 10000`);
@@ -433,7 +432,7 @@ async function run() {
   assert(revision.missing?.includes('本机索引中没有这个 session'), 'a provenance session missing from the index is marked, not linked');
   assert(await js(win, `document.querySelector('.evidence.missing .evidence-title').disabled`), 'a missing session cannot be opened');
   const newVersion = await clickCopy(win, '.skill-actions', '确认并铸造新版本');
-  assert(newVersion.startsWith('用 Obelisk 铸造 Skill「incident-retro」的新版本'), `the new-version prompt says so (${newVersion.split('\n')[0]})`);
+  assert(newVersion.startsWith('/obelisk-skill-assets 铸造 Skill「incident-retro」的新版本'), `the new-version prompt says so (${newVersion})`);
   await js(win, `document.querySelector('.prompt-toast-close')?.click()`);
 
   // A fully minted Skill: no mint button, no evidence removal.
