@@ -313,8 +313,12 @@ export function checkSummary(state, transactions) {
   return { ...counts, mode: 'checking', done: counts.checking === 0 };
 }
 
-/** Hashes still worth asking about: not yet answered, or not final. */
-export function hashesToCheck(transactions, results) {
-  return transactions.map((tx) => tx.hash.toLowerCase())
-    .filter((hash) => !['confirmed', 'reverted', 'not_found'].includes(results.get(hash)?.status));
+/**
+ * Hashes still worth asking about: not yet answered, or not final. While the
+ * run is going, a transaction the node has not seen yet may still arrive, so
+ * 未找到 is asked again too.
+ */
+export function hashesToCheck(transactions, results, running = false) {
+  const final = running ? ['confirmed', 'reverted'] : ['confirmed', 'reverted', 'not_found'];
+  return transactions.map((tx) => tx.hash.toLowerCase()).filter((hash) => !final.includes(results.get(hash)?.status));
 }

@@ -109,6 +109,7 @@ test('the on-chain check: each transaction’s state, the summary, and what to a
   const summary = checkSummary(state, txs);
   assert.deepEqual([summary.confirmed, summary.not_found, summary.pending, summary.unavailable, summary.checking, summary.done], [1, 1, 1, 1, 2, false]);
   assert.deepEqual(hashesToCheck(txs, results), [txs[2].hash, txs[3].hash, txs[4].hash, txs[5].hash], 'confirmed and missing ones are final');
+  assert.deepEqual(hashesToCheck(txs, results, true), [txs[1].hash, txs[2].hash, txs[3].hash, txs[4].hash, txs[5].hash], 'while the run goes, a missing one is asked again');
   assert.equal(txCheckOf(checkState(record, null, results), txs[0].hash), 'offline');
 });
 

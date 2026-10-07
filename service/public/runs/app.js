@@ -129,7 +129,7 @@ async function runChecks(force = false) {
   if (state.chain === undefined) state.chain = await loadChain();
   const mode = checkState(record, state.chain, state.checks).mode;
   if (mode !== 'checking') return;
-  const hashes = hashesToCheck(runArtifacts(record).transactions, state.checks);
+  const hashes = hashesToCheck(runArtifacts(record).transactions, state.checks, record.run.status === 'running');
   if (!hashes.length) return;
   // A transaction never asked about goes at once; the rest wait their turn.
   const unasked = hashes.some((hash) => !state.checks.has(hash));
@@ -507,6 +507,10 @@ function renderProvenance() {
     note.push('现在显示的是 Playground 在本机写下的文件，发布后会出现在 Obelisk 的在线服务上。');
   }
   $('rn-prov-note').textContent = note.join('');
+  // The files themselves, for anyone who wants to check them or keep a copy.
+  $('rn-prov-files').replaceChildren(...['provenance.json', 'events.jsonl'].map((file) => el('a', {
+    class: 'rn-file', href: `/runs/${state.runId}/${file}`, download: `${state.runId}-${file}`,
+  }, `下载 ${file}`)));
   for (const node of document.querySelectorAll('#rn-prov [data-check-for]')) node.replaceChildren(checkBadge(node.dataset.checkFor) ?? '');
 }
 

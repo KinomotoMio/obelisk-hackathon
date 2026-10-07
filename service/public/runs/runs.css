@@ -5,6 +5,8 @@
    page's CSP allows only this file. */
 
 .site-main.rn { max-width: 1280px; }
+/* The footer lines up with the wider main column. */
+.site-main.rn ~ .site-foot { max-width: 1280px; }
 .rn .mono { font-size: 12px; }
 
 /* Intro */
@@ -108,7 +110,8 @@
   padding: 7px 8px; border-radius: 8px; border: 0; background: transparent; cursor: pointer; color: inherit;
 }
 .rn-step-btn:hover { background: var(--surface-strong); }
-.rn-step.selected .rn-step-btn { background: var(--accent-soft); }
+.rn-step.running .rn-step-btn, .rn-step.selected .rn-step-btn { background: var(--accent-soft); }
+.rn-step.selected .rn-step-btn { box-shadow: inset 0 0 0 1px rgba(167, 139, 250, 0.4); }
 .rn-step-btn:focus-visible, .rn-counter:focus-visible, .rn-shot-pic:focus-visible, .rn-toggle:focus-visible, .rn-step-shot:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .rn-k {
   width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center;
@@ -189,6 +192,12 @@
 .rn-section-h { display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--hairline); }
 .rn-section-h h2 { font-size: 17px; font-weight: 600; }
 .rn-section-h .rn-count { margin-left: 0; }
+.rn-files { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.rn-file {
+  padding: 3px 10px; border-radius: 8px; border: 1px solid var(--hairline); background: var(--surface-strong);
+  color: var(--fg); font-size: 12px; white-space: nowrap;
+}
+.rn-file:hover { background: var(--surface-hi); text-decoration: none; }
 
 /* Key screenshots */
 .rn-shots { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
@@ -301,6 +310,8 @@
   .rn-prov > tbody > tr > th { padding: 10px 12px 0; border-bottom: 0; }
   .rn-prov > tbody > tr > td { padding: 2px 12px 10px; }
   .rn-shots { grid-template-columns: minmax(0, 1fr); }
+  .rn-section-h { flex-wrap: wrap; }
+  .rn-files { margin-left: 0; width: 100%; justify-content: flex-start; }
   .rn-runs { grid-template-columns: minmax(0, 1fr); }
   .rn-proof { padding: 12px; }
 }
