@@ -9,6 +9,7 @@
   },
   "main": "out/main/index.js",
   "scripts": {
+    "postinstall": "node node_modules/electron/install.js",
     "start": "electron-vite preview",
     "dev": "electron-vite dev",
     "build": "electron-vite build && electron-builder",
