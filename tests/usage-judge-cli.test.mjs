@@ -135,6 +135,7 @@ test('"判断 Skill 调用的结果": preview, one batched run of the local harn
     assert.deepEqual(run.schema.required, ['judgments'], 'the answer shape is given to Codex as a schema file');
     assert.equal(run.cwd.endsWith(join('.obelisk', 'judge')), true, 'the judge starts in the data directory, away from projects');
     const prompt = harness.prompt();
+    assert.ok(prompt.includes(probeDraft.description), 'fetched Skill description reaches the judge');
     assert.match(prompt, /\[user, before the Skill\] 帮我修一下登录页的报错/);
     assert.match(prompt, /← tool error: String to replace not found/);
     assert.match(prompt, /\[user\] 不对，应该改 auth\.ts/);

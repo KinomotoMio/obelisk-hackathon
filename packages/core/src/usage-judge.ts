@@ -30,7 +30,7 @@ import { OUTCOMES, type Outcome } from './usage-buckets.ts';
 import type { JudgeHarness } from './usage-annotations.ts';
 
 /** Bump when the prompt or the output contract changes. */
-export const JUDGE_PROMPT_VERSION = 2;
+export const JUDGE_PROMPT_VERSION = 3;
 export const MAX_JUDGED_SCENES = 3;
 const SLICE_CHARS = 5000;
 const LINE_CHARS = 300;

@@ -29,8 +29,10 @@ later uses show up in `obelisk skill invocations`.
 | `obelisk skill list` | The local library: names, descriptions, status (`draft` or `minted`). | No |
 | `obelisk skill mint <name>` | **Preview only.** Author, network, fingerprint, birth scenes, parent Skill, and whether this is a new Skill or a new version. | No |
 | `obelisk skill mint <name> --confirm <fingerprint>` | Signs the previewed fingerprint, has the service submit it and store the body, then freezes the version in the library. | Chain and online service |
-| `obelisk skill fetch <skill id \| fingerprint> [--version <n>] [--name <name>] [--project <dir>]` | **Preview only.** The minted version, its author and birth scenes, where it will be installed, and the full body. | No |
-| `obelisk skill fetch <fingerprint> --confirm [--name <name>] [--project <dir>]` | Installs exactly that version into Claude Code and records the fetch. | Local files |
+| `obelisk skill fetch <skill id \| fingerprint> [--version <n>] [--name <name>] [--project <dir>] [--harness claude\|codex]` | **Preview only.** The minted version, its author and birth scenes, where it will be installed, and the full body. | No |
+| `obelisk skill fetch <fingerprint> --confirm [--name <name>] [--project <dir>] [--harness claude\|codex]` | Installs exactly that version into the selected harness and records the fetch. | Local files |
+
+When running in Codex, pass `--harness codex` on preview and confirmation; use `--project` for a project-local `.agents/skills` installation. Claude uses `.claude/skills` and remains the CLI default.
 
 Each command prints one JSON object. Its `next` field says what to do next;
 follow it. Errors use the `{ "error": ... }` envelope and exit with code 1.

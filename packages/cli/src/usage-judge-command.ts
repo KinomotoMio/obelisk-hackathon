@@ -18,6 +18,7 @@ import { withSkillInvocations } from '../../core/src/core.ts';
 import { readInvocationSlice } from '../../core/src/invocation-slices.ts';
 import { resolveObeliskPaths } from '../../core/src/paths.ts';
 import { skillVersionsByFingerprint } from '../../core/src/skill-invocations.ts';
+import { listSkillFetches } from '../../core/src/skill-fetches.ts';
 import { readSkill } from '../../core/src/skills.ts';
 import {
   countSettledSignals,
@@ -75,9 +76,13 @@ async function judge(options: JudgeOptions, deps: UsageDeps) {
   const reportable = reportableFingerprints(versions);
   const annotations = await readUsageAnnotations(paths.dataDir);
   const descriptions = new Map<string, string>();
+  const fetched = await listSkillFetches(paths.skillsDir);
   for (const matches of versions.values()) {
     for (const match of matches) {
-      if (!descriptions.has(match.name)) descriptions.set(match.name, (await readSkill(paths.skillsDir, match.name))?.description ?? '');
+      const key = `${match.name}:${match.fingerprint}`;
+      if (!descriptions.has(key)) descriptions.set(key, match.state === 'fetched'
+        ? fetched.findLast((record) => record.name === match.name && record.fingerprint === match.fingerprint)?.description ?? ''
+        : (await readSkill(paths.skillsDir, match.name))?.description ?? '');
     }
   }
 
@@ -140,7 +145,7 @@ async function judge(options: JudgeOptions, deps: UsageDeps) {
       const name = versions.get(invocation.fingerprint!)?.[0]?.name ?? 'unknown';
       return {
         id: `i${index + 1}`,
-        skill: { name, description: descriptions.get(name) ?? '' },
+        skill: { name, description: descriptions.get(`${name}:${invocation.fingerprint}`) ?? '' },
         slice,
         messageUuid: invocation.messageUuid,
         fingerprint: invocation.fingerprint!,
