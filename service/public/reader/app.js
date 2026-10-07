@@ -21,6 +21,7 @@ import {
   shareNumber,
   shortAddress,
   speaker,
+  timeZoneLabel,
   splitBlocks,
   splitInline,
   splitRedactions,
@@ -274,7 +275,7 @@ function showStateRefusal(share) {
       tone: 'dim', iconName: 'ban',
       title: '发送方已撤回这份分享',
       text: `撤回于 ${formatDateTime(share.revokedAt)}。撤回后任何人都无法再打开它，Obelisk 在线服务上的加密副本也已删除。`,
-      meta: ['撤回由 BOT Chain 上的记录证明', chainLink(share.transactions?.revoke ?? share.transactions?.create, '撤回记录')],
+      meta: ['撤回由 BOT Chain 上的记录证明', chainLink(share.transactions?.revoke ?? share.transactions?.create, '撤回记录'), `本地时间 ${timeZoneLabel()}`],
     });
   }
   if (share.status === 'expired') {
@@ -282,7 +283,7 @@ function showStateRefusal(share) {
       tone: 'warn', iconName: 'clock',
       title: '这份分享已过期',
       text: `它的有效期到 ${formatDateTime(share.expiresAt)} 为止。如果还需要查看，请联系发送方 ${sender} 重新分享。`,
-      meta: ['有效期由 BOT Chain 上的分享授权决定', chainLink(share.transactions?.create, '分享授权')],
+      meta: ['有效期由 BOT Chain 上的分享授权决定', chainLink(share.transactions?.create, '分享授权'), `本地时间 ${timeZoneLabel()}`],
     });
   }
   const last = share.receipts?.at(-1);
@@ -290,7 +291,7 @@ function showStateRefusal(share) {
     tone: 'warn', iconName: 'eye',
     title: '打开次数已用完',
     text: `这份分享只能打开 ${share.maxOpens} 次，已经全部用完${last ? `，最后一次在 ${formatDateTime(last.openedAt)}` : ''}。如果还需要查看，请联系发送方 ${sender} 重新分享。`,
-    meta: ['每次打开都在 BOT Chain 上留有回执', chainLink(receiptRecord(share), '打开回执')],
+    meta: ['每次打开都在 BOT Chain 上留有回执', chainLink(receiptRecord(share), '打开回执'), last ? `本地时间 ${timeZoneLabel()}` : null],
   });
 }
 
@@ -346,7 +347,7 @@ function showIntro() {
       h('dt', { text: '发送方' }), h('dd', { class: 'mono', title: share.sender }, shortAddress(share.sender)),
       h('dt', { text: '指定接收者' }), h('dd', { class: 'mono', title: share.recipient }, shortAddress(share.recipient)),
       h('dt', { text: '打开次数' }), h('dd', { text: opensLine(share) }),
-      h('dt', { text: '有效期至' }), h('dd', { text: formatDateTime(share.expiresAt) }),
+      h('dt', { text: '有效期至' }), h('dd', { text: `${formatDateTime(share.expiresAt)}（${timeZoneLabel()}）` }),
     ),
     resume ? h('div', { class: 'callout' }, '你在这个标签页里打开过这份分享。重新连接钱包即可再次显示，不会再消耗打开次数。') : null,
     h('div', { class: 'actions' }, connectBtn),
@@ -633,6 +634,7 @@ function showReader(snapshot, opened) {
         h('span', {}, providerName(snapshot.source?.provider)),
         snapshot.source?.startedAt ? h('span', {}, `会话开始于 ${formatDateTime(snapshot.source.startedAt)}`) : null,
         redactions.length ? h('span', {}, `打码：${redactions.join('；')}`) : null,
+        h('span', {}, `时间均为本地时间（${timeZoneLabel()}）`),
       ),
       timeline,
       h('div', { class: 'receipt' },

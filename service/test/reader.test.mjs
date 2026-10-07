@@ -85,6 +85,11 @@ test('snapshot text is split into parts the page renders as text, with redaction
   assert.deepEqual(reader.summarizeToolCall({ name: 'Bash', input: '{"command":"grep -rn payment src/"}' }), { verb: '运行', detail: 'grep -rn payment src/' });
   assert.equal(reader.shareNumber(`0x0142${'0'.repeat(60)}`), 'S-0142');
   assert.equal(reader.shortAddress('0x7a3f000000000000000000000000000000c21e'), '0x7a3f…c21e');
+  // Every time is shown in the viewer's zone, and the label names that zone.
+  const offset = -new Date().getTimezoneOffset();
+  assert.match(reader.timeZoneLabel(), /^UTC[+-]\d{1,2}(:\d{2})?$/);
+  assert.equal(reader.timeZoneLabel().startsWith(offset >= 0 ? 'UTC+' : 'UTC-'), true);
+  assert.equal(reader.formatDateTime('2026-10-07T10:20:00.000Z').slice(11), new Date('2026-10-07T10:20:00.000Z').toTimeString().slice(0, 5));
 
   // Snapshot content is untrusted: the page never parses anything as HTML.
   for (const file of readdirSync(new URL('../public/reader/', import.meta.url))) {

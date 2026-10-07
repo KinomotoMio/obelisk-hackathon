@@ -198,6 +198,18 @@ export function formatDateTime(iso) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
+/**
+ * The viewer's time zone as `UTC+8` / `UTC-4:30`. Every time on the page is
+ * shown in this zone, so it is labeled once wherever times appear.
+ */
+export function timeZoneLabel(date = new Date()) {
+  const offset = -date.getTimezoneOffset();
+  const sign = offset >= 0 ? '+' : '-';
+  const hours = Math.floor(Math.abs(offset) / 60);
+  const minutes = Math.abs(offset) % 60;
+  return `UTC${sign}${hours}${minutes ? `:${pad(minutes)}` : ''}`;
+}
+
 /** `10-07 21:03`, for the watermark. */
 export function formatShortDateTime(iso) {
   return formatDateTime(iso).slice(5);
