@@ -1,0 +1,26 @@
+{
+  "schema": "obelisk.playground.scenario/1",
+  "name": "natural-market-01",
+  "title": "模拟角色的日常求职、作品集与排障请求；真实 AI 执行，测试网",
+  "network": { "serviceUrl": "https://obelisk-service.kinomotomiovo.workers.dev", "chainId": 968 },
+  "defaults": { "harness": "codex", "timeoutMinutes": 8 },
+  "roles": [
+    { "id": "job-seeker-01", "label": "模拟角色：求职者", "skills": ["obelisk", "obelisk-skill-assets", "obelisk-distill"] },
+    { "id": "designer-01", "label": "模拟角色：设计师", "skills": ["obelisk", "obelisk-skill-assets", "obelisk-distill"] },
+    { "id": "maintainer-01", "label": "模拟角色：项目维护者", "skills": ["obelisk", "obelisk-skill-assets", "obelisk-distill"] }
+  ],
+  "steps": [
+    {
+      "id": "job-materials", "role": "job-seeker-01", "title": "准备后台开发实习申请", "scenes": ["v1:task/writing"],
+      "prompt": "我想投后台开发实习，有没有别人总结过的好方法可以参考？我做过一个校园活动报名网站，负责报名接口、名额限制和邮件通知；还没正式上线，也没有性能测试数字。帮我把这些经历整理成一段简历项目介绍，再写一封简短的申请邮件。别给我编成绩，有缺的信息留出来就好。把结果存下来，方便我接着改。"
+    },
+    {
+      "id": "portfolio", "role": "designer-01", "title": "整理一个设计项目", "scenes": ["v1:task/writing"],
+      "prompt": "我准备找交互设计实习，想把一个校园失物招领的小项目整理成作品集。现在只有页面草图，访谈过三位同学，还没有上线，问题主要是照片不好认、联系方式乱放。有没有合适的经验能参考？帮我搭一个作品集章节，把哪些地方还缺证据写清楚，不要把设想当成已经做成的效果。"
+    },
+    {
+      "id": "incident", "role": "maintainer-01", "title": "整理偶发 502 的排查方向", "scenes": ["v1:task/debug"],
+      "prompt": "我的小网站最近偶尔返回 502，重启后能恢复一阵。我现在只有这些现象：晚上人多时容易出现，静态页面通常还能开，日志里偶尔有 upstream timed out。有没有成熟的排查思路？帮我整理一下先看什么、哪些信息还缺，别上来就建议扩容。我想把排查笔记存下来。"
+    }
+  ]
+}
