@@ -4,7 +4,7 @@
 // Shared by scripts/export-abi.ts (writes) and test/abi-export.test.ts
 // (checks the committed files), so both agree byte for byte.
 
-export const EXPORTED_CONTRACTS = ["KeyRegistry", "ShareRegistry", "SkillRegistry", "UsageStats"] as const;
+export const EXPORTED_CONTRACTS = ["KeyRegistry", "ShareRegistry", "SkillRegistry", "UsageStats", "SkillMarket"] as const;
 
 export function renderAbiJson(abi: unknown): string {
   return `${JSON.stringify(abi, null, 2)}\n`;

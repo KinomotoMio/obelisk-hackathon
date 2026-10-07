@@ -12,6 +12,24 @@
 
 export const EIP712_VERSION = "1";
 
+export const skillMarketTypes = {
+  ListSkill: [
+    { name: "author", type: "address" }, { name: "skillId", type: "uint256" },
+    { name: "versionIndex", type: "uint256" }, { name: "mode", type: "uint8" },
+    { name: "license", type: "uint8" }, { name: "price", type: "uint256" },
+    { name: "royaltyBps", type: "uint16" }, { name: "nonce", type: "uint256" },
+    { name: "deadline", type: "uint256" },
+  ],
+  BuySkill: [
+    { name: "buyer", type: "address" }, { name: "offerId", type: "uint256" },
+    { name: "nonce", type: "uint256" }, { name: "deadline", type: "uint256" },
+  ],
+  UseSkill: [
+    { name: "buyer", type: "address" }, { name: "offerId", type: "uint256" },
+    { name: "nonce", type: "uint256" }, { name: "deadline", type: "uint256" },
+  ],
+} as const;
+
 export const domainNames = {
   KeyRegistry: "ObeliskKeyRegistry",
   ShareRegistry: "ObeliskShareRegistry",
