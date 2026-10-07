@@ -123,7 +123,7 @@ export function bytesToBase64(bytes: Uint8Array): string {
 }
 
 async function sha256Hex(bytes: Uint8Array): Promise<Hex> {
-  return bytesToHex(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes)));
+  return bytesToHex(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes as Uint8Array<ArrayBuffer>)));
 }
 
 function hexOfSize(value: unknown, bytes: number, field: string): Hex {
