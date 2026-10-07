@@ -20,13 +20,14 @@ import { resolveObeliskPaths } from '../../core/src/paths.ts';
 import { skillVersionsByFingerprint } from '../../core/src/skill-invocations.ts';
 import { fingerprintToBytes32 } from '../../core/src/skill-chain.ts';
 import { countSettledSignals, readUsageAnnotations, storedAnnotator, writeUsageAnnotations } from '../../core/src/usage-annotations.ts';
-import { planUsageReports, reportableFingerprints, signReportUsage, type ReportBucket, type UsageReportPlan } from '../../core/src/usage-report.ts';
+import { SCENE_OUTCOME_PREFIX } from '../../core/src/usage-buckets.ts';
+import { planUsageReports, reportableFingerprints, signReportUsage, splitReportCalls, type ReportBucket, type ReportCall, type UsageReportPlan } from '../../core/src/usage-report.ts';
 import { readUsageSettings, reportedKey, writeUsageSettings, type ReportedTotals, type UsageSettings } from '../../core/src/usage-settings.ts';
 import { loadWallet } from '../../core/src/wallet.ts';
 import { skillService, type SkillChainDeps } from './skill-mint-command.ts';
 import { runUsageJudgeCommand } from './usage-judge-command.ts';
 
-export const USAGE_USAGE = 'Usage: obelisk usage status | enable [--confirm] | disable | report [--if-due] | judge [--harness claude|codex] [--limit <n>] [--batch <n>] [--model <name>] [--confirm]';
+export const USAGE_USAGE = 'Usage: obelisk usage status | enable [--confirm] | disable | report [--if-due] | judge [--harness codex|claude] [--limit <n>] [--batch <n>] [--model <name>] [--confirm]';
 
 /** How long a report signature stays valid for the relay. */
 const REPORT_DEADLINE_SECONDS = 600;
@@ -35,7 +36,7 @@ const REPORT_INTERVAL_MS = 24 * 3600 * 1000;
 
 export type UsageDeps = SkillChainDeps;
 
-const WHAT_IS_SENT = 'For each minted Skill version you used: its fingerprint, how many times you invoked it in total, how many of those invocations showed each fact signal (tool error, correction, repeated edit, repeated invocation), and, once `obelisk usage judge` has run, how many fell into each scene and result.';
+const WHAT_IS_SENT = 'For each minted Skill version you used: its fingerprint, how many times you invoked it in total, how many of those invocations showed each fact signal (tool error, correction, repeated edit, repeated invocation), and, once `obelisk usage judge` has run, how many fell into each scene and result, and each scene\'s results.';
 const NEVER_SENT = 'Never sent: session content, prompts, file names, project paths, Skill names you gave, or when each invocation happened.';
 const PUBLIC = 'Reports are written on BOT Chain under your wallet address, so anyone can see which minted versions this wallet reported and its running totals.';
 const FEE = 'Paid by the Obelisk online service; this wallet is not charged.';
@@ -84,7 +85,9 @@ async function pendingReports(client: ObeliskServiceClient, chain: ChainInfo, wa
 }
 
 function describe(pending: Pending) {
-  const { plan, onChain, message } = pending;
+  const { plan, onChain, last, message } = pending;
+  const outcomes = message?.outcomes ?? [];
+  const pairs = outcomes.filter((bucket) => bucket.label.startsWith(SCENE_OUTCOME_PREFIX));
   return {
     skill: plan.names.join(', '),
     state: plan.state,
@@ -95,8 +98,13 @@ function describe(pending: Pending) {
     sessions: plan.sessions,
     alreadyReported: onChain,
     willAdd: message ? message.cumulativeInvocations - onChain : 0,
+    transactions: message ? splitReportCalls(message, last).length : 0,
     scenes: (message?.scenes ?? []).map((bucket) => ({ tag: bucket.label, invocations: bucket.cumulative })),
-    outcomes: (message?.outcomes ?? []).map((bucket) => ({ id: bucket.label, invocations: bucket.cumulative })),
+    outcomes: outcomes.filter((bucket) => !pairs.includes(bucket)).map((bucket) => ({ id: bucket.label, invocations: bucket.cumulative })),
+    sceneOutcomes: pairs.map((bucket) => {
+      const [tag, outcome] = bucket.label.slice(SCENE_OUTCOME_PREFIX.length).split('|') as [string, string];
+      return { tag, outcome, invocations: bucket.cumulative };
+    }),
   };
 }
 
@@ -168,56 +176,80 @@ async function report(deps: UsageDeps, { ifDue, enabling }: { ifDue: boolean; en
   let stoppedAt: string | null = null;
   for (const item of pending) {
     const { plan, onChain } = item;
-    const sent = item.message!;
+    const key = reportedKey(chain.chainId, plan.fingerprint);
+    const calls = splitReportCalls(item.message!, item.last);
     const toChain = (buckets: ReportBucket[]) => buckets.map((bucket) => ({ key: bucket.key as Hex, cumulative: BigInt(bucket.cumulative) }));
-    const sign = async () => {
-      const message = {
-        reporter: account.address,
-        fingerprint: fingerprintToBytes32(plan.fingerprint),
-        cumulativeInvocations: BigInt(sent.cumulativeInvocations),
-        scenes: toChain(sent.scenes),
-        outcomes: toChain(sent.outcomes),
-        nonce,
-        deadline: BigInt(Math.floor(now.getTime() / 1000) + REPORT_DEADLINE_SECONDS),
-      };
-      return { message, signature: await signReportUsage(account, chain.chainId, chain.contracts.UsageStats, message) };
-    };
     const summary = { skill: plan.names.join(', '), skillId: plan.skillId, version: plan.versionIndex + 1, fingerprint: plan.fingerprint };
-    let outcome;
-    try {
+    const transactions: string[] = [];
+    let explorer: string | null = null;
+    let confirmed = true;
+    let failure: unknown = null;
+    // More buckets than one report holds go out as several reports; each is
+    // recorded as soon as it is relayed, so a rerun sends only what is left.
+    for (const call of calls) {
+      const sign = async (sent: ReportCall) => {
+        const message = {
+          reporter: account.address,
+          fingerprint: fingerprintToBytes32(plan.fingerprint),
+          cumulativeInvocations: BigInt(sent.cumulativeInvocations),
+          scenes: toChain(sent.scenes),
+          outcomes: toChain(sent.outcomes),
+          nonce,
+          deadline: BigInt(Math.floor(now.getTime() / 1000) + REPORT_DEADLINE_SECONDS),
+        };
+        return { message, signature: await signReportUsage(account, chain.chainId, chain.contracts.UsageStats, message) };
+      };
+      let outcome;
       try {
-        outcome = await client.relay({ action: 'ReportUsage', ...(await sign()) });
+        try {
+          outcome = await client.relay({ action: 'ReportUsage', ...(await sign(call)) });
+        } catch (error) {
+          if (!(error instanceof ServiceError && error.code === 'stale_nonce')) throw error;
+          nonce = await client.nonce('UsageStats', account.address);
+          outcome = await client.relay({ action: 'ReportUsage', ...(await sign(call)) });
+        }
       } catch (error) {
-        if (!(error instanceof ServiceError && error.code === 'stale_nonce')) throw error;
-        nonce = await client.nonce('UsageStats', account.address);
-        outcome = await client.relay({ action: 'ReportUsage', ...(await sign()) });
+        failure = error;
+        break;
       }
-    } catch (error) {
-      results.push({ ...summary, status: 'failed', error: error instanceof Error ? error.message : String(error) });
-      if (error instanceof ServiceError && error.status < 500) continue;
+      nonce += 1n;
+      const previous = settings.reported[key];
+      settings.reported[key] = {
+        cumulativeInvocations: call.cumulativeInvocations,
+        scenes: { ...previous?.scenes, ...Object.fromEntries(call.scenes.map((bucket) => [bucket.key, bucket.cumulative])) },
+        outcomes: { ...previous?.outcomes, ...Object.fromEntries(call.outcomes.map((bucket) => [bucket.key, bucket.cumulative])) },
+        reportedAt: now.toISOString(),
+        txHash: outcome.txHash,
+      };
+      await writeUsageSettings(paths.dataDir, settings);
+      transactions.push(outcome.txHash);
+      explorer = outcome.explorerUrl;
+      // The next report needs the next contract nonce, which an unconfirmed
+      // transaction has not used yet on chain.
+      if (outcome.status === 'pending') { confirmed = false; break; }
+    }
+    const sentAll = transactions.length === calls.length && confirmed;
+    if (failure !== null) {
+      results.push({
+        ...summary,
+        status: 'failed',
+        error: failure instanceof Error ? failure.message : String(failure),
+        ...(transactions.length > 0 ? { transactions, sent: `${transactions.length} of ${calls.length} reports` } : {}),
+      });
+      if (failure instanceof ServiceError && failure.status < 500) continue;
       stoppedAt = plan.fingerprint;
       break;
     }
-    nonce += 1n;
-    settings.reported[reportedKey(chain.chainId, plan.fingerprint)] = {
-      cumulativeInvocations: sent.cumulativeInvocations,
-      scenes: Object.fromEntries(sent.scenes.map((bucket) => [bucket.key, bucket.cumulative])),
-      outcomes: Object.fromEntries(sent.outcomes.map((bucket) => [bucket.key, bucket.cumulative])),
-      reportedAt: now.toISOString(),
-      txHash: outcome.txHash,
-    };
-    await writeUsageSettings(paths.dataDir, settings);
     results.push({
       ...summary,
-      status: outcome.status === 'confirmed' ? 'reported' : 'submitted',
-      cumulative: sent.cumulativeInvocations,
-      added: sent.cumulativeInvocations - onChain,
-      transaction: outcome.txHash,
-      explorer: outcome.explorerUrl,
+      status: sentAll ? 'reported' : 'submitted',
+      cumulative: item.message!.cumulativeInvocations,
+      added: item.message!.cumulativeInvocations - onChain,
+      transaction: transactions.at(-1),
+      ...(calls.length > 1 ? { transactions, reports: calls.length } : {}),
+      explorer,
     });
-    // The next report needs the next contract nonce, which an unconfirmed
-    // transaction has not used yet on chain.
-    if (outcome.status === 'pending') { stoppedAt = plan.fingerprint; break; }
+    if (!sentAll) { stoppedAt = plan.fingerprint; break; }
   }
   const failed = results.some((item) => (item as { status: string }).status === 'failed');
   if (!stoppedAt && !failed) settings.lastRunAt = now.toISOString();

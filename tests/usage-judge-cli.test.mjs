@@ -11,9 +11,9 @@ import assert from 'node:assert/strict';
 import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { sceneBucketKey } from '../packages/core/src/scenes.ts';
+import { sceneBucketKey, SCENES } from '../packages/core/src/scenes.ts';
 import { skillBodyFromMarkdown, skillFingerprint } from '../packages/core/src/skills.ts';
-import { outcomeBucketKey } from '../packages/core/src/usage-buckets.ts';
+import { outcomeBucketKey, sceneOutcomeBucketKey } from '../packages/core/src/usage-buckets.ts';
 import { supported } from './chain-cli-fakes.mjs';
 import { setupPeople, startFakeSkillService } from './skill-chain-fakes.mjs';
 
@@ -157,12 +157,15 @@ test('"判断 Skill 调用的结果": preview, one batched run of the local harn
       Object.fromEntries(version.outcomes.map((bucket) => [bucket.id, bucket.invocations])),
       { 'outcome/rework': 2, 'signal/tool-error': 1, 'signal/user-correction': 1, 'signal/repeated-edit': 1, 'signal/repeated-invocation': 1 },
     );
+    assert.deepEqual(version.sceneOutcomes, [{ tag: 'v1:task/debug', outcome: 'rework', invocations: 2 }], 'each scene carries its own results');
+    assert.equal(version.transactions, 1);
 
     const enabled = await bob.ok('usage', 'enable', '--confirm');
     const reported = service.usage.get(`0x${probeFp}:${enabled.wallet}`);
     assert.deepEqual(reported.scenes, { [sceneBucketKey('v1:task/debug')]: 2 });
     assert.equal(reported.outcomes[outcomeBucketKey('outcome/rework')], 2);
     assert.equal(reported.outcomes[outcomeBucketKey('signal/tool-error')], 1);
+    assert.equal(reported.outcomes[sceneOutcomeBucketKey('v1:task/debug', 'rework')], 2);
   } finally {
     service.close();
   }
@@ -194,6 +197,57 @@ test('the judge also runs through Claude Code, and a failed run keeps nothing an
     const bad = await bob.run('usage', 'judge', '--harness', 'gemini');
     assert.equal(bad.status, 1);
     assert.match(bad.json.error, /Usage: obelisk usage judge \[--harness codex\|claude\]/);
+  } finally {
+    service.close();
+  }
+});
+
+test('per-scene results for many scenes are sent whole, over several reports, and never again', { skip }, async () => {
+  const service = await startFakeSkillService();
+  try {
+    const { alice, bob } = setupPeople(service);
+    await alice.ok('wallet', 'create');
+    await alice.mint(probeDraft);
+    await bob.ok('wallet', 'create');
+    await bob.ok('skill', 'fetch', probeFp, '--confirm');
+
+    // Twelve settled invocations, each already judged with three scenes of its own.
+    const sessionId = '7d1c2e30-0000-4000-8000-00000000b002';
+    const base = { sessionId, cwd: '/tmp/probe', userType: 'external', isSidechain: false };
+    const uuid = (n) => `b0000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
+    const records = Array.from({ length: 12 }, (_, n) => ({ ...load, ...base, uuid: uuid(n + 1), timestamp: `2026-10-06T10:00:${String(n + 10)}.000Z` }));
+    const dir = join(bob.home, '.claude', 'projects', '-tmp-probe');
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(join(dir, `${sessionId}.jsonl`), `${records.map((record) => JSON.stringify(record)).join('\n')}\n`);
+    const tags = SCENES.slice(0, 36).map((scene) => `v1:${scene.id}`);
+    const invocations = Object.fromEntries(records.map((record, n) => [record.uuid, {
+      fingerprint: probeFp, sessionId,
+      signals: { rulesVersion: 1, values: [], countedAt: '2026-10-07T00:00:00.000Z' },
+      judgment: { outcome: n % 2 ? 'rework' : 'smooth', scenes: tags.slice(n * 3, n * 3 + 3), reason: '', harness: 'codex', promptVersion: 1, judgedAt: '2026-10-07T00:00:00.000Z' },
+    }]));
+    mkdirSync(join(bob.home, '.obelisk'), { recursive: true });
+    writeFileSync(join(bob.home, '.obelisk', 'usage-annotations.json'), JSON.stringify({ schema: 1, invocations }));
+
+    const preview = await bob.ok('usage', 'enable');
+    const [version] = preview.versions;
+    assert.deepEqual({ scenes: version.scenes.length, pairs: version.sceneOutcomes.length, transactions: version.transactions }, { scenes: 36, pairs: 36, transactions: 2 });
+
+    const enabled = await bob.ok('usage', 'enable', '--confirm');
+    const [result] = enabled.reports;
+    assert.deepEqual({ status: result.status, reports: result.reports, transactions: result.transactions.length }, { status: 'reported', reports: 2, transactions: 2 });
+    const reports = service.relays.filter((relay) => relay.action === 'ReportUsage');
+    assert.equal(reports.length, 2);
+    assert.ok(reports.every((relay) => relay.message.cumulativeInvocations === '12' && relay.message.outcomes.length <= 32 && relay.message.scenes.length <= 32));
+
+    const onChain = service.usage.get(`0x${probeFp}:${enabled.wallet}`);
+    assert.equal(Object.keys(onChain.scenes).length, 36, 'every scene arrived');
+    for (const [n, tag] of tags.entries()) {
+      assert.equal(onChain.outcomes[sceneOutcomeBucketKey(tag, Math.floor(n / 3) % 2 ? 'rework' : 'smooth')], 1, tag);
+    }
+    assert.equal(onChain.outcomes[outcomeBucketKey('outcome/smooth')], 6);
+
+    assert.equal((await bob.ok('usage', 'report')).status, 'nothing_new');
+    assert.equal(service.relays.filter((relay) => relay.action === 'ReportUsage').length, 2);
   } finally {
     service.close();
   }

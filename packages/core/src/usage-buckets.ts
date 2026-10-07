@@ -12,12 +12,28 @@
 //   signal/<id>   fact signals counted by rule, any number each:
 //                 tool-error, user-correction, repeated-edit, repeated-invocation
 //
+//   scene-outcome:<scene tag>|<outcome>
+//                 judged invocations of one scene with one result, so each
+//                 scene has its own 顺利率. <scene tag> is the tag in the
+//                 current vocabulary version, as sceneBucketKey hashes it
+//                 (`v1:task/debug`, or a `user:` tag as written), and
+//                 <outcome> is one of OUTCOMES:
+//                 `scene-outcome:v1:task/debug|smooth`. Only pairs that occur
+//                 are sent.
+//
 // The key of an id is keccak256 of its UTF-8 bytes, so anyone can recompute it
 // on or off chain. Like every bucket, each is a per-wallet running total no
 // larger than the wallet's invocation count. 顺利率 is smooth / (smooth +
-// rework + failed); unknown is shown next to it, never counted in it.
+// rework + failed); unknown is shown next to it, never counted in it. The same
+// holds per scene over its scene-outcome pairs.
+//
+// One report holds at most MAX_REPORT_BUCKETS per array, and a key a report
+// leaves out keeps its previous total, so a wallet with more buckets sends
+// several reports (usage-report.ts splitReportCalls) and every bucket is kept.
 
 import { keccak256, stringToBytes, type Hex } from 'viem';
+
+import { migrateSceneTag } from './scenes.ts';
 
 export const OUTCOMES = ['smooth', 'rework', 'failed', 'unknown'] as const;
 export type Outcome = (typeof OUTCOMES)[number];
@@ -42,4 +58,25 @@ export const MAX_REPORT_BUCKETS = 32;
 /** bytes32 key -> outcome bucket id, for reading distributions back. */
 export function outcomeBucketIdsByKey(): Map<Hex, OutcomeBucketId> {
   return new Map(OUTCOME_BUCKET_IDS.map((id) => [outcomeBucketKey(id), id]));
+}
+
+export const SCENE_OUTCOME_PREFIX = 'scene-outcome:';
+
+/** `scene-outcome:<tag in the current vocabulary version>|<outcome>`. */
+export function sceneOutcomeBucketId(tag: string, outcome: Outcome): string {
+  return `${SCENE_OUTCOME_PREFIX}${migrateSceneTag(tag) ?? tag}|${outcome}`;
+}
+
+export function sceneOutcomeBucketKey(tag: string, outcome: Outcome): Hex {
+  return keccak256(stringToBytes(sceneOutcomeBucketId(tag, outcome)));
+}
+
+/** bytes32 key -> { tag, outcome } for the given scene tags, for reading per-scene results back. */
+export function sceneOutcomeKeysFor(tags: Iterable<string>): Map<Hex, { tag: string; outcome: Outcome }> {
+  const out = new Map<Hex, { tag: string; outcome: Outcome }>();
+  for (const tag of tags) {
+    const normalized = migrateSceneTag(tag) ?? tag;
+    for (const outcome of OUTCOMES) out.set(sceneOutcomeBucketKey(normalized, outcome), { tag: normalized, outcome });
+  }
+  return out;
 }

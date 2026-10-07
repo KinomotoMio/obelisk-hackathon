@@ -11,8 +11,8 @@ import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
 
 import { obeliskDomain, pinnedDeployments, usageStatsTypes } from '../packages/core/src/chain-protocol.ts';
 import { sceneBucketKey } from '../packages/core/src/scenes.ts';
-import { MAX_REPORT_BUCKETS, outcomeBucketKey } from '../packages/core/src/usage-buckets.ts';
-import { planUsageReports, signReportUsage, toReportBuckets } from '../packages/core/src/usage-report.ts';
+import { MAX_REPORT_BUCKETS, outcomeBucketKey, sceneOutcomeBucketId, sceneOutcomeBucketKey, sceneOutcomeKeysFor } from '../packages/core/src/usage-buckets.ts';
+import { planUsageReports, signReportUsage, splitReportCalls, toReportBuckets } from '../packages/core/src/usage-report.ts';
 
 const fp = (char) => char.repeat(64);
 const load = (fingerprint, sessionId, n) => ({
@@ -53,7 +53,7 @@ test('only versions minted on the service chain are reported: own minted and fet
   );
 });
 
-test('annotations become per-invocation bucket counts: scenes by vocabulary key, one outcome and any signals each', () => {
+test('annotations become per-invocation bucket counts: scenes by vocabulary key, one outcome and any signals each, and each judged scene with its outcome', () => {
   const invocations = [load(fp('a'), 's1', 1), load(fp('a'), 's1', 2), load(fp('a'), 's2', 3)];
   const versions = new Map([[fp('a'), [minted('mine', fp('a'), 968, '1')]]]);
   const annotations = {
@@ -71,7 +71,15 @@ test('annotations become per-invocation bucket counts: scenes by vocabulary key,
   );
   assert.deepEqual(
     new Map(plan.outcomes.map((bucket) => [bucket.label, bucket.cumulative])),
-    new Map([['outcome/smooth', 1], ['outcome/unknown', 1], ['signal/tool-error', 1]]),
+    new Map([
+      ['outcome/smooth', 1], ['outcome/unknown', 1], ['signal/tool-error', 1],
+      ['scene-outcome:v1:artifact/resume|smooth', 1], ['scene-outcome:user:context/求职季|smooth', 1], ['scene-outcome:v1:artifact/resume|unknown', 1],
+    ]),
+  );
+  assert.equal(
+    plan.outcomes.find((bucket) => bucket.label === 'scene-outcome:v1:artifact/resume|smooth').key,
+    sceneOutcomeBucketKey('artifact/resume', 'smooth'),
+    'the pair key hashes the tag in the current vocabulary version',
   );
   assert.equal(plan.outcomes.find((bucket) => bucket.label === 'signal/tool-error').key, outcomeBucketKey('signal/tool-error'));
   for (const buckets of [plan.scenes, plan.outcomes]) {
@@ -79,14 +87,37 @@ test('annotations become per-invocation bucket counts: scenes by vocabulary key,
   }
 });
 
-test('more buckets than a report holds keeps the largest, still in key order', () => {
-  const counts = new Map(Array.from({ length: MAX_REPORT_BUCKETS + 5 }, (_, index) => [
-    sceneBucketKey(`user:context/tag-${index}`), { label: `tag-${index}`, cumulative: index + 1 },
-  ]));
-  const buckets = toReportBuckets(counts);
-  assert.equal(buckets.length, MAX_REPORT_BUCKETS);
-  assert.equal(Math.min(...buckets.map((bucket) => bucket.cumulative)), 6);
-  assert.deepEqual(buckets.map((bucket) => bucket.key), buckets.map((bucket) => bucket.key).sort());
+test('scene-outcome keys: keccak256 of "scene-outcome:<tag>|<outcome>", recoverable from the scene tags', () => {
+  assert.equal(sceneOutcomeBucketId('task/debug', 'rework'), 'scene-outcome:v1:task/debug|rework');
+  const keys = sceneOutcomeKeysFor(['v1:task/debug', 'user:context/求职季']);
+  assert.equal(keys.size, 8);
+  assert.deepEqual(keys.get(sceneOutcomeBucketKey('v1:task/debug', 'failed')), { tag: 'v1:task/debug', outcome: 'failed' });
+  assert.deepEqual(keys.get(sceneOutcomeBucketKey('user:context/求职季', 'smooth')), { tag: 'user:context/求职季', outcome: 'smooth' });
+});
+
+test('every bucket is kept: more than a report holds are spread over several reports, and only what grew is sent', () => {
+  const buckets = (count, offset = 0) => toReportBuckets(new Map(Array.from({ length: count }, (_, index) => [
+    sceneBucketKey(`user:context/tag-${index + offset}`), { label: `tag-${index + offset}`, cumulative: 1 },
+  ])));
+  const scenes = buckets(MAX_REPORT_BUCKETS + 5);
+  const outcomes = buckets(2 * MAX_REPORT_BUCKETS + 1, 100);
+  assert.equal(scenes.length, MAX_REPORT_BUCKETS + 5, 'planning keeps every bucket');
+
+  const calls = splitReportCalls({ cumulativeInvocations: 9, scenes, outcomes }, null);
+  assert.equal(calls.length, 3);
+  for (const call of calls) {
+    assert.equal(call.cumulativeInvocations, 9);
+    for (const list of [call.scenes, call.outcomes]) {
+      assert.ok(list.length <= MAX_REPORT_BUCKETS);
+      assert.deepEqual(list.map((bucket) => bucket.key), list.map((bucket) => bucket.key).sort(), 'keys ascend');
+    }
+  }
+  assert.deepEqual(calls.flatMap((call) => call.scenes), scenes);
+  assert.deepEqual(calls.flatMap((call) => call.outcomes), outcomes);
+
+  const sent = { scenes: Object.fromEntries(scenes.map((bucket) => [bucket.key, 1])), outcomes: Object.fromEntries(outcomes.slice(1).map((bucket) => [bucket.key, 1])) };
+  assert.deepEqual(splitReportCalls({ cumulativeInvocations: 9, scenes, outcomes }, sent), [{ cumulativeInvocations: 9, scenes: [], outcomes: [outcomes[0]] }], 'what was sent before is left out');
+  assert.deepEqual(splitReportCalls({ cumulativeInvocations: 10, scenes: [], outcomes: [] }, null), [{ cumulativeInvocations: 10, scenes: [], outcomes: [] }], 'a total alone is one report');
 });
 
 test('a ReportUsage signature recovers to the reporter in the UsageStats domain', async () => {

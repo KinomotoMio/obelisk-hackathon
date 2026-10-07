@@ -16,9 +16,13 @@
 // that are not in the library stay local. Nothing else leaves the machine: no
 // session content, names, paths, or timestamps, only the counts.
 //
-// Scene and outcome buckets come from per-invocation annotations (#25 fills
-// them in). Without annotations the bucket arrays are empty, which UsageStats
-// accepts; the format already carries them.
+// Scene and outcome buckets come from per-invocation annotations (#25): the
+// judged scenes, the judged outcome and the fact signals, plus one
+// scene-outcome pair per judged scene (usage-buckets.ts) so each scene has its
+// own 顺利率. Without annotations the bucket arrays are empty, which
+// UsageStats accepts. A report holds at most MAX_REPORT_BUCKETS per array;
+// splitReportCalls spreads more over several reports, each of which leaves
+// the other keys as they are.
 
 import type { Address, Hex } from 'viem';
 import type { PrivateKeyAccount } from 'viem/accounts';
@@ -26,7 +30,7 @@ import type { PrivateKeyAccount } from 'viem/accounts';
 import { obeliskDomain, usageStatsTypes } from './chain-protocol.ts';
 import { migrateSceneTag, sceneBucketKey } from './scenes.ts';
 import type { SkillInvocation, SkillVersionMatch } from './skill-invocations.ts';
-import { MAX_REPORT_BUCKETS, outcomeBucketKey, type Outcome, type OutcomeBucketId, type Signal } from './usage-buckets.ts';
+import { MAX_REPORT_BUCKETS, outcomeBucketKey, sceneOutcomeBucketId, sceneOutcomeBucketKey, type Outcome, type OutcomeBucketId, type Signal } from './usage-buckets.ts';
 
 /** What #25 knows about one invocation: observed scenes, judged outcome, fact signals. */
 export interface InvocationAnnotation {
@@ -58,17 +62,41 @@ export interface UsageReportPlan {
   outcomes: ReportBucket[];
 }
 
-/**
- * Canonical bucket array: at most MAX_REPORT_BUCKETS (the largest counts
- * kept), keys strictly ascending as UsageStats requires.
- */
+/** Canonical bucket array: non-zero buckets, keys strictly ascending as UsageStats requires. */
 export function toReportBuckets(counts: ReadonlyMap<Hex, { label: string; cumulative: number }>): ReportBucket[] {
   return [...counts.entries()]
     .map(([key, value]) => ({ key: key.toLowerCase() as Hex, label: value.label, cumulative: value.cumulative }))
     .filter((bucket) => bucket.cumulative > 0)
-    .sort((a, b) => b.cumulative - a.cumulative || (a.key < b.key ? -1 : 1))
-    .slice(0, MAX_REPORT_BUCKETS)
     .sort((a, b) => (a.key < b.key ? -1 : 1));
+}
+
+export interface ReportCall {
+  cumulativeInvocations: number;
+  scenes: ReportBucket[];
+  outcomes: ReportBucket[];
+}
+
+/**
+ * The reports that bring one wallet's totals for a version up to `report`:
+ * only buckets above what was `sent` before, at most MAX_REPORT_BUCKETS per
+ * array per report, in key order. Every report carries the same invocation
+ * total; UsageStats keeps a key a report leaves out, so after the last one
+ * every bucket is on chain. At least one report, even with no bucket.
+ */
+export function splitReportCalls(
+  report: ReportCall,
+  sent: { scenes?: Record<string, number>; outcomes?: Record<string, number> } | null,
+): ReportCall[] {
+  const grown = (buckets: ReportBucket[], previous: Record<string, number> | undefined) =>
+    buckets.filter((bucket) => bucket.cumulative > (previous?.[bucket.key] ?? 0));
+  const scenes = grown(report.scenes, sent?.scenes);
+  const outcomes = grown(report.outcomes, sent?.outcomes);
+  const count = Math.max(1, Math.ceil(scenes.length / MAX_REPORT_BUCKETS), Math.ceil(outcomes.length / MAX_REPORT_BUCKETS));
+  return Array.from({ length: count }, (_, index) => ({
+    cumulativeInvocations: report.cumulativeInvocations,
+    scenes: scenes.slice(index * MAX_REPORT_BUCKETS, (index + 1) * MAX_REPORT_BUCKETS),
+    outcomes: outcomes.slice(index * MAX_REPORT_BUCKETS, (index + 1) * MAX_REPORT_BUCKETS),
+  }));
 }
 
 function chainVersion(match: SkillVersionMatch, chainId: number): { skillId: string; versionIndex: number } | null {
@@ -127,6 +155,9 @@ export function planUsageReports(
       const ids = new Set<OutcomeBucketId>(annotation.signals?.map((signal) => `signal/${signal}` as const));
       if (annotation.outcome) ids.add(`outcome/${annotation.outcome}`);
       for (const id of ids) bump(outcomes, outcomeBucketKey(id), id);
+      if (annotation.outcome) {
+        for (const tag of sceneKeys.values()) bump(outcomes, sceneOutcomeBucketKey(tag, annotation.outcome), sceneOutcomeBucketId(tag, annotation.outcome));
+      }
     }
     plans.push({
       fingerprint,

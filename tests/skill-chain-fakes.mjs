@@ -122,6 +122,7 @@ export async function startFakeSkillService() {
         if (Number(typed.cumulativeInvocations) < previous.cumulative) return fail(422, 'contract_rejected', 'InvocationsDecreased');
         for (const kind of ['scenes', 'outcomes']) {
           const keys = message[kind].map((bucket) => bucket.key);
+          if (keys.length > 32) return fail(422, 'contract_rejected', 'TooManyBuckets');
           if (keys.some((bucketKey, index) => index > 0 && bucketKey <= keys[index - 1])) return fail(422, 'contract_rejected', 'BucketKeysNotAscending');
           for (const bucket of message[kind]) {
             if (Number(bucket.cumulative) < (previous[kind][bucket.key] ?? 0)) return fail(422, 'contract_rejected', 'BucketDecreased');
