@@ -243,6 +243,10 @@ const OTHER = '0xD4e81b6C0a3F5e2d9B7c4A1f0E3d2C5b6A7f8e90';
 function weeks(counts) {
   return counts.map((invocations, index) => ({ start: new Date(Date.UTC(2026, 7, 17 + index * 7)).toISOString().slice(0, 10), invocations }));
 }
+function sceneResults(smooth, rework, failed, unknown) {
+  const judged = smooth + rework + failed;
+  return { smooth, rework, failed, unknown, judged, smoothRate: judged ? smooth / judged : null };
+}
 function chainScene(tag) {
   const scene = describeScene(tag);
   return { tag, kind: scene.kind, label: scene.label, dimensionLabel: scene.dimensionLabel };
@@ -285,10 +289,10 @@ const chainSkills = {
     usage: {
       totalInvocations: 1284, uniqueWallets: 312, uniqueWalletsExact: true, lastReportAt: '2026-10-07T02:00:00.000Z',
       scenes: [
-        { ...chainScene('v1:domain/mobile'), invocations: 918 },
-        { ...chainScene('v1:task/release'), invocations: 201 },
-        { ...chainScene('v1:domain/frontend'), invocations: 97 },
-        { tag: null, kind: 'unknown', label: null, dimensionLabel: null, invocations: 68 },
+        { ...chainScene('v1:domain/mobile'), invocations: 918, results: sceneResults(690, 60, 18, 150) },
+        { ...chainScene('v1:task/release'), invocations: 201, results: sceneResults(120, 30, 20, 31) },
+        { ...chainScene('v1:domain/frontend'), invocations: 97, results: sceneResults(76, 10, 3, 8) },
+        { tag: null, kind: 'unknown', label: null, dimensionLabel: null, invocations: 68, results: sceneResults(2, 1, 0, 1) },
       ],
       outcomesReported: true,
       results: { smooth: 888, rework: 102, failed: 42, unknown: 252, judged: 1032, smoothRate: 888 / 1032, toolErrors: 77, userCorrections: 180 },
@@ -310,6 +314,8 @@ function registerHandlers() {
   ipcMain.handle('skills:chain-detail', (_event, skillId) => (chainSkills[skillId]
     ? { ok: true, skill: chainSkills[skillId] }
     : { ok: false, error: { code: 'unknown_skill', message: `No minted Skill ${skillId}` } }));
+  ipcMain.handle('playground:info', () => ({ dir: null }));
+  ipcMain.handle('playground:skill-sources', () => []);
   ipcMain.handle('db:getSessions', () => Object.keys(sessions).map(sessionSummary));
   ipcMain.handle('db:getSessionsByIds', (_event, ids) => ids.filter(id => sessions[id]).map(sessionSummary));
   ipcMain.handle('db:getSessionMessages', (_event, id) => (sessions[id] ? sessionMessages(id) : []));
@@ -562,6 +568,16 @@ async function run() {
   assert(JSON.stringify(market.scenes) === JSON.stringify(['移动端', '构建与发布', '前端与交互', '未命名的新标签']), `measured scenes are labelled (${market.scenes})`);
   assert(market.text.includes('适用于所有发布场景') && market.text.includes('实测 71% 的调用来自「移动端」'), "the author's description sits next to what was measured");
   assert(market.trend === 8, 'the weekly trend has one point per week');
+  const sceneRates = await js(win, `[...document.querySelectorAll('[data-panel="scenes"] .scene-row')].map(row => ({
+    rate: row.querySelector('.scene-rate').innerText.replace(/\\s+/g, ' ').trim(),
+    low: row.classList.contains('low'),
+    segments: row.querySelectorAll('.scene-bar > i').length,
+  }))`);
+  assert(sceneRates[0].rate === '90% 顺利 768 次可判断' && sceneRates[0].segments === 4, `each scene shows its own rate with its sample (${sceneRates[0].rate})`);
+  assert(sceneRates[1].low && sceneRates[1].rate.startsWith('71% 顺利 偏低'), `a clearly lower scene is marked (${sceneRates[1].rate})`);
+  assert(sceneRates[3].rate === '样本不足 3 次可判断' && !sceneRates[3].low, `a scene with few judged calls shows no rate (${sceneRates[3].rate})`);
+  const findingText = await js(win, `document.querySelector('[data-finding]')?.textContent`);
+  assert(findingText === '在「构建与发布」场景顺利率明显偏低（71%，整体 86%）。', `the description is compared with measured rates (${findingText})`);
   assert(market.text.includes('新建') && market.text.includes('应用商店审核清单'), 'a user-created birth scene is marked new');
   await screenshot(win, 'skill-detail-market.png');
 
