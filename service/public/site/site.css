@@ -55,7 +55,6 @@ body {
     radial-gradient(80% 60% at 100% 0%, rgba(236, 72, 153, 0.10), transparent 55%),
     radial-gradient(70% 60% at 0% 100%, rgba(99, 102, 241, 0.12), transparent 60%),
     linear-gradient(to bottom, var(--bg) 0%, var(--bg-2) 100%);
-  background-attachment: fixed;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
