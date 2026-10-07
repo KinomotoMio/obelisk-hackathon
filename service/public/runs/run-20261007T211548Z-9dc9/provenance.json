@@ -1,0 +1,266 @@
+{
+  "schema": "obelisk.playground.provenance/1",
+  "run": {
+    "id": "run-20261007T211548Z-9dc9",
+    "scenario": {
+      "name": "daily-use-08-maintainer-01",
+      "title": "测试网日常工作续篇 · 维护者",
+      "file": "playground/scenarios/daily-use-08-maintainer-01.json",
+      "sha256": "dfa0104e47f9f501749b57609407aa89f438548c53169d0c63061df9a5f6762f"
+    },
+    "network": {
+      "serviceUrl": "https://obelisk-service.kinomotomiovo.workers.dev",
+      "chainId": 968
+    },
+    "startedAt": "2026-10-07T21:15:48Z",
+    "endedAt": "2026-10-07T21:20:41Z",
+    "status": "succeeded",
+    "dryRun": false,
+    "obelisk": {
+      "gitCommit": "e2b71d4"
+    }
+  },
+  "roles": [
+    {
+      "id": "maintainer-01",
+      "label": "模拟角色：维护者",
+      "wallet": {
+        "address": "0xc2b2A036cDd817e118279D8A12d2c2d5C0610Df3"
+      },
+      "harness": {
+        "kind": "codex",
+        "version": "codex-cli 0.160.0",
+        "model": "gpt-6.1-sol"
+      }
+    }
+  ],
+  "steps": [
+    {
+      "id": "install-1",
+      "index": 0,
+      "title": "用户选用市场方法",
+      "role": "maintainer-01",
+      "action": "cli",
+      "scenes": [],
+      "status": "succeeded",
+      "startedAt": "2026-10-07T21:15:48Z",
+      "endedAt": "2026-10-07T21:15:52Z",
+      "harness": null,
+      "prompt": null,
+      "sessions": [],
+      "commands": [
+        {
+          "argv": [
+            "skill",
+            "fetch",
+            "5f3bbfab2a818e8cbdbc2f87f28f266fb6cc6e6682f55a54de92a820d9aa9495",
+            "--harness",
+            "codex",
+            "--confirm",
+            "--project",
+            "<playground>/roles/maintainer-01/workspace"
+          ],
+          "exitCode": 0,
+          "startedAt": "2026-10-07T21:15:48Z",
+          "endedAt": "2026-10-07T21:15:52Z",
+          "transactions": []
+        }
+      ],
+      "transactions": [],
+      "artifacts": [
+        {
+          "kind": "skill-fetch",
+          "ref": "evidence-led-bug-report"
+        }
+      ],
+      "screenshots": [],
+      "error": null
+    },
+    {
+      "id": "task-1",
+      "index": 1,
+      "title": "同学接手时可能直接说“肯定是数据库慢”。帮我把当前 502 ",
+      "role": "maintainer-01",
+      "action": "prompt",
+      "scenes": [
+        "v1:task/planning"
+      ],
+      "status": "succeeded",
+      "startedAt": "2026-10-07T21:15:52Z",
+      "endedAt": "2026-10-07T21:16:44Z",
+      "harness": {
+        "kind": "codex",
+        "version": "codex-cli 0.160.0",
+        "model": "gpt-6.1-sol",
+        "maxTurns": null
+      },
+      "prompt": "$evidence-led-bug-report 同学接手时可能直接说“肯定是数据库慢”。帮我把当前 502 的信息写成一份简短 issue，清楚区分现象、假设和缺失证据，不要默认任何根因。 请把产物保存在当前项目。",
+      "sessions": [
+        {
+          "source": "codex",
+          "id": "01a11839-042a-7b13-9a0e-8b27633ce750",
+          "obeliskId": "codex:01a11839-042a-7b13-9a0e-8b27633ce750"
+        }
+      ],
+      "commands": [],
+      "transactions": [],
+      "artifacts": [],
+      "screenshots": [],
+      "error": null
+    },
+    {
+      "id": "install-2",
+      "index": 2,
+      "title": "用户选用市场方法",
+      "role": "maintainer-01",
+      "action": "cli",
+      "scenes": [],
+      "status": "succeeded",
+      "startedAt": "2026-10-07T21:16:44Z",
+      "endedAt": "2026-10-07T21:16:48Z",
+      "harness": null,
+      "prompt": null,
+      "sessions": [],
+      "commands": [
+        {
+          "argv": [
+            "skill",
+            "fetch",
+            "11e1a23f42ad60ae9d6fc6ff534e3bca216f80585b12f1e531777013b2e9b307",
+            "--harness",
+            "codex",
+            "--confirm",
+            "--project",
+            "<playground>/roles/maintainer-01/workspace"
+          ],
+          "exitCode": 0,
+          "startedAt": "2026-10-07T21:16:44Z",
+          "endedAt": "2026-10-07T21:16:48Z",
+          "transactions": []
+        }
+      ],
+      "transactions": [],
+      "artifacts": [
+        {
+          "kind": "skill-fetch",
+          "ref": "standards-change-inventory-review"
+        }
+      ],
+      "screenshots": [],
+      "error": null
+    },
+    {
+      "id": "task-2",
+      "index": 3,
+      "title": "交接规范想改一下：以后每个结论都要附证据位置，没有证据的就标",
+      "role": "maintainer-01",
+      "action": "prompt",
+      "scenes": [
+        "v1:task/planning"
+      ],
+      "status": "succeeded",
+      "startedAt": "2026-10-07T21:16:48Z",
+      "endedAt": "2026-10-07T21:19:10Z",
+      "harness": {
+        "kind": "codex",
+        "version": "codex-cli 0.160.0",
+        "model": "gpt-6.1-sol",
+        "maxTurns": null
+      },
+      "prompt": "$standards-change-inventory-review 交接规范想改一下：以后每个结论都要附证据位置，没有证据的就标待确认。帮我按这个标准回看现有排障和交接文档，把需要调整的地方补好。 请把产物保存在当前项目。",
+      "sessions": [
+        {
+          "source": "codex",
+          "id": "01a11839-dfa5-7881-8061-861bd0a4d22e",
+          "obeliskId": "codex:01a11839-dfa5-7881-8061-861bd0a4d22e"
+        }
+      ],
+      "commands": [],
+      "transactions": [],
+      "artifacts": [],
+      "screenshots": [],
+      "error": null
+    },
+    {
+      "id": "install-3",
+      "index": 4,
+      "title": "用户选用市场方法",
+      "role": "maintainer-01",
+      "action": "cli",
+      "scenes": [],
+      "status": "succeeded",
+      "startedAt": "2026-10-07T21:19:10Z",
+      "endedAt": "2026-10-07T21:19:14Z",
+      "harness": null,
+      "prompt": null,
+      "sessions": [],
+      "commands": [
+        {
+          "argv": [
+            "skill",
+            "fetch",
+            "dae270f439ec7c53bbcaf4968c8e22c4b611178a35554166ba86eb9f93a5dcab",
+            "--harness",
+            "codex",
+            "--confirm",
+            "--project",
+            "<playground>/roles/maintainer-01/workspace"
+          ],
+          "exitCode": 0,
+          "startedAt": "2026-10-07T21:19:10Z",
+          "endedAt": "2026-10-07T21:19:14Z",
+          "transactions": []
+        }
+      ],
+      "transactions": [],
+      "artifacts": [
+        {
+          "kind": "skill-fetch",
+          "ref": "scope-change-handoff"
+        }
+      ],
+      "screenshots": [],
+      "error": null
+    },
+    {
+      "id": "task-3",
+      "index": 5,
+      "title": "我准备把排障工作交给另一个同学一周。帮我从最新文档里整理一份",
+      "role": "maintainer-01",
+      "action": "prompt",
+      "scenes": [
+        "v1:task/planning"
+      ],
+      "status": "succeeded",
+      "startedAt": "2026-10-07T21:19:14Z",
+      "endedAt": "2026-10-07T21:20:41Z",
+      "harness": {
+        "kind": "codex",
+        "version": "codex-cli 0.160.0",
+        "model": "gpt-6.1-sol",
+        "maxTurns": null
+      },
+      "prompt": "$scope-change-handoff 我准备把排障工作交给另一个同学一周。帮我从最新文档里整理一份短交接，今天能继续做什么、还缺哪些访问条件、哪些决定需要回来讨论。 请把产物保存在当前项目。",
+      "sessions": [
+        {
+          "source": "codex",
+          "id": "01a1183c-18c8-7912-859a-1574ae17873d",
+          "obeliskId": "codex:01a1183c-18c8-7912-859a-1574ae17873d"
+        }
+      ],
+      "commands": [],
+      "transactions": [],
+      "artifacts": [],
+      "screenshots": [],
+      "error": null
+    }
+  ],
+  "totals": {
+    "roles": 1,
+    "steps": 6,
+    "sessions": 3,
+    "commands": 3,
+    "transactions": 0,
+    "screenshots": 0
+  }
+}

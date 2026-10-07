@@ -1,0 +1,287 @@
+{
+  "schema": "obelisk.playground.provenance/1",
+  "run": {
+    "id": "run-20261007T211547Z-e1d3",
+    "scenario": {
+      "name": "daily-use-08-job-seeker-01",
+      "title": "测试网日常工作续篇 · 求职者",
+      "file": "playground/scenarios/daily-use-08-job-seeker-01.json",
+      "sha256": "189efe833517f262d28c75906e4b0b771560eb227856fb44df50614139e49bc7"
+    },
+    "network": {
+      "serviceUrl": "https://obelisk-service.kinomotomiovo.workers.dev",
+      "chainId": 968
+    },
+    "startedAt": "2026-10-07T21:15:47Z",
+    "endedAt": "2026-10-07T21:19:33Z",
+    "status": "succeeded",
+    "dryRun": false,
+    "obelisk": {
+      "gitCommit": "e2b71d4"
+    }
+  },
+  "roles": [
+    {
+      "id": "job-seeker-01",
+      "label": "模拟角色：求职者",
+      "wallet": {
+        "address": "0x8DE8692E82a32a07D876BaF6f8289b61F0b779C1"
+      },
+      "harness": {
+        "kind": "codex",
+        "version": "codex-cli 0.160.0",
+        "model": "gpt-6.1-sol"
+      }
+    }
+  ],
+  "steps": [
+    {
+      "id": "install-1",
+      "index": 0,
+      "title": "用户选用市场方法",
+      "role": "job-seeker-01",
+      "action": "cli",
+      "scenes": [],
+      "status": "succeeded",
+      "startedAt": "2026-10-07T21:15:47Z",
+      "endedAt": "2026-10-07T21:15:50Z",
+      "harness": null,
+      "prompt": null,
+      "sessions": [],
+      "commands": [
+        {
+          "argv": [
+            "skill",
+            "fetch",
+            "3feece437dcc9073593ce19407d043622eacc885b677ec4c7d6db6a76e4e65c9",
+            "--harness",
+            "codex",
+            "--confirm",
+            "--project",
+            "<playground>/roles/job-seeker-01/workspace"
+          ],
+          "exitCode": 0,
+          "startedAt": "2026-10-07T21:15:47Z",
+          "endedAt": "2026-10-07T21:15:50Z",
+          "transactions": []
+        }
+      ],
+      "transactions": [],
+      "artifacts": [
+        {
+          "kind": "skill-fetch",
+          "ref": "evidence-grounded-job-materials"
+        }
+      ],
+      "screenshots": [],
+      "error": null
+    },
+    {
+      "id": "task-1",
+      "index": 1,
+      "title": "如果面试官问为什么用 SQLite 而不是 MySQL，我该",
+      "role": "job-seeker-01",
+      "action": "prompt",
+      "scenes": [
+        "v1:task/planning"
+      ],
+      "status": "succeeded",
+      "startedAt": "2026-10-07T21:15:50Z",
+      "endedAt": "2026-10-07T21:17:15Z",
+      "harness": {
+        "kind": "codex",
+        "version": "codex-cli 0.160.0",
+        "model": "gpt-6.1-sol",
+        "maxTurns": null
+      },
+      "prompt": "$evidence-grounded-job-materials 如果面试官问为什么用 SQLite 而不是 MySQL，我该怎么解释？结合我现有项目经历写一个一分钟回答，哪些是当时的选择、哪些只是现在的理解要分开。 请把产物保存在当前项目。",
+      "sessions": [
+        {
+          "source": "codex",
+          "id": "01a11838-fc9f-71d3-b536-72baf781b255",
+          "obeliskId": "codex:01a11838-fc9f-71d3-b536-72baf781b255"
+        }
+      ],
+      "commands": [
+        {
+          "argv": [
+            "--query",
+            "<tmp>"
+          ],
+          "exitCode": 0,
+          "startedAt": "2026-10-07T21:16:17Z",
+          "endedAt": "2026-10-07T21:16:17Z",
+          "transactions": []
+        },
+        {
+          "argv": [
+            "--query",
+            "<tmp>"
+          ],
+          "exitCode": 0,
+          "startedAt": "2026-10-07T21:16:28Z",
+          "endedAt": "2026-10-07T21:16:28Z",
+          "transactions": []
+        }
+      ],
+      "transactions": [],
+      "artifacts": [],
+      "screenshots": [],
+      "error": null
+    },
+    {
+      "id": "install-2",
+      "index": 2,
+      "title": "用户选用市场方法",
+      "role": "job-seeker-01",
+      "action": "cli",
+      "scenes": [],
+      "status": "succeeded",
+      "startedAt": "2026-10-07T21:17:15Z",
+      "endedAt": "2026-10-07T21:17:18Z",
+      "harness": null,
+      "prompt": null,
+      "sessions": [],
+      "commands": [
+        {
+          "argv": [
+            "skill",
+            "fetch",
+            "608430d0d29afeb96f59ffc1ae04e33b6ec7315fde7f4ddd3640fdd6c48895ce",
+            "--harness",
+            "codex",
+            "--confirm",
+            "--project",
+            "<playground>/roles/job-seeker-01/workspace"
+          ],
+          "exitCode": 0,
+          "startedAt": "2026-10-07T21:17:15Z",
+          "endedAt": "2026-10-07T21:17:18Z",
+          "transactions": []
+        }
+      ],
+      "transactions": [],
+      "artifacts": [
+        {
+          "kind": "skill-fetch",
+          "ref": "small-project-evidence-loop"
+        }
+      ],
+      "screenshots": [],
+      "error": null
+    },
+    {
+      "id": "task-2",
+      "index": 3,
+      "title": "我还没有真的找同学试系统。帮我准备一封约同学周末试用的短消息",
+      "role": "job-seeker-01",
+      "action": "prompt",
+      "scenes": [
+        "v1:task/planning"
+      ],
+      "status": "succeeded",
+      "startedAt": "2026-10-07T21:17:18Z",
+      "endedAt": "2026-10-07T21:18:25Z",
+      "harness": {
+        "kind": "codex",
+        "version": "codex-cli 0.160.0",
+        "model": "gpt-6.1-sol",
+        "maxTurns": null
+      },
+      "prompt": "$small-project-evidence-loop 我还没有真的找同学试系统。帮我准备一封约同学周末试用的短消息，再把试用需要提前准备的东西列一下，不要替我发出去。 请把产物保存在当前项目。",
+      "sessions": [
+        {
+          "source": "codex",
+          "id": "01a1183a-5725-7733-9747-d5d28aa3fdc2",
+          "obeliskId": "codex:01a1183a-5725-7733-9747-d5d28aa3fdc2"
+        }
+      ],
+      "commands": [],
+      "transactions": [],
+      "artifacts": [],
+      "screenshots": [],
+      "error": null
+    },
+    {
+      "id": "install-3",
+      "index": 4,
+      "title": "用户选用市场方法",
+      "role": "job-seeker-01",
+      "action": "cli",
+      "scenes": [],
+      "status": "succeeded",
+      "startedAt": "2026-10-07T21:18:25Z",
+      "endedAt": "2026-10-07T21:18:29Z",
+      "harness": null,
+      "prompt": null,
+      "sessions": [],
+      "commands": [
+        {
+          "argv": [
+            "skill",
+            "fetch",
+            "5c448b5cc0ed4b80c157a2224698d6d3e2c01c7134373c6dc6749d5fe274876a",
+            "--harness",
+            "codex",
+            "--confirm",
+            "--project",
+            "<playground>/roles/job-seeker-01/workspace"
+          ],
+          "exitCode": 0,
+          "startedAt": "2026-10-07T21:18:25Z",
+          "endedAt": "2026-10-07T21:18:29Z",
+          "transactions": []
+        }
+      ],
+      "transactions": [],
+      "artifacts": [
+        {
+          "kind": "skill-fetch",
+          "ref": "evidence-grounded-value-writing"
+        }
+      ],
+      "screenshots": [],
+      "error": null
+    },
+    {
+      "id": "task-3",
+      "index": 5,
+      "title": "帮我把这些项目材料收成一页投递前检查清单，哪些表述有事实支持",
+      "role": "job-seeker-01",
+      "action": "prompt",
+      "scenes": [
+        "v1:task/planning"
+      ],
+      "status": "succeeded",
+      "startedAt": "2026-10-07T21:18:29Z",
+      "endedAt": "2026-10-07T21:19:33Z",
+      "harness": {
+        "kind": "codex",
+        "version": "codex-cli 0.160.0",
+        "model": "gpt-6.1-sol",
+        "maxTurns": null
+      },
+      "prompt": "$evidence-grounded-value-writing 帮我把这些项目材料收成一页投递前检查清单，哪些表述有事实支持、哪些容易说大了，给我几个具体替换写法。 请把产物保存在当前项目。",
+      "sessions": [
+        {
+          "source": "codex",
+          "id": "01a1183b-6ba3-7f71-9211-923b40480fbe",
+          "obeliskId": "codex:01a1183b-6ba3-7f71-9211-923b40480fbe"
+        }
+      ],
+      "commands": [],
+      "transactions": [],
+      "artifacts": [],
+      "screenshots": [],
+      "error": null
+    }
+  ],
+  "totals": {
+    "roles": 1,
+    "steps": 6,
+    "sessions": 3,
+    "commands": 5,
+    "transactions": 0,
+    "screenshots": 0
+  }
+}

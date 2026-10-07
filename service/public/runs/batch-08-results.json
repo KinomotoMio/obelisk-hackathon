@@ -1,0 +1,382 @@
+{
+  "recordedAt": "2026-10-07T21:24:56.521398+00:00",
+  "chainId": 968,
+  "label": "模拟角色主动选用市场方法，真实 AI 任务和判定",
+  "newInvocations": 14,
+  "simulatedWallets": 5,
+  "newSimulatedWallets": 1,
+  "outcomes": {
+    "smooth": 14
+  },
+  "runs": [
+    {
+      "role": "writer-01",
+      "runId": "run-20261007T211555Z-5fb0",
+      "wallet": "0xd1c87022FefB0C605Bc9A6798DcB76D15a7C1340",
+      "judgments": [
+        {
+          "skill": "ai-building-collaboration",
+          "outcome": "smooth",
+          "scenes": [
+            "v1:task/planning",
+            "v1:artifact/docs"
+          ],
+          "reason": "已保存符合六小时预算的分工与交付计划，未出现用户要求返工。"
+        },
+        {
+          "skill": "evidence-grounded-value-writing",
+          "outcome": "smooth",
+          "scenes": [
+            "v1:task/writing",
+            "v1:artifact/docs"
+          ],
+          "reason": "已保存面向同学的介绍和三个问题，并说明未完成事项与证据边界，未出现返工。"
+        }
+      ],
+      "reports": [
+        {
+          "skill": "evidence-grounded-value-writing",
+          "skillId": "12",
+          "version": 1,
+          "fingerprint": "5c448b5cc0ed4b80c157a2224698d6d3e2c01c7134373c6dc6749d5fe274876a",
+          "status": "reported",
+          "cumulative": 1,
+          "added": 1,
+          "transaction": "0xcd421550a36232f85d7caf01dda2ec3d2dc7f6fc8ae00f82622306eb4fdfea4d",
+          "explorer": "https://scan.bohr.life/tx/0xcd421550a36232f85d7caf01dda2ec3d2dc7f6fc8ae00f82622306eb4fdfea4d"
+        },
+        {
+          "skill": "ai-building-collaboration",
+          "skillId": "10",
+          "version": 1,
+          "fingerprint": "8198ffb1d25bc5900824dc730bdbb4985b2284b9d470165bee4f5704402ebfd4",
+          "status": "reported",
+          "cumulative": 1,
+          "added": 1,
+          "transaction": "0x75fb1ecb3c83809fc97e81f3f1eba1e5ad6e7cabb947bdd0545d9de198a53de5",
+          "explorer": "https://scan.bohr.life/tx/0x75fb1ecb3c83809fc97e81f3f1eba1e5ad6e7cabb947bdd0545d9de198a53de5"
+        }
+      ]
+    },
+    {
+      "role": "job-seeker-01",
+      "runId": "run-20261007T211547Z-e1d3",
+      "wallet": "0x8DE8692E82a32a07D876BaF6f8289b61F0b779C1",
+      "judgments": [
+        {
+          "skill": "evidence-grounded-job-materials",
+          "outcome": "smooth",
+          "scenes": [
+            "v1:task/writing",
+            "v1:context/job-search",
+            "v1:artifact/docs"
+          ],
+          "reason": "已保存一分钟回答，明确区分当时事实与现在理解，未见返工。"
+        },
+        {
+          "skill": "small-project-evidence-loop",
+          "outcome": "smooth",
+          "scenes": [
+            "v1:task/planning",
+            "v1:task/writing",
+            "v1:artifact/docs"
+          ],
+          "reason": "已保存邀请消息和试用准备清单，标注待执行且未发送，未见返工。"
+        },
+        {
+          "skill": "evidence-grounded-value-writing",
+          "outcome": "smooth",
+          "scenes": [
+            "v1:task/writing",
+            "v1:context/job-search",
+            "v1:artifact/script"
+          ],
+          "reason": "已保存一页检查清单和具体替换写法，Git 检查报错未影响产物完成。"
+        }
+      ],
+      "reports": [
+        {
+          "skill": "evidence-grounded-job-materials",
+          "skillId": "15",
+          "version": 1,
+          "fingerprint": "3feece437dcc9073593ce19407d043622eacc885b677ec4c7d6db6a76e4e65c9",
+          "status": "reported",
+          "cumulative": 2,
+          "added": 1,
+          "transaction": "0x9c4b4c6994f15aae9bf0118e99a51d1e6b33fd3cac4064b625efc5cded97c386",
+          "explorer": "https://scan.bohr.life/tx/0x9c4b4c6994f15aae9bf0118e99a51d1e6b33fd3cac4064b625efc5cded97c386"
+        },
+        {
+          "skill": "small-project-evidence-loop",
+          "skillId": "16",
+          "version": 1,
+          "fingerprint": "608430d0d29afeb96f59ffc1ae04e33b6ec7315fde7f4ddd3640fdd6c48895ce",
+          "status": "reported",
+          "cumulative": 2,
+          "added": 1,
+          "transaction": "0x34a87bea6302afd87f288a76110424be7e9fb62f14452dec24aee711b0f8b8ef",
+          "explorer": "https://scan.bohr.life/tx/0x34a87bea6302afd87f288a76110424be7e9fb62f14452dec24aee711b0f8b8ef"
+        },
+        {
+          "skill": "evidence-grounded-value-writing",
+          "skillId": "12",
+          "version": 1,
+          "fingerprint": "5c448b5cc0ed4b80c157a2224698d6d3e2c01c7134373c6dc6749d5fe274876a",
+          "status": "reported",
+          "cumulative": 1,
+          "added": 1,
+          "transaction": "0xbff8cda1bfb53d734063f6e53d9cad4af5e79050d45f00660e25300cf7af9834",
+          "explorer": "https://scan.bohr.life/tx/0xbff8cda1bfb53d734063f6e53d9cad4af5e79050d45f00660e25300cf7af9834"
+        }
+      ]
+    },
+    {
+      "role": "maintainer-01",
+      "runId": "run-20261007T211548Z-9dc9",
+      "wallet": "0xc2b2A036cDd817e118279D8A12d2c2d5C0610Df3",
+      "judgments": [
+        {
+          "skill": "evidence-led-bug-report",
+          "outcome": "smooth",
+          "scenes": [
+            "v1:task/writing",
+            "v1:task/debug",
+            "v1:artifact/docs"
+          ],
+          "reason": "已保存并回读核对简短 issue，明确区分现象、假设和缺失证据，未见用户要求返工。"
+        },
+        {
+          "skill": "standards-change-inventory-review",
+          "outcome": "smooth",
+          "scenes": [
+            "v1:task/writing",
+            "v1:task/code-review",
+            "v1:artifact/docs"
+          ],
+          "reason": "已按新证据标准更新四份文档并保存复查清单，链接和表格检查通过。"
+        },
+        {
+          "skill": "scope-change-handoff",
+          "outcome": "smooth",
+          "scenes": [
+            "v1:task/writing",
+            "v1:task/planning",
+            "v1:artifact/docs"
+          ],
+          "reason": "已保存一周交接并更新旧入口，涵盖可推进任务、访问条件和待讨论决定，链接检查通过。"
+        }
+      ],
+      "reports": [
+        {
+          "skill": "standards-change-inventory-review",
+          "skillId": "13",
+          "version": 1,
+          "fingerprint": "11e1a23f42ad60ae9d6fc6ff534e3bca216f80585b12f1e531777013b2e9b307",
+          "status": "reported",
+          "cumulative": 1,
+          "added": 1,
+          "transaction": "0xb40e9a12ffa27637c18a72fcc80dbb8c80d89b991d9bc9e508e089d0c474d3a9",
+          "explorer": "https://scan.bohr.life/tx/0xb40e9a12ffa27637c18a72fcc80dbb8c80d89b991d9bc9e508e089d0c474d3a9"
+        },
+        {
+          "skill": "evidence-led-bug-report",
+          "skillId": "11",
+          "version": 1,
+          "fingerprint": "5f3bbfab2a818e8cbdbc2f87f28f266fb6cc6e6682f55a54de92a820d9aa9495",
+          "status": "reported",
+          "cumulative": 1,
+          "added": 1,
+          "transaction": "0xfbaff0fdf234da5b99c72987db0d9117e34dbe229e766bda0809ddfcfabdcd87",
+          "explorer": "https://scan.bohr.life/tx/0xfbaff0fdf234da5b99c72987db0d9117e34dbe229e766bda0809ddfcfabdcd87"
+        },
+        {
+          "skill": "ai-building-collaboration",
+          "skillId": "10",
+          "version": 1,
+          "fingerprint": "8198ffb1d25bc5900824dc730bdbb4985b2284b9d470165bee4f5704402ebfd4",
+          "status": "reported",
+          "cumulative": 1,
+          "added": 0,
+          "transaction": "0x896d1a49a77ddecfad11d3f62290631a2c143993f82f2ca320060e6cd799f59f",
+          "explorer": "https://scan.bohr.life/tx/0x896d1a49a77ddecfad11d3f62290631a2c143993f82f2ca320060e6cd799f59f"
+        },
+        {
+          "skill": "scope-change-handoff",
+          "skillId": "18",
+          "version": 1,
+          "fingerprint": "dae270f439ec7c53bbcaf4968c8e22c4b611178a35554166ba86eb9f93a5dcab",
+          "status": "reported",
+          "cumulative": 1,
+          "added": 1,
+          "transaction": "0x3fba35ef06baec48ac36510bfe83637e8f6fc211877c6fa3ebaa57d0db97adff",
+          "explorer": "https://scan.bohr.life/tx/0x3fba35ef06baec48ac36510bfe83637e8f6fc211877c6fa3ebaa57d0db97adff"
+        }
+      ]
+    },
+    {
+      "role": "builder-01",
+      "runId": "run-20261007T211544Z-b0ff",
+      "wallet": "0x055bFeae1781F53B189493F4F3605A247e676383",
+      "judgments": [
+        {
+          "skill": "ai-building-collaboration",
+          "outcome": "smooth",
+          "scenes": [
+            "v1:domain/frontend",
+            "v1:task/build-feature",
+            "v1:artifact/web-page"
+          ],
+          "reason": "原型和打开说明已完成并通过静态及模拟检查，过程中没有用户要求返工。"
+        },
+        {
+          "skill": "evidence-led-bug-report",
+          "outcome": "smooth",
+          "scenes": [
+            "v1:task/testing",
+            "v1:task/debug",
+            "v1:artifact/report"
+          ],
+          "reason": "完成边界检查并保存报告，明确区分已验证结果和真实浏览器验证缺口。"
+        },
+        {
+          "skill": "evidence-grounded-value-writing",
+          "outcome": "smooth",
+          "scenes": [
+            "v1:task/writing",
+            "v1:artifact/docs"
+          ],
+          "reason": "已保存可转发的简短介绍，涵盖当前功能、限制和反馈需求，未加入未来功能。"
+        }
+      ],
+      "reports": [
+        {
+          "skill": "ai-building-collaboration",
+          "skillId": "10",
+          "version": 1,
+          "fingerprint": "8198ffb1d25bc5900824dc730bdbb4985b2284b9d470165bee4f5704402ebfd4",
+          "status": "reported",
+          "cumulative": 2,
+          "added": 1,
+          "transaction": "0xb2935607fd7261c951f7f42d13e7e1a9de753fa2e3dc02d1a98ab64f9dcbfcb0",
+          "explorer": "https://scan.bohr.life/tx/0xb2935607fd7261c951f7f42d13e7e1a9de753fa2e3dc02d1a98ab64f9dcbfcb0"
+        },
+        {
+          "skill": "evidence-grounded-value-writing",
+          "skillId": "12",
+          "version": 1,
+          "fingerprint": "5c448b5cc0ed4b80c157a2224698d6d3e2c01c7134373c6dc6749d5fe274876a",
+          "status": "reported",
+          "cumulative": 1,
+          "added": 1,
+          "transaction": "0x9375ded547de628494008c1fa004d7ad401a5e2f58f3e6b233787e85cc68e91b",
+          "explorer": "https://scan.bohr.life/tx/0x9375ded547de628494008c1fa004d7ad401a5e2f58f3e6b233787e85cc68e91b"
+        },
+        {
+          "skill": "evidence-led-bug-report",
+          "skillId": "11",
+          "version": 1,
+          "fingerprint": "5f3bbfab2a818e8cbdbc2f87f28f266fb6cc6e6682f55a54de92a820d9aa9495",
+          "status": "reported",
+          "cumulative": 1,
+          "added": 1,
+          "transaction": "0xc9fb0b9b9c6da8f8cbafb5f0418d6f919f88fd437de3f11be84467e137e7de43",
+          "explorer": "https://scan.bohr.life/tx/0xc9fb0b9b9c6da8f8cbafb5f0418d6f919f88fd437de3f11be84467e137e7de43"
+        },
+        {
+          "skill": "small-project-evidence-loop",
+          "skillId": "16",
+          "version": 1,
+          "fingerprint": "608430d0d29afeb96f59ffc1ae04e33b6ec7315fde7f4ddd3640fdd6c48895ce",
+          "status": "reported",
+          "cumulative": 1,
+          "added": 0,
+          "transaction": "0x23dd35c064d81ffbe3a2c246727aba3a9add405cbe09cc6304d1ff5aa1235fa1",
+          "explorer": "https://scan.bohr.life/tx/0x23dd35c064d81ffbe3a2c246727aba3a9add405cbe09cc6304d1ff5aa1235fa1"
+        }
+      ]
+    },
+    {
+      "role": "designer-01",
+      "runId": "run-20261007T211545Z-a6a8",
+      "wallet": "0x6640773539e914Da9f1D04056DBCD3c301fE2f2F",
+      "judgments": [
+        {
+          "skill": "small-project-evidence-loop",
+          "outcome": "smooth",
+          "scenes": [
+            "v1:domain/frontend",
+            "v1:artifact/design-mockup",
+            "v1:context/creative-visual"
+          ],
+          "reason": "HTML 草图已保存并通过静态检查，包含三件示例物品和详情返回流程，未见用户要求返工。"
+        },
+        {
+          "skill": "standards-change-inventory-review",
+          "outcome": "smooth",
+          "scenes": [
+            "v1:task/refactor",
+            "v1:artifact/docs",
+            "v1:artifact/design-mockup"
+          ],
+          "reason": "说明、任务卡、观察表和原型已按线下联系口径对齐，差异清单已保存，未见用户指出问题要求重做。"
+        },
+        {
+          "skill": "evidence-grounded-value-writing",
+          "outcome": "smooth",
+          "scenes": [
+            "v1:task/writing",
+            "v1:artifact/portfolio",
+            "v1:artifact/docs"
+          ],
+          "reason": "一页项目说明已保存且链接检查通过，清楚区分已有产物、设计假设和待验证事项。"
+        }
+      ],
+      "reports": [
+        {
+          "skill": "small-project-evidence-loop",
+          "skillId": "16",
+          "version": 1,
+          "fingerprint": "608430d0d29afeb96f59ffc1ae04e33b6ec7315fde7f4ddd3640fdd6c48895ce",
+          "status": "reported",
+          "cumulative": 2,
+          "added": 1,
+          "transaction": "0x2c02a8a82142479a00cecab0a605b7422d9235dd29b7888226d704abeda749ad",
+          "explorer": "https://scan.bohr.life/tx/0x2c02a8a82142479a00cecab0a605b7422d9235dd29b7888226d704abeda749ad"
+        },
+        {
+          "skill": "standards-change-inventory-review",
+          "skillId": "13",
+          "version": 1,
+          "fingerprint": "11e1a23f42ad60ae9d6fc6ff534e3bca216f80585b12f1e531777013b2e9b307",
+          "status": "reported",
+          "cumulative": 1,
+          "added": 1,
+          "transaction": "0x4fdb44c5675befb481fa7a1f159b771e041805df5862475ee994c4b6e9c14b8f",
+          "explorer": "https://scan.bohr.life/tx/0x4fdb44c5675befb481fa7a1f159b771e041805df5862475ee994c4b6e9c14b8f"
+        },
+        {
+          "skill": "evidence-grounded-value-writing",
+          "skillId": "12",
+          "version": 1,
+          "fingerprint": "5c448b5cc0ed4b80c157a2224698d6d3e2c01c7134373c6dc6749d5fe274876a",
+          "status": "reported",
+          "cumulative": 1,
+          "added": 1,
+          "transaction": "0x44a4486a05a85d5dbac10c85c436ac252eb0c6f2fda61516a3112cde38cb5839",
+          "explorer": "https://scan.bohr.life/tx/0x44a4486a05a85d5dbac10c85c436ac252eb0c6f2fda61516a3112cde38cb5839"
+        },
+        {
+          "skill": "ai-building-collaboration",
+          "skillId": "10",
+          "version": 1,
+          "fingerprint": "8198ffb1d25bc5900824dc730bdbb4985b2284b9d470165bee4f5704402ebfd4",
+          "status": "reported",
+          "cumulative": 1,
+          "added": 0,
+          "transaction": "0xe5b454d41d2b886d74bfa7be4ce995a23805e1e38bf1cb3b030fe006ce3e0c51",
+          "explorer": "https://scan.bohr.life/tx/0xe5b454d41d2b886d74bfa7be4ce995a23805e1e38bf1cb3b030fe006ce3e0c51"
+        }
+      ]
+    }
+  ]
+}

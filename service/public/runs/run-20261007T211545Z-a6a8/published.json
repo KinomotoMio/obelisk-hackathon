@@ -1,0 +1,19 @@
+{
+  "schema": "obelisk.playground.published/1",
+  "runId": "run-20261007T211545Z-a6a8",
+  "publishedAt": "2026-10-07T21:24:02Z",
+  "fixture": false,
+  "redactions": 6,
+  "files": [
+    {
+      "path": "provenance.json",
+      "bytes": 7680,
+      "sha256": "1d58e04cb3633bd3064805ee8851a16ec9d76e5587a9029c94c596c9efd3fd7e"
+    },
+    {
+      "path": "events.jsonl",
+      "bytes": 6990,
+      "sha256": "33f24d5e1c948280bca8517fa93c50efa210e663959a9bca7564829f2db3210b"
+    }
+  ]
+}

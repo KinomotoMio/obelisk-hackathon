@@ -44,3 +44,7 @@
 运行列表 [测试网入口](https://obelisk-service.kinomotomiovo.workers.dev/runs) / [主网入口](https://obelisk-service-mainnet.kinomotomiovo.workers.dev/runs) 保留每批链 ID，不能因为从主网域名打开就把历史测试网运行说成主网交易。
 
 完整的调用判定与上报交易见 [本轮结果](../testing/playground-usage-results.json)，公开副本为 `/runs/usage-results.json`。
+
+## 第八批：从方法到实际原型
+
+[测试网产物目录](https://obelisk-service.kinomotomiovo.workers.dev/runs/batch-08.html)：5 个模拟角色的 14 次真实 AI 任务，新增/更新 30 份文件，包括读书笔记和失物招领 HTML 原型。对应 [判断与交易](../testing/playground-batch-08-results.json)。原型、检查报告和未执行的线下试用边界分别保留。

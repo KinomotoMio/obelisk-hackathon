@@ -2,6 +2,101 @@
   "schema": "obelisk.playground.runs/1",
   "runs": [
     {
+      "id": "run-20261007T211555Z-5fb0",
+      "title": "测试网日常工作续篇 · 社团组织者",
+      "startedAt": "2026-10-07T21:15:55Z",
+      "endedAt": "2026-10-07T21:18:37Z",
+      "status": "succeeded",
+      "chainId": 968,
+      "dryRun": false,
+      "fixture": false,
+      "totals": {
+        "roles": 1,
+        "steps": 4,
+        "sessions": 2,
+        "commands": 2,
+        "transactions": 0,
+        "screenshots": 0
+      },
+      "publishedAt": "2026-10-07T21:24:03Z"
+    },
+    {
+      "id": "run-20261007T211548Z-9dc9",
+      "title": "测试网日常工作续篇 · 维护者",
+      "startedAt": "2026-10-07T21:15:48Z",
+      "endedAt": "2026-10-07T21:20:41Z",
+      "status": "succeeded",
+      "chainId": 968,
+      "dryRun": false,
+      "fixture": false,
+      "totals": {
+        "roles": 1,
+        "steps": 6,
+        "sessions": 3,
+        "commands": 3,
+        "transactions": 0,
+        "screenshots": 0
+      },
+      "publishedAt": "2026-10-07T21:24:03Z"
+    },
+    {
+      "id": "run-20261007T211547Z-e1d3",
+      "title": "测试网日常工作续篇 · 求职者",
+      "startedAt": "2026-10-07T21:15:47Z",
+      "endedAt": "2026-10-07T21:19:33Z",
+      "status": "succeeded",
+      "chainId": 968,
+      "dryRun": false,
+      "fixture": false,
+      "totals": {
+        "roles": 1,
+        "steps": 6,
+        "sessions": 3,
+        "commands": 5,
+        "transactions": 0,
+        "screenshots": 0
+      },
+      "publishedAt": "2026-10-07T21:24:03Z"
+    },
+    {
+      "id": "run-20261007T211545Z-a6a8",
+      "title": "测试网日常工作续篇 · 设计师",
+      "startedAt": "2026-10-07T21:15:45Z",
+      "endedAt": "2026-10-07T21:23:56Z",
+      "status": "succeeded",
+      "chainId": 968,
+      "dryRun": false,
+      "fixture": false,
+      "totals": {
+        "roles": 1,
+        "steps": 6,
+        "sessions": 3,
+        "commands": 3,
+        "transactions": 0,
+        "screenshots": 0
+      },
+      "publishedAt": "2026-10-07T21:24:02Z"
+    },
+    {
+      "id": "run-20261007T211544Z-b0ff",
+      "title": "测试网日常工作续篇 · 项目构建者",
+      "startedAt": "2026-10-07T21:15:44Z",
+      "endedAt": "2026-10-07T21:23:24Z",
+      "status": "succeeded",
+      "chainId": 968,
+      "dryRun": false,
+      "fixture": false,
+      "totals": {
+        "roles": 1,
+        "steps": 6,
+        "sessions": 3,
+        "commands": 3,
+        "transactions": 0,
+        "screenshots": 0
+      },
+      "publishedAt": "2026-10-07T21:24:02Z"
+    },
+    {
       "id": "run-20261007T204252Z-d2c1",
       "title": "已购买的协作方法用于作品集审阅",
       "startedAt": "2026-10-07T20:42:52Z",

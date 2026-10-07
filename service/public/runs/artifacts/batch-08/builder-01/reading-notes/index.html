@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>页间 · 读书笔记</title>
+<style>
+:root{--primary:#28564a;--hover:#1c4037;--background:#eef2f0;--surface:#ffffff;--text:#243831;--muted:#53685f;--border:#c2cec8;--danger:#a12626;--radius:12px;--font-body:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;--font-display:"Songti SC","STSong",serif;--gap:32px;--page-max:1060px;scrollbar-color:var(--muted) var(--background);scrollbar-width:auto}
+*{box-sizing:border-box}body{margin:0;background:var(--background);color:var(--text);font:16px/1.7 var(--font-body)}::-webkit-scrollbar{width:12px;height:12px}::-webkit-scrollbar-track{background:var(--background)}::-webkit-scrollbar-thumb{background:var(--muted);border:3px solid var(--background);border-radius:8px}::-webkit-scrollbar-thumb:hover{background:var(--primary)}::-webkit-scrollbar-thumb:active{background:var(--hover)}
+main{max-width:var(--page-max);margin:0 auto;padding:48px 24px 64px}header{display:flex;align-items:center;justify-content:space-between;gap:20px;border-bottom:1px solid var(--border);padding-bottom:24px;margin-bottom:40px}.brand{display:flex;gap:16px;align-items:center}.mark{width:42px;height:52px;background:var(--primary);color:var(--surface);display:grid;place-items:center;border-radius:2px 2px 16px 2px;font:24px var(--font-display)}h1{font:600 32px/1.3 var(--font-display);margin:0}header p{margin:5px 0 0;color:var(--muted);font-size:14px}.local{font-size:13px;color:var(--primary)}.intro{margin-bottom:30px}.intro h2{font:500 28px/1.5 var(--font-display);margin:0 0 6px}.intro p{margin:0;color:var(--muted)}.workspace{display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);gap:var(--gap);align-items:start}.compose{background:var(--surface);padding:26px;border:1px solid var(--border);border-radius:var(--radius)}h2{font-size:19px;line-height:1.5;margin:0 0 22px}label{display:block;font-weight:600;margin-bottom:8px}input,textarea{font:16px/1.6 var(--font-body);color:var(--text);background:var(--surface);border:1px solid var(--border);border-radius:6px;width:100%;padding:11px 12px}input:hover,textarea:hover{border-color:var(--muted)}textarea{min-height:210px;resize:none;overflow-y:auto}input::placeholder,textarea::placeholder{color:var(--muted)}:focus-visible{outline:3px solid var(--primary);outline-offset:3px}[aria-invalid=true]{border-color:var(--danger)}.field{margin-bottom:14px}.error{display:block;min-height:24px;color:var(--danger);font-size:13px}button{font:600 15px/1.5 var(--font-body);cursor:pointer;border-radius:6px;padding:12px 18px;border:1px solid var(--primary);background:var(--primary);color:var(--surface);min-height:46px}button:hover{background:var(--hover)}button:active{transform:translateY(1px)}button:disabled{opacity:.55;cursor:not-allowed;transform:none}.save{width:100%}.hint{font-size:13px;color:var(--muted);margin:13px 0 0}.list-heading{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}.list-heading h2{margin:0}.count{font-size:13px;color:var(--muted)}.empty{border:1px dashed var(--border);border-radius:var(--radius);padding:52px 25px;text-align:center;color:var(--muted)}.empty strong{display:block;color:var(--text);font:500 23px var(--font-display);margin-bottom:12px}.empty p{margin:0;font-size:14px}.notes{list-style:none;margin:0;padding:0;display:grid;gap:18px}.note{position:relative;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px 26px 24px 30px;overflow-wrap:anywhere}.note:before{content:"";position:absolute;left:0;top:24px;width:4px;height:32px;background:var(--primary)}.note h3{margin:0 0 13px;font:600 21px/1.5 var(--font-display)}blockquote{margin:0;white-space:pre-wrap;line-height:1.9}time{display:block;margin-top:18px;color:var(--muted);font-size:12px}.feedback{min-height:54px;padding-top:10px;font-size:14px;color:var(--primary)}.feedback.failure{color:var(--danger)}.more{margin-top:20px;background:transparent;color:var(--primary)}.more:hover{background:var(--surface)}[hidden]{display:none!important}footer{margin-top:44px;color:var(--muted);font-size:12px;border-top:1px solid var(--border);padding-top:18px}
+@media(max-width:720px){main{padding:26px 18px 40px}header{margin-bottom:28px;align-items:flex-start}.local{max-width:85px}.workspace{grid-template-columns:1fr;gap:28px}.compose{padding:22px}.intro h2{font-size:25px}h1{font-size:28px}.note{padding-right:22px}}@media(forced-colors:active){:root{scrollbar-color:auto}.mark,button{border:1px solid ButtonText}.note:before{background:CanvasText}}@media(prefers-reduced-motion:reduce){button:active{transform:none}}
+</style>
+</head>
+<body>
+<main>
+<header><div class="brand"><span class="mark" aria-hidden="true">页</span><div><h1>页间</h1><p>我的读书笔记</p></div></div><span class="local">保存在此浏览器</span></header>
+<div class="intro"><h2>留下一段，日后再读。</h2><p>写下书名和摘录，让读过的文字有处可寻。</p></div>
+<div class="workspace">
+<section class="compose" aria-labelledby="compose-title"><h2 id="compose-title">记一条笔记</h2>
+<form id="note-form" novalidate>
+<div class="field"><label for="book">书名</label><input id="book" name="book" placeholder="例如：小王子" required maxlength="200" aria-describedby="book-error"><span id="book-error" class="error"></span></div>
+<div class="field"><label for="excerpt">摘录</label><textarea style="resize: none" id="excerpt" name="excerpt" placeholder="记下想留住的那段文字……" required maxlength="20000" aria-describedby="excerpt-error"></textarea><span id="excerpt-error" class="error"></span></div>
+<button class="save" type="submit" id="save">保存笔记</button><p class="hint">保存后会出现在右侧列表，刷新仍可查看。</p>
+</form><div id="feedback" class="feedback" role="status" aria-live="polite"></div>
+</section>
+<section aria-labelledby="list-title"><div class="list-heading"><h2 id="list-title">已记下的文字</h2><span id="count" class="count">0 条笔记</span></div><div id="empty" class="empty"><strong>从第一段文字开始</strong><p>填好书名和摘录，点击「保存笔记」。</p></div><ul id="notes" class="notes"></ul><button id="more" class="more" type="button" onclick="showMore()" hidden>显示更多笔记</button></section>
+</div><footer>笔记只保存在当前设备的当前浏览器中。清除浏览器数据会移除笔记。</footer>
+</main>
+<script>
+'use strict';
+const STORAGE_KEY='reading-notes-v1';
+const form=document.getElementById('note-form');
+const book=document.getElementById('book');
+const excerpt=document.getElementById('excerpt');
+const feedback=document.getElementById('feedback');
+const save=document.getElementById('save');
+const more=document.getElementById('more');
+let notes=[],visible=20,unavailable=false;
+function readNotes(){
+ const raw=localStorage.getItem(STORAGE_KEY);
+ if(raw===null)return [];
+ const data=JSON.parse(raw);
+ if(!Array.isArray(data)||data.some(n=>!n||typeof n.book!=='string'||typeof n.excerpt!=='string'||typeof n.id!=='string'||!Number.isFinite(n.createdAt)))throw new Error('invalid storage');
+ return data;
+}
+function message(text,error=false){feedback.textContent=text;feedback.classList.toggle('failure',error);}
+function render(){
+ const list=document.getElementById('notes');list.replaceChildren();
+ document.getElementById('count').textContent=`${notes.length} 条笔记`;
+ document.getElementById('empty').hidden=notes.length>0||unavailable;
+ for(const n of notes.slice(0,visible)){
+  const item=document.createElement('li');item.className='note';
+  const title=document.createElement('h3');title.textContent=n.book;
+  const quote=document.createElement('blockquote');quote.textContent=n.excerpt;
+  const time=document.createElement('time');const date=new Date(n.createdAt);
+  if(!Number.isNaN(date.getTime())){time.dateTime=date.toISOString();time.textContent=new Intl.DateTimeFormat('zh-CN',{year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'}).format(date);}
+  item.append(title,quote,time);list.append(item);
+ }
+ more.hidden=notes.length<=visible;
+}
+function load(){
+ try{notes=readNotes();unavailable=false;save.disabled=false;render();}
+ catch{unavailable=true;save.disabled=true;render();message('无法读取本机笔记，已暂停保存以保护原数据。请检查浏览器是否允许本地存储；若原数据损坏，请保留它再排查。',true);}
+}
+form.addEventListener('submit',event=>{
+ event.preventDefault();if(event.isComposing||unavailable)return;
+ let first=null;
+ for(const [field,hint] of [[book,'请填写书名。'],[excerpt,'请填写摘录。']]){
+  const invalid=!field.value.trim();field.setAttribute('aria-invalid',String(invalid));
+  document.getElementById(field.id+'-error').textContent=invalid?hint:'';
+  if(invalid&&!first)first=field;
+ }
+ if(first){message('还有内容未填写，请检查标出的字段。',true);first.focus();return;}
+ save.disabled=true;
+ try{
+  const latest=readNotes();
+  const next=[{id:typeof crypto.randomUUID==='function'?crypto.randomUUID():`${Date.now()}-${Math.random()}`,book:book.value.trim(),excerpt:excerpt.value.trim(),createdAt:Date.now()},...latest];
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(next));
+  notes=next;visible=20;render();form.reset();excerpt.style.height='';
+  message('已保存到本机，列表已更新。');book.focus();
+ }catch{message('保存失败，填写内容已保留。请检查浏览器存储权限或可用空间，再点击保存。',true);}
+ finally{save.disabled=false;}
+});
+for(const field of [book,excerpt])field.addEventListener('input',()=>{field.removeAttribute('aria-invalid');document.getElementById(field.id+'-error').textContent='';});
+excerpt.addEventListener('input',()=>{excerpt.style.height='auto';excerpt.style.height=Math.min(excerpt.scrollHeight,480)+'px';});
+function showMore(){visible+=20;render();if(more.hidden){document.getElementById('list-title').setAttribute('tabindex','-1');document.getElementById('list-title').focus();}}
+window.addEventListener('storage',event=>{if(event.key===STORAGE_KEY||event.key===null){load();if(!unavailable)message('本机笔记列表已更新。');}});
+window.addEventListener('beforeunload',event=>{if(book.value.trim()||excerpt.value.trim()){event.preventDefault();event.returnValue='';}});
+load();
+</script>
+</body>
+</html>

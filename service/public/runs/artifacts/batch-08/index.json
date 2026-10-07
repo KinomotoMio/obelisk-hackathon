@@ -1,0 +1,155 @@
+{
+  "label": "模拟角色的真实 AI 产物",
+  "items": [
+    {
+      "role": "builder-01",
+      "path": "builder-01/README.md",
+      "bytes": 2088
+    },
+    {
+      "role": "builder-01",
+      "path": "builder-01/COLLABORATION_PLAN.md",
+      "bytes": 2249
+    },
+    {
+      "role": "builder-01",
+      "path": "builder-01/DESIGN.md",
+      "bytes": 4175
+    },
+    {
+      "role": "builder-01",
+      "path": "builder-01/docs/reading-notes-10min-trial.md",
+      "bytes": 8445
+    },
+    {
+      "role": "builder-01",
+      "path": "builder-01/docs/prototype-verification.md",
+      "bytes": 2366
+    },
+    {
+      "role": "builder-01",
+      "path": "builder-01/docs/edge-case-check-report.md",
+      "bytes": 4465
+    },
+    {
+      "role": "builder-01",
+      "path": "builder-01/docs/friends-trial-intro.md",
+      "bytes": 2690
+    },
+    {
+      "role": "builder-01",
+      "path": "builder-01/reading-notes/index.html",
+      "bytes": 10492
+    },
+    {
+      "role": "builder-01",
+      "path": "builder-01/docs/history/COLLABORATION_PLAN-before-prototype-2026-10-08.md",
+      "bytes": 10349
+    },
+    {
+      "role": "designer-01",
+      "path": "designer-01/portfolio/campus-lost-found-half-hour-review.md",
+      "bytes": 5022
+    },
+    {
+      "role": "designer-01",
+      "path": "designer-01/portfolio/campus-lost-found-test-record.md",
+      "bytes": 3871
+    },
+    {
+      "role": "designer-01",
+      "path": "designer-01/portfolio/campus-lost-found-one-page.md",
+      "bytes": 4095
+    },
+    {
+      "role": "designer-01",
+      "path": "designer-01/portfolio/campus-lost-found-test-guide.md",
+      "bytes": 3060
+    },
+    {
+      "role": "designer-01",
+      "path": "designer-01/portfolio/campus-lost-found.md",
+      "bytes": 8393
+    },
+    {
+      "role": "designer-01",
+      "path": "designer-01/portfolio/campus-lost-found-task-cards.md",
+      "bytes": 2241
+    },
+    {
+      "role": "designer-01",
+      "path": "designer-01/portfolio/campus-lost-found-two-evenings.md",
+      "bytes": 8193
+    },
+    {
+      "role": "designer-01",
+      "path": "designer-01/portfolio/campus-lost-found-contact-change.md",
+      "bytes": 5341
+    },
+    {
+      "role": "designer-01",
+      "path": "designer-01/portfolio/lost-found-sketch/index.html",
+      "bytes": 9909
+    },
+    {
+      "role": "designer-01",
+      "path": "designer-01/portfolio/lost-found-sketch/README.md",
+      "bytes": 3673
+    },
+    {
+      "role": "job-seeker-01",
+      "path": "job-seeker-01/求职材料/SQLite选型_一分钟回答与事实边界.md",
+      "bytes": 4767
+    },
+    {
+      "role": "job-seeker-01",
+      "path": "job-seeker-01/求职材料/周末试用邀请与准备清单.md",
+      "bytes": 4893
+    },
+    {
+      "role": "job-seeker-01",
+      "path": "job-seeker-01/求职材料/投递前一页检查清单.md",
+      "bytes": 4261
+    },
+    {
+      "role": "maintainer-01",
+      "path": "maintainer-01/notes/weekend-handoff.md",
+      "bytes": 4383
+    },
+    {
+      "role": "maintainer-01",
+      "path": "maintainer-01/notes/one-week-handoff.md",
+      "bytes": 6251
+    },
+    {
+      "role": "maintainer-01",
+      "path": "maintainer-01/notes/502-issue-handoff.md",
+      "bytes": 7089
+    },
+    {
+      "role": "maintainer-01",
+      "path": "maintainer-01/notes/502-issue.md",
+      "bytes": 3349
+    },
+    {
+      "role": "maintainer-01",
+      "path": "maintainer-01/notes/502-troubleshooting.md",
+      "bytes": 9166
+    },
+    {
+      "role": "maintainer-01",
+      "path": "maintainer-01/notes/handoff-evidence-review.md",
+      "bytes": 6503
+    },
+    {
+      "role": "writer-01",
+      "path": "writer-01/活动报名页-周末交付计划.md",
+      "bytes": 7596
+    },
+    {
+      "role": "writer-01",
+      "path": "writer-01/活动报名页-给社团同学的介绍.md",
+      "bytes": 2435
+    }
+  ]
+}
