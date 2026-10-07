@@ -15,6 +15,7 @@
 //   POST /v1/shares/:id/open            recipient-signed RecordOpen -> receipt on chain, then the key package
 //   POST /v1/shares/:id/revoke          sender-signed RevokeShare -> relayed, transaction kept with the share
 //   GET  /s/:shareId, /activate         the web reader page (public/reader, #10)
+//   GET  /market/…, /preview/…          public web pages (public/<page>/index.html; SITE_PAGES)
 //   GET  /v1/skills/:ref                minted Skill version + stored body (skills.ts)
 //   POST /v1/skills/:fingerprint/content store a minted version's body (skills.ts)
 //   GET  /v1/skills/:id/lineage         the family tree a Skill belongs to (skills.ts)
@@ -85,6 +86,8 @@ export interface AppDeps {
   usageTrend?: UsageTrendStore | null;
   /** The web reader's HTML (public/reader/index.html); absent when assets are not bound. */
   readerPage?: () => Promise<Response>;
+  /** A public page's HTML from the assets binding, by asset path (SITE_PAGES); absent when assets are not bound. */
+  sitePage?: (path: string) => Promise<Response>;
 }
 
 /**
@@ -114,6 +117,36 @@ export const READER_HEADERS = {
 
 function isReaderPath(parts: string[]): boolean {
   return (parts.length === 2 && parts[0] === 's') || (parts.length === 1 && parts[0] === 'activate');
+}
+
+/**
+ * Public pages for people outside the App (judges, investors, buyers): the
+ * Skill market (#35) and the investor preview (#33). Each owns one path
+ * segment; every extension-less path under it returns the page's index.html,
+ * which routes on the client. Their scripts, styles, and the shared shell in
+ * public/site/ are files, so the assets binding serves them before the Worker
+ * runs. They read only this service's public GET API (same origin).
+ */
+export const SITE_PAGES: Readonly<Record<string, string>> = {
+  market: '/market/index.html',
+  preview: '/preview/index.html',
+};
+
+/** The reader's policy (same origin only, never framed), revalidated on each visit. */
+export const SITE_HEADERS = { ...READER_HEADERS, 'cache-control': 'no-cache' };
+
+function sitePagePath(parts: string[]): string | null {
+  const page = parts[0] !== undefined && Object.hasOwn(SITE_PAGES, parts[0]) ? SITE_PAGES[parts[0]]! : null;
+  if (!page || parts.slice(1).some((part) => part.includes('.'))) return null;
+  return page;
+}
+
+async function sitePageResponse(deps: AppDeps, path: string): Promise<Response> {
+  if (!deps.sitePage) throw new RequestError(503, 'page_unavailable', 'This service has no web page assets bound (ASSETS)');
+  const page = await deps.sitePage(path);
+  if (page.status === 404) throw new RequestError(404, 'not_found', `This service has no page at ${path.replace(/\/index\.html$/, '')}`);
+  if (!page.ok) throw new RequestError(502, 'page_unavailable', `The page could not be loaded (HTTP ${page.status})`);
+  return new Response(page.body, { status: 200, headers: SITE_HEADERS });
 }
 
 async function readerResponse(deps: AppDeps): Promise<Response> {
@@ -169,6 +202,8 @@ export async function handleRequest(request: Request, deps: AppDeps): Promise<Re
   const { config, publicClient } = deps;
   try {
     if ((request.method === 'GET' || request.method === 'HEAD') && isReaderPath(parts)) return await readerResponse(deps);
+    const sitePath = request.method === 'GET' || request.method === 'HEAD' ? sitePagePath(parts) : null;
+    if (sitePath) return await sitePageResponse(deps, sitePath);
     if (parts[0] !== 'v1') throw new RequestError(404, 'not_found', `No route for ${request.method} ${pathname}`);
     const route = parts.slice(1);
 
