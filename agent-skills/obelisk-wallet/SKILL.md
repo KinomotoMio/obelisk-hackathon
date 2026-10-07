@@ -20,7 +20,9 @@ The private key is generated locally and kept in the system keychain (macOS
 Keychain, or the Secret Service keyring on Linux). It never appears in command
 output. Never ask the user for a private key or recovery phrase, and never try to
 read one from the keychain yourself. Importing an existing wallet happens in the
-Obelisk App, not in conversation.
+Obelisk App, not in conversation: if the user wants to use a wallet they already
+have, tell them to open Settings → 钱包 → 导入已有钱包 and paste the private key or
+recovery phrase there.
 
 ## Commands
 
