@@ -19,6 +19,7 @@ import { join } from 'node:path';
 import { getAddress, recoverTypedDataAddress } from 'viem';
 
 import { obeliskDomain, pinnedDeployments, skillContentTypes, skillRegistryTypes, usageStatsTypes } from '../packages/core/src/chain-protocol.ts';
+import { outcomeBucketKey } from '../packages/core/src/usage-buckets.ts';
 import { cliEnv, installFakeKeychain, runCliAsync } from './chain-cli-fakes.mjs';
 import { makeTempDir } from './temp-dirs.mjs';
 
@@ -182,6 +183,45 @@ export async function startFakeSkillService() {
       const created = !contents.has(fingerprint);
       if (created) contents.set(fingerprint, { name, description, body, author: signer });
       return send(200, { stored: true, created, fingerprint, skillId: String(ref.skillId), versionIndex: ref.versionIndex, name });
+    }
+    // GET /v1/skills/:id/usage and /lineage (service/src/usage.ts, skills.ts), summed from what was reported and minted here.
+    const readMatch = /^\/v1\/skills\/([1-9]\d*)\/(usage|lineage)$/.exec(url.pathname);
+    if (readMatch && request.method === 'GET') {
+      const skillId = Number(readMatch[1]);
+      const skill = skills[skillId - 1];
+      if (!skill) return fail(404, 'unknown_skill', `Skill ${skillId} is not minted`);
+      if (readMatch[2] === 'usage') {
+        const versions = skill.versions.map((version, index) => {
+          const reports = [...usage].filter(([key]) => key.startsWith(`${version.fingerprint}:`));
+          return { index, fingerprint: version.fingerprint, publishedAt: version.publishedAt, totalInvocations: reports.reduce((sum, [, entry]) => sum + entry.cumulative, 0), uniqueWallets: reports.length, lastReportAt: null };
+        });
+        const reported = [...usage].filter(([key]) => skill.versions.some((version) => key.startsWith(`${version.fingerprint}:`)));
+        const wallets = new Set(reported.map(([key]) => key.split(':')[1]));
+        const outcome = (id) => reported.reduce((sum, [, entry]) => sum + (entry.outcomes[outcomeBucketKey(`outcome/${id}`)] ?? 0), 0);
+        const [smooth, rework, failed, unknown] = ['smooth', 'rework', 'failed', 'unknown'].map(outcome);
+        const judged = smooth + rework + failed;
+        return send(200, {
+          chainId: 968, contract: testnet.contracts.UsageStats, skillId: String(skillId), author: skill.author,
+          parentSkillId: skill.parentSkillId === 0n ? null : String(skill.parentSkillId), birthScenes: [],
+          totalInvocations: versions.reduce((sum, version) => sum + version.totalInvocations, 0),
+          uniqueWallets: wallets.size, uniqueWalletsExact: true, lastReportAt: null, scenes: [], outcomes: [],
+          results: { smooth, rework, failed, unknown, judged, smoothRate: judged === 0 ? null : smooth / judged, signals: {} },
+          trend: { unit: 'week', source: 'none', available: false, weeks: [] }, versions,
+        });
+      }
+      let root = skillId;
+      while (skills[root - 1].parentSkillId !== 0n) root = Number(skills[root - 1].parentSkillId);
+      const nodes = [];
+      const walk = (id, depth) => {
+        const node = skills[id - 1];
+        const children = skills.map((child, index) => ({ child, id: index + 1 })).filter(({ child }) => child.parentSkillId === BigInt(id)).map(({ id: childId }) => childId);
+        nodes.push({ skillId: String(id), parentSkillId: node.parentSkillId === 0n ? null : String(node.parentSkillId), depth, author: node.author, name: contents.get(node.versions[0].fingerprint)?.name ?? null, versionCount: node.versions.length, latestFingerprint: node.versions.at(-1).fingerprint, createdAt: node.versions[0].publishedAt, childSkillIds: children.map(String) });
+        for (const child of children) walk(child, depth + 1);
+      };
+      walk(root, 0);
+      const path = [];
+      for (let id = skillId; ; id = Number(skills[id - 1].parentSkillId)) { path.unshift(String(id)); if (skills[id - 1].parentSkillId === 0n) break; }
+      return send(200, { chainId: 968, contract: testnet.contracts.SkillRegistry, skillId: String(skillId), rootSkillId: String(root), path, nodes, truncated: false });
     }
     const skillMatch = /^\/v1\/skills\/([^/]+)$/.exec(url.pathname);
     if (skillMatch && request.method === 'GET') {

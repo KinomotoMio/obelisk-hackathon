@@ -39,6 +39,7 @@ import {
   skillVersionsByFingerprint,
   summarizeSkillUsage,
 } from '../../core/src/skill-invocations.ts';
+import { runResumeCommand } from './resume-command.ts';
 import { runShareCommand } from './share-command.ts';
 import { runSkillFetchCommand } from './skill-fetch-command.ts';
 import { runSkillMintCommand } from './skill-mint-command.ts';
@@ -212,6 +213,10 @@ async function main() {
     try { emit(await runShareCommand(args.slice(1))); } catch (error) { fail(error); }
     return;
   }
+  if (args[0] === 'resume') {
+    try { emit(await runResumeCommand(args.slice(1))); } catch (error) { fail(error); }
+    return;
+  }
   if (args[0] === 'install') {
     const npx = process.platform === 'win32' ? 'npx.cmd' : 'npx';
     const child = spawnSync(
@@ -227,7 +232,7 @@ async function main() {
     }
     return;
   }
-  process.stderr.write('Usage:\n  obelisk install [skills options]\n  obelisk --build\n  obelisk --search "text" [--nonce <token>]\n  obelisk --query <file.js>\n  obelisk --attune <file.js>\n  obelisk skill list | show <name> | save <draft.json> | scenes | tag <name> [--add <tag>] [--remove <tag>] | invocations [<name>] | fingerprint <SKILL.md> | mint <name> [--confirm <fingerprint>] | fetch <skill id | fingerprint> [--version <n>] [--name <name>] [--project <dir>] [--confirm]\n  obelisk wallet create | show | activate [--confirm]\n  obelisk usage status | enable [--confirm] | disable | report [--if-due] | judge [--harness claude|codex] [--limit <n>] [--confirm]\n  obelisk share outline <session-id>\n  obelisk share draft <session-id> --to <0x address> [--messages <from>-<to>|all] [--opens <n>|unlimited] [--expires <n>m|h|d]\n  obelisk share send <draft-id> [--redact all|none|<n>,<n>…] [--confirm]\n  obelisk share list [--to <0x address>]\n  obelisk share status <draft-id|share-id|S-number>\n  obelisk share revoke <draft-id|share-id|S-number> [--confirm]\n');
+  process.stderr.write('Usage:\n  obelisk install [skills options]\n  obelisk --build\n  obelisk --search "text" [--nonce <token>]\n  obelisk --query <file.js>\n  obelisk --attune <file.js>\n  obelisk skill list | show <name> | save <draft.json> | scenes | tag <name> [--add <tag>] [--remove <tag>] | invocations [<name>] | fingerprint <SKILL.md> | mint <name> [--confirm <fingerprint>] | fetch <skill id | fingerprint> [--version <n>] [--name <name>] [--project <dir>] [--confirm]\n  obelisk wallet create | show | activate [--confirm]\n  obelisk usage status | enable [--confirm] | disable | report [--if-due] | judge [--harness claude|codex] [--limit <n>] [--confirm]\n  obelisk share outline <session-id>\n  obelisk share draft <session-id> --to <0x address> [--messages <from>-<to>|all] [--opens <n>|unlimited] [--expires <n>m|h|d]\n  obelisk share send <draft-id> [--redact all|none|<n>,<n>…] [--confirm]\n  obelisk share list [--to <0x address>]\n  obelisk share status <draft-id|share-id|S-number>\n  obelisk share revoke <draft-id|share-id|S-number> [--confirm]\n  obelisk resume facts [--since <date>] [--until <date>] | render <spec.json> [--out <file.html>]\n');
   process.exitCode = 1;
 }
 
