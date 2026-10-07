@@ -6,15 +6,22 @@
 // invocation and returns its scenes (from the scene vocabulary) and an
 // outcome: smooth (顺利), rework (有返工), failed (失败), or unknown (无法判断).
 //
-// It runs through the local harness, never a hosted API: `claude -p` or
-// `codex exec`, on the user's own subscription. Several invocations go in
-// one run, each as a compact rendering of its slice only. The run keeps no
-// session of its own (`--no-session-persistence` / `--ephemeral`), has no
-// tools or Skills, and starts in <data dir>/judge, so it does not show up in
-// the history Obelisk indexes.
+// It runs through the local harness, never a hosted API: `codex exec`
+// (preferred, the harness background runs use) or `claude -p`, on the user's
+// own subscription. Several invocations go in one run, each as a compact
+// rendering of its slice only. The run keeps no session of its own
+// (`--ephemeral` / `--no-session-persistence`), has no tools or Skills, and
+// starts in <data dir>/judge, so it does not show up in the history Obelisk
+// indexes.
+//
+// Codex runs with `--ignore-user-config` (no MCP servers, hooks, notify
+// scripts or profiles from config.toml; auth still comes from CODEX_HOME, so
+// an isolated CODEX_HOME in the environment is honoured), with its shell,
+// memories, apps, plugins and sub-agents off, and with `--output-schema` so
+// the answer has the judge's JSON shape.
 
 import { spawn } from 'node:child_process';
-import { mkdir, mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import type { InvocationSlice, SliceEvent } from './invocation-slices.ts';
@@ -141,18 +148,53 @@ export interface HarnessRun {
   env?: NodeJS.ProcessEnv;
 }
 
+/** The JSON Schema the judge's answer must follow (Codex `--output-schema`, strict mode). */
+export function judgeOutputSchema(): object {
+  return {
+    type: 'object',
+    additionalProperties: false,
+    required: ['judgments'],
+    properties: {
+      judgments: {
+        type: 'array',
+        items: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['id', 'outcome', 'scenes', 'reason'],
+          properties: {
+            id: { type: 'string' },
+            outcome: { type: 'string', enum: [...OUTCOMES] },
+            scenes: { type: 'array', items: { type: 'string', enum: SCENES.map((scene) => scene.id) } },
+            reason: { type: 'string' },
+          },
+        },
+      },
+    },
+  };
+}
+
+/** Codex features a judge run has no use for; unknown keys are ignored by older or newer Codex. */
+const CODEX_FEATURES_OFF = ['shell_tool', 'unified_exec', 'memories', 'apps', 'plugins', 'multi_agent', 'browser_use', 'computer_use'];
+
 /** The command line for one judge run; the prompt goes to stdin. */
-export function harnessCommand(run: HarnessRun, lastMessageFile: string): { command: string; args: string[] } {
-  const model = run.model ? ['--model', run.model] : [];
+export function harnessCommand(run: HarnessRun, files: { lastMessage: string; schema: string }): { command: string; args: string[] } {
   if (run.harness === 'claude') {
     return {
       command: 'claude',
-      args: ['-p', '--output-format', 'json', '--no-session-persistence', '--tools', '', '--disable-slash-commands', '--strict-mcp-config', '--max-turns', '1', ...model],
+      args: ['-p', '--output-format', 'json', '--no-session-persistence', '--tools', '', '--disable-slash-commands', '--strict-mcp-config', '--max-turns', '1', ...(run.model ? ['--model', run.model] : [])],
     };
   }
   return {
     command: 'codex',
-    args: ['exec', '--ephemeral', '--sandbox', 'read-only', '--skip-git-repo-check', '--color', 'never', '-C', run.cwd, '-o', lastMessageFile, ...model, '-'],
+    args: [
+      'exec', '--ephemeral', '--ignore-user-config', '--ignore-rules',
+      '--sandbox', 'read-only', '--skip-git-repo-check', '--color', 'never', '-C', run.cwd,
+      ...CODEX_FEATURES_OFF.flatMap((feature) => ['-c', `features.${feature}=false`]),
+      '-c', 'web_search="disabled"',
+      '--output-schema', files.schema, '-o', files.lastMessage,
+      ...(run.model ? ['-m', run.model] : []),
+      '-',
+    ],
   };
 }
 
@@ -160,9 +202,10 @@ export function harnessCommand(run: HarnessRun, lastMessageFile: string): { comm
 export async function runJudgeHarness(run: HarnessRun): Promise<string> {
   await mkdir(run.cwd, { recursive: true });
   const scratch = await mkdtemp(join(run.cwd, 'run-'));
-  const lastMessageFile = join(scratch, 'last-message.txt');
-  const { command, args } = harnessCommand(run, lastMessageFile);
+  const files = { lastMessage: join(scratch, 'last-message.txt'), schema: join(scratch, 'judgment.schema.json') };
+  const { command, args } = harnessCommand(run, files);
   try {
+    if (run.harness === 'codex') await writeFile(files.schema, JSON.stringify(judgeOutputSchema()));
     const { code, stdout, stderr } = await new Promise<{ code: number | null; stdout: string; stderr: string }>((resolve, reject) => {
       const child = spawn(command, args, { cwd: run.cwd, env: run.env ?? process.env, stdio: ['pipe', 'pipe', 'pipe'] });
       let out = '';
@@ -180,7 +223,9 @@ export async function runJudgeHarness(run: HarnessRun): Promise<string> {
       if (result.is_error || typeof result.result !== 'string') throw new Error(`claude did not finish the judgment (${result.subtype ?? 'error'})`);
       return result.result;
     }
-    return await readFile(lastMessageFile, 'utf8');
+    const answer = await readFile(files.lastMessage, 'utf8').catch(() => '');
+    if (!answer.trim()) throw new Error(`codex finished without an answer: ${(stderr || stdout).trim().slice(-500)}`);
+    return answer;
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT' && String((error as NodeJS.ErrnoException).syscall).startsWith('spawn')) {
       throw new Error(`${command} is not installed or not on PATH; install it or pick the other harness with --harness`, { cause: error });

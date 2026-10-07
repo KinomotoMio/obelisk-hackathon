@@ -1,7 +1,7 @@
 // Copyright (C) 2026 tommy0103 and contributors.
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// `obelisk usage judge [--harness claude|codex] [--limit <n>] [--batch <n>] [--model <name>] [--confirm]` (#25).
+// `obelisk usage judge [--harness codex|claude] [--limit <n>] [--batch <n>] [--model <name>] [--confirm]` (#25).
 //
 // Has the user's own AI coding assistant judge the scenes and outcome of
 // Skill invocations that will be reported (minted or fetched versions), a
@@ -30,7 +30,7 @@ import { buildJudgePrompt, JUDGE_PROMPT_VERSION, parseJudgeOutput, runJudgeHarne
 import { reportableFingerprints } from '../../core/src/usage-report.ts';
 import type { UsageDeps } from './usage-command.ts';
 
-export const USAGE_JUDGE_USAGE = 'Usage: obelisk usage judge [--harness claude|codex] [--limit <n>] [--batch <n>] [--model <name>] [--confirm]';
+export const USAGE_JUDGE_USAGE = 'Usage: obelisk usage judge [--harness codex|claude] [--limit <n>] [--batch <n>] [--model <name>] [--confirm]';
 
 const DEFAULT_LIMIT = 20;
 const DEFAULT_BATCH = 5;
@@ -59,9 +59,9 @@ function onPath(command: string, env: NodeJS.ProcessEnv): boolean {
 
 function pickHarness(requested: JudgeHarness | null, env: NodeJS.ProcessEnv): JudgeHarness {
   if (requested) return requested;
-  if (onPath('claude', env)) return 'claude';
   if (onPath('codex', env)) return 'codex';
-  throw new Error('Neither Claude Code (`claude`) nor Codex (`codex`) is on PATH; the judge runs through one of them on this computer');
+  if (onPath('claude', env)) return 'claude';
+  throw new Error('Neither Codex (`codex`) nor Claude Code (`claude`) is on PATH; the judge runs through one of them on this computer');
 }
 
 const HARNESS_NAME: Record<JudgeHarness, string> = { claude: 'Claude Code', codex: 'Codex' };

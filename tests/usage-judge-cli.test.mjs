@@ -3,7 +3,7 @@
 
 // `obelisk usage judge` and fact signals (#25) through the built CLI. Bob
 // fetched Alice's minted Skill and used it twice in one Claude Code session;
-// the judge is a fake `claude` / `codex` on PATH that logs how it was run and
+// the judge is a fake `codex` / `claude` on PATH that logs how it was run and
 // answers in the judge's JSON contract. No real harness or service is used.
 
 import { test } from 'node:test';
@@ -38,7 +38,9 @@ const tool = basename(process.argv[1], '.mjs');
 const argv = process.argv.slice(2);
 const dir = process.env.FAKE_JUDGE_DIR;
 const prompt = readFileSync(0, 'utf8');
-appendFileSync(join(dir, 'runs.log'), JSON.stringify({ tool, argv, cwd: process.cwd() }) + '\\n');
+const schemaFile = argv.includes('--output-schema') ? argv[argv.indexOf('--output-schema') + 1] : null;
+const schema = schemaFile && existsSync(schemaFile) ? JSON.parse(readFileSync(schemaFile, 'utf8')) : null;
+appendFileSync(join(dir, 'runs.log'), JSON.stringify({ tool, argv, cwd: process.cwd(), schema }) + '\\n');
 writeFileSync(join(dir, 'last-prompt.txt'), prompt);
 if (existsSync(join(dir, 'fail'))) { process.stderr.write('usage limit reached\\n'); process.exit(1); }
 const ids = [...prompt.matchAll(/^=== (i\\d+) /gm)].map((match) => match[1]);
@@ -114,7 +116,7 @@ test('"判断 Skill 调用的结果": preview, one batched run of the local harn
 
     const preview = await bob.ok('usage', 'judge');
     assert.equal(preview.preview, true);
-    assert.deepEqual({ harness: preview.harness, invocations: preview.invocations, runs: preview.runs }, { harness: 'claude', invocations: 2, runs: 1 });
+    assert.deepEqual({ harness: preview.harness, invocations: preview.invocations, runs: preview.runs }, { harness: 'codex', invocations: 2, runs: 1 });
     assert.match(preview.reads, /without tools, without Skills, and without saving a session/);
     assert.match(preview.stays, /stay on this computer/);
     assert.match(preview.next, /Only after they confirm, run `obelisk usage judge --confirm`/);
@@ -128,8 +130,9 @@ test('"判断 Skill 调用的结果": preview, one batched run of the local harn
       { outcome: 'rework', scenes: ['v1:task/debug'] },
     ], 'a scene outside the vocabulary is dropped');
     const [run] = harness.runs();
-    assert.equal(run.tool, 'claude');
-    assert.ok(run.argv.includes('--no-session-persistence'));
+    assert.equal(run.tool, 'codex', 'Codex is preferred when both are installed');
+    for (const flag of ['--ephemeral', '--ignore-user-config']) assert.ok(run.argv.includes(flag), flag);
+    assert.deepEqual(run.schema.required, ['judgments'], 'the answer shape is given to Codex as a schema file');
     assert.equal(run.cwd.endsWith(join('.obelisk', 'judge')), true, 'the judge starts in the data directory, away from projects');
     const prompt = harness.prompt();
     assert.match(prompt, /\[user, before the Skill\] 帮我修一下登录页的报错/);
@@ -165,33 +168,32 @@ test('"判断 Skill 调用的结果": preview, one batched run of the local harn
   }
 });
 
-test('the judge also runs through Codex, and a failed run keeps nothing and can be run again', { skip }, async () => {
+test('the judge also runs through Claude Code, and a failed run keeps nothing and can be run again', { skip }, async () => {
   const service = await startFakeSkillService();
   try {
     const bob = await bobWithHistory(service);
     const harness = installFakeHarness(bob);
 
     harness.fail(true);
-    const failed = await bob.ok('usage', 'judge', '--harness', 'codex', '--batch', '1', '--confirm');
+    const failed = await bob.ok('usage', 'judge', '--harness', 'claude', '--batch', '1', '--confirm');
     assert.equal(failed.status, 'partial');
-    assert.match(failed.error, /codex exited with 1: usage limit reached/);
+    assert.match(failed.error, /claude exited with 1: usage limit reached/);
     assert.match(failed.next, /run the same command again/);
     assert.equal(harness.runs().length, 1, 'it stops at the first failed run');
 
     harness.fail(false);
-    const judged = await bob.ok('usage', 'judge', '--harness', 'codex', '--batch', '1', '--confirm');
-    assert.deepEqual({ status: judged.status, judged: judged.judged, harness: judged.harness }, { status: 'judged', judged: 2, harness: 'codex' });
-    const codexRuns = harness.runs().slice(1);
-    assert.equal(codexRuns.length, 2, 'one run per batch of one');
-    for (const run of codexRuns) {
-      assert.equal(run.argv[0], 'exec');
-      assert.ok(run.argv.includes('--ephemeral'));
-      assert.equal(run.argv[run.argv.indexOf('--sandbox') + 1], 'read-only');
+    const judged = await bob.ok('usage', 'judge', '--harness', 'claude', '--batch', '1', '--confirm');
+    assert.deepEqual({ status: judged.status, judged: judged.judged, harness: judged.harness }, { status: 'judged', judged: 2, harness: 'claude' });
+    const claudeRuns = harness.runs().slice(1);
+    assert.equal(claudeRuns.length, 2, 'one run per batch of one');
+    for (const run of claudeRuns) {
+      assert.equal(run.argv[0], '-p');
+      assert.ok(run.argv.includes('--no-session-persistence'));
     }
 
     const bad = await bob.run('usage', 'judge', '--harness', 'gemini');
     assert.equal(bad.status, 1);
-    assert.match(bad.json.error, /Usage: obelisk usage judge \[--harness claude\|codex\]/);
+    assert.match(bad.json.error, /Usage: obelisk usage judge \[--harness codex\|claude\]/);
   } finally {
     service.close();
   }

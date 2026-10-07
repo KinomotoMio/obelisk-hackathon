@@ -7,7 +7,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { buildJudgePrompt, harnessCommand, parseJudgeOutput, renderSlice } from '../packages/core/src/usage-judge.ts';
+import { buildJudgePrompt, harnessCommand, judgeOutputSchema, parseJudgeOutput, renderSlice } from '../packages/core/src/usage-judge.ts';
 
 const event = (role, text, extra = {}) => ({
   uuid: `${role}-${text.length}-${Math.random()}`, role, timestamp: null, human: role === 'user', text, toolCalls: [], toolResults: [], ...extra,
@@ -57,16 +57,27 @@ test('judge answers: only known ids, known outcomes, and vocabulary scenes are k
 });
 
 test('judge runs keep no session, have no tools or Skills, and read the prompt from stdin', () => {
-  const claude = harnessCommand({ harness: 'claude', prompt: '', cwd: '/data/judge' }, '/tmp/last');
+  const files = { lastMessage: '/tmp/last', schema: '/tmp/schema.json' };
+  const codex = harnessCommand({ harness: 'codex', prompt: '', cwd: '/data/judge', model: 'gpt-5' }, files);
+  assert.equal(codex.command, 'codex');
+  for (const flag of ['exec', '--ephemeral', '--ignore-user-config', '--ignore-rules', '--skip-git-repo-check']) assert.ok(codex.args.includes(flag), flag);
+  assert.equal(codex.args[codex.args.indexOf('--sandbox') + 1], 'read-only');
+  assert.equal(codex.args[codex.args.indexOf('-C') + 1], '/data/judge');
+  for (const off of ['features.shell_tool=false', 'features.memories=false', 'web_search="disabled"']) assert.ok(codex.args.includes(off), off);
+  assert.equal(codex.args[codex.args.indexOf('--output-schema') + 1], '/tmp/schema.json');
+  assert.equal(codex.args[codex.args.indexOf('-o') + 1], '/tmp/last');
+  assert.equal(codex.args[codex.args.indexOf('-m') + 1], 'gpt-5');
+  assert.equal(codex.args.at(-1), '-');
+
+  const schema = judgeOutputSchema();
+  const item = schema.properties.judgments.items;
+  assert.deepEqual(item.required, ['id', 'outcome', 'scenes', 'reason'], 'strict mode: every property is required');
+  assert.deepEqual(item.properties.outcome.enum, ['smooth', 'rework', 'failed', 'unknown']);
+  assert.ok(item.properties.scenes.items.enum.includes('task/debug'));
+
+  const claude = harnessCommand({ harness: 'claude', prompt: '', cwd: '/data/judge' }, files);
   assert.equal(claude.command, 'claude');
   for (const flag of ['-p', '--no-session-persistence', '--disable-slash-commands', '--strict-mcp-config']) assert.ok(claude.args.includes(flag), flag);
   assert.equal(claude.args[claude.args.indexOf('--tools') + 1], '');
   assert.equal(claude.args[claude.args.indexOf('--max-turns') + 1], '1');
-
-  const codex = harnessCommand({ harness: 'codex', prompt: '', cwd: '/data/judge', model: 'gpt-5' }, '/tmp/last');
-  assert.equal(codex.command, 'codex');
-  for (const flag of ['exec', '--ephemeral', '--skip-git-repo-check']) assert.ok(codex.args.includes(flag), flag);
-  assert.equal(codex.args[codex.args.indexOf('--sandbox') + 1], 'read-only');
-  assert.equal(codex.args[codex.args.indexOf('-o') + 1], '/tmp/last');
-  assert.equal(codex.args.at(-1), '-');
 });
