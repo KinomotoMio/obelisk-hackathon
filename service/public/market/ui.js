@@ -45,7 +45,7 @@ export function sceneChip(scene, { declared = false } = {}) {
   const label = str(scene?.label, 80) ?? (tag.replace(/^user:[a-z]+\//, '').replace(/^v\d+:/, '') || '未命名场景');
   return h('span', { class: 'chip', title: [dimensionLabel(scene?.dimension), tag].filter(Boolean).join(' · ') },
     created ? h('span', { class: 'new' }, '新建') : null,
-    label,
+    h('span', { translate: 'no' }, label),
     declared ? h('span', { class: 'chip-mark' }, '作者声明') : null);
 }
 

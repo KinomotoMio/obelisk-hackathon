@@ -31,7 +31,7 @@ export function initialLanguage(search, stored, browserLanguage) {
   return browserLanguage?.toLowerCase().startsWith('zh') ? 'zh' : 'en';
 }
 
-export const CONTENT_SELECTOR = '[translate="no"], [data-original-content], pre, code, textarea, script, style, .skill-card-name, .skill-card-desc, .rn-prompt, .pv-msg, #rn-title';
+export const CONTENT_SELECTOR = '[translate="no"], [data-original-content], pre, code, textarea, script, style, .rn-prompt, .pv-msg, #rn-title';
 
 export function startLanguageSwitch() {
   let stored;
