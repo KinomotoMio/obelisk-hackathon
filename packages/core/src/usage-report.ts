@@ -77,6 +77,18 @@ function chainVersion(match: SkillVersionMatch, chainId: number): { skillId: str
   return null;
 }
 
+/** Fingerprints of versions that are reported: minted or fetched on `chainId` (any chain when omitted). */
+export function reportableFingerprints(versions: ReadonlyMap<string, SkillVersionMatch[]>, chainId?: number): Set<string> {
+  const out = new Set<string>();
+  for (const [fingerprint, matches] of versions) {
+    const onChain = matches.some((match) => chainId === undefined
+      ? (match.state === 'minted' && match.mint !== null) || (match.state === 'fetched' && match.fetched !== undefined)
+      : chainVersion(match, chainId) !== null);
+    if (onChain) out.add(fingerprint);
+  }
+  return out;
+}
+
 /** One report per minted version on `chainId` that has at least one invocation. */
 export function planUsageReports(
   invocations: readonly SkillInvocation[],

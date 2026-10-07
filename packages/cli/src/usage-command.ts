@@ -12,14 +12,14 @@
 
 import type { Address, Hex } from 'viem';
 
-import { findSkillInvocations } from '../../core/src/core.ts';
+import { withSkillInvocations } from '../../core/src/core.ts';
 import { systemSecretStore } from '../../core/src/keychain.ts';
 import { networkLabel, ServiceError, type ChainInfo, type ObeliskServiceClient } from '../../core/src/obelisk-service.ts';
 import { resolveObeliskPaths } from '../../core/src/paths.ts';
-import type { SkillInvocation } from '../../core/src/skill-invocations.ts';
 import { skillVersionsByFingerprint } from '../../core/src/skill-invocations.ts';
 import { fingerprintToBytes32 } from '../../core/src/skill-chain.ts';
-import { planUsageReports, signReportUsage, type ReportBucket, type UsageReportPlan } from '../../core/src/usage-report.ts';
+import { countSettledSignals, readUsageAnnotations, storedAnnotator, writeUsageAnnotations } from '../../core/src/usage-annotations.ts';
+import { planUsageReports, reportableFingerprints, signReportUsage, type ReportBucket, type UsageReportPlan } from '../../core/src/usage-report.ts';
 import { readUsageSettings, reportedKey, writeUsageSettings, type ReportedTotals, type UsageSettings } from '../../core/src/usage-settings.ts';
 import { loadWallet } from '../../core/src/wallet.ts';
 import { skillService, type SkillChainDeps } from './skill-mint-command.ts';
@@ -31,12 +31,9 @@ const REPORT_DEADLINE_SECONDS = 600;
 /** `report --if-due` sends at most once per this interval. */
 const REPORT_INTERVAL_MS = 24 * 3600 * 1000;
 
-export interface UsageDeps extends SkillChainDeps {
-  /** Recognized Skill loads; the CLI refreshes the index and reads them. */
-  invocations?: () => SkillInvocation[];
-}
+export type UsageDeps = SkillChainDeps;
 
-const WHAT_IS_SENT = 'For each minted Skill version you used: its fingerprint, how many times you invoked it in total, and how many of those invocations fell into each scene and result (once those are judged, #25).';
+const WHAT_IS_SENT = 'For each minted Skill version you used: its fingerprint, how many times you invoked it in total, how many of those invocations showed each fact signal (tool error, correction, repeated edit, repeated invocation), and, once invocations are judged, how many fell into each scene and result.';
 const NEVER_SENT = 'Never sent: session content, prompts, file names, project paths, Skill names you gave, or when each invocation happened.';
 const PUBLIC = 'Reports are written on BOT Chain under your wallet address, so anyone can see which minted versions this wallet reported and its running totals.';
 const FEE = 'Paid by the Obelisk online service; this wallet is not charged.';
@@ -64,8 +61,18 @@ function nextReport(plan: UsageReportPlan, onChain: number, last: ReportedTotals
 async function pendingReports(client: ObeliskServiceClient, chain: ChainInfo, wallet: Address, settings: UsageSettings, deps: UsageDeps): Promise<Pending[]> {
   const paths = resolveObeliskPaths({ env: deps.env ?? process.env });
   const versions = await skillVersionsByFingerprint(paths.skillsDir);
-  const invocations = (deps.invocations ?? findSkillInvocations)();
-  const plans = planUsageReports(invocations, versions, chain.chainId);
+  const annotations = await readUsageAnnotations(paths.dataDir);
+  const reportable = reportableFingerprints(versions, chain.chainId);
+  // Fact signals cost nothing, so they are counted here for every settled
+  // invocation of a reportable version; judgments come from `usage judge`.
+  const invocations = await withSkillInvocations(async (db, found) => {
+    const now = deps.now?.() ?? new Date();
+    if (countSettledSignals(db, found, annotations, now, (item) => reportable.has(item.fingerprint ?? '')) > 0) {
+      await writeUsageAnnotations(paths.dataDir, annotations);
+    }
+    return found;
+  });
+  const plans = planUsageReports(invocations, versions, chain.chainId, storedAnnotator(annotations));
   return Promise.all(plans.map(async (plan) => {
     const usage = await client.usage(fingerprintToBytes32(plan.fingerprint), { wallet });
     const onChain = usage.wallet?.cumulative ?? 0;
