@@ -2,7 +2,7 @@
   "chainId": 968,
   "network": "botTestnet",
   "complete": true,
-  "updatedAt": "2026-10-06T19:41:08.621Z",
+  "updatedAt": "2026-10-07T19:35:39.894Z",
   "contracts": {
     "KeyRegistry": {
       "address": "0x82450C2AA0aE363b363C04E5eabA6Ee1d92D1dDE",
@@ -27,7 +27,17 @@
       "txHash": "0x484c7d6b07cea1cc76c8d8ca15995b0f7fc7e4c16a8bde2ffd9202122ac72542",
       "blockNumber": 25941574,
       "deployer": "0x2f8A318ad91cBa234Af92ad6029F9bE395a20F9f"
+    },
+    "SkillMarket": {
+      "address": "0x69a63ceCB9753CAe115Ae9a272586568e871d360",
+      "txHash": "0x6c855aa6f315d4af742e0099ade23a4e8c1e90b56802e81a372e55ea04b51750",
+      "blockNumber": 26056335,
+      "deployer": "0x2f8A318ad91cBa234Af92ad6029F9bE395a20F9f"
     }
   },
-  "pending": {}
+  "pending": {},
+  "marketConfig": {
+    "platform": "0x2f8A318ad91cBa234Af92ad6029F9bE395a20F9f",
+    "feeBps": 500
+  }
 }

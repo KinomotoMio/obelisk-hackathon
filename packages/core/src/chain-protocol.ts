@@ -176,6 +176,7 @@ export const pinnedDeployments: Readonly<Record<number, PinnedDeployment>> = {
       "ShareRegistry": "0x81B4B63d101941ffeb2Da61754981796eC2DD8dd",
       "SkillRegistry": "0xD42208e780225e90C5DE7f56A7F007058230900b",
       "UsageStats": "0x84b17B83C976E2b0C447A4df09c52D80e4f40B98"
-    }
+    },
+    "market": "0x69a63ceCB9753CAe115Ae9a272586568e871d360"
   }
 };
