@@ -19,7 +19,7 @@ import type { InvocationSlice } from './invocation-slices.ts';
 import type { Signal } from './usage-buckets.ts';
 
 /** Bump when a rule changes, so stored signals are recounted. */
-export const SIGNAL_RULES_VERSION = 2;
+export const SIGNAL_RULES_VERSION = 3;
 export const REPEATED_EDIT_THRESHOLD = 3;
 
 const EDIT_TOOLS = new Set(['Edit', 'MultiEdit', 'Write', 'NotebookEdit', 'apply_patch', 'edit', 'write']);

@@ -38,3 +38,20 @@ test('arbitrary exit_code text, nested stdout and other tools are not command st
   blocks[1].text = JSON.stringify(command);
   assert.deepEqual(commandEvidence('codex', 'exec', JSON.stringify(blocks)).map(c => c.exitCode), [0]);
 });
+
+test('verbose captured command envelopes retain failure and retry status through compaction', async () => {
+  const { compactCommandOutput } = await import('../packages/core/src/tool-execution-evidence.ts');
+  const blocks = structuredClone(captured[1].payload.output);
+  const failure = JSON.parse(blocks[1].text);
+  // Stress mutation of the real captured envelope, not a claimed native run.
+  failure.output += '\nlong build diagnostic'.repeat(2000);
+  blocks[1].text = JSON.stringify(failure);
+  blocks.push(structuredClone(captured[2].payload.output[1]));
+  const full = JSON.stringify(blocks);
+  assert.ok(full.length > 10000);
+  const compact = compactCommandOutput(full);
+  assert.ok(compact.length < 10000);
+  assert.deepEqual(commandEvidence('codex', 'exec', compact).map(c => c.exitCode), [2, 0]);
+  assert.match(compact, /output truncated/);
+  assert.equal(compactCommandOutput(contents[1]), contents[1]);
+});

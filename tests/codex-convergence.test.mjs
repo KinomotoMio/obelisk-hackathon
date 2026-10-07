@@ -270,3 +270,31 @@ test('Codex prefix snapshot plus cooperative append converges SQLite projection'
   dbFinal.close();
   dbSplit.close();
 });
+
+test('real long command failures survive canonical parsing, SQLite and incremental replay', async () => {
+  const { commandEvidence } = await import('../packages/core/src/tool-execution-evidence.ts');
+  const source = readFileSync(new URL('./fixtures/codex/long-command-output.jsonl', import.meta.url), 'utf8');
+  const lines = source.trim().split('\n');
+  const path = join(makeTempDir('obelisk-codex-long-output-'), 'rollout.jsonl');
+  writeFileSync(path, source);
+  const sourceUnit = { key: path, sessionId: '', meta: { source: 'codex', guardian: false } };
+  const records = drain(parse(sourceUnit, null)).values;
+  const direct = assembleSessionDetail(records);
+  const results = records.filter(r => r.kind === 'tool_result');
+  assert.deepEqual(results.flatMap(r => commandEvidence('codex', 'exec', r.content).map(c => c.exitCode)), [7, 0]);
+  assert.ok(results[0].content.length < 10000);
+  assert.match(results[0].content, /output truncated/);
+  const db = freshDb();
+  const incremental = freshDb();
+  try {
+    persist(db, sourceUnit, parse(sourceUnit, null));
+    assert.deepEqual(assembleSessionDetail(detailRows(db, direct.session.id)), direct);
+    writeFileSync(path, lines.slice(0, 2).join('\n') + '\n');
+    const first = persist(incremental, sourceUnit, parse(sourceUnit, null));
+    appendFileSync(path, lines.slice(2).join('\n') + '\n');
+    // The result arrives after its call across an incremental boundary.
+    persist(incremental, sourceUnit, parse(sourceUnit, first));
+    assert.deepEqual(assembleSessionDetail(detailRows(incremental, direct.session.id)), direct);
+    assert.ok(first);
+  } finally { db.close(); incremental.close(); }
+});

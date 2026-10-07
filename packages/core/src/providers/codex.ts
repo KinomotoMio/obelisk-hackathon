@@ -27,6 +27,8 @@ import {
   readCodexGuardianThreadInfo,
 } from '../parsing.ts';
 
+import { compactCommandOutput } from '../tool-execution-evidence.ts';
+
 import type {
   Cursor,
   DiscoverContext,
@@ -39,7 +41,7 @@ import type {
 } from './types.ts';
 
 export const name = 'codex';
-const CODEX_CANONICAL_TRANSCRIPT_MARKER = '__codex_canonical_transcript_v3__';
+const CODEX_CANONICAL_TRANSCRIPT_MARKER = '__codex_canonical_transcript_v4__';
 const CODEX_SESSIONS_DIR = 'sessions';
 const CODEX_ARCHIVED_SESSIONS_DIR = 'archived_sessions';
 
@@ -954,7 +956,7 @@ export function* parse(
       // Preserve the source result even when malformed input has no matching
       // call. An empty anchor is explicit evidence of the missing association;
       // silently dropping the source record would create a timeline hole.
-      out.push({ kind: 'tool_result', tool_use_id: toolId, message_uuid: messageUuid, session_id: sessionId, content: trunc(codexToolOutput(payload) || ''), file_path: null, is_error: payload.is_error ? 1 : 0 });
+      out.push({ kind: 'tool_result', tool_use_id: toolId, message_uuid: messageUuid, session_id: sessionId, content: compactCommandOutput(codexToolOutput(payload) || ''), file_path: null, is_error: payload.is_error ? 1 : 0 });
       openCallMessageUuids.delete(toolId);
     }
   };

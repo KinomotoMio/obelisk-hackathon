@@ -29,3 +29,33 @@ export function commandEvidence(source: string | null, tool: string | null, cont
     return result;
   } catch { return []; }
 }
+
+/** Keep complete command status envelopes when verbose stdout exceeds the index limit.
+ * Output text is bounded across commands; status fields are never cut mid-JSON.
+ * Small and unrecognized results retain their original representation.
+ */
+export function compactCommandOutput(content: string, limit = 10000): string {
+  if (content.length <= limit) return content;
+  const commands = commandEvidence('codex', 'exec', content);
+  if (!commands.length) return content.slice(0, limit);
+  const blocks = JSON.parse(content) as { type: string; text: string }[];
+  const textBudget = Math.min(400, Math.floor(limit / 2 / commands.length));
+  const compact = [blocks[0]];
+  for (const block of blocks.slice(1)) {
+    if (block?.type !== 'input_text' || typeof block.text !== 'string') continue;
+    let value;
+    try { value = JSON.parse(block.text); } catch { continue; }
+    // Apply the same structural contract as the evidence reader.
+    if (!value || typeof value !== 'object' || Array.isArray(value)
+      || typeof value.chunk_id !== 'string' || !Number.isFinite(value.wall_time_seconds)
+      || !Number.isInteger(value.exit_code) || typeof value.output !== 'string') continue;
+    compact.push({ type: 'input_text', text: JSON.stringify({
+      chunk_id: value.chunk_id,
+      wall_time_seconds: value.wall_time_seconds,
+      exit_code: value.exit_code,
+      output: value.output.length > textBudget ? `${value.output.slice(0, textBudget)}…[output truncated]` : value.output,
+    }) });
+  }
+  compact.push({ type: 'input_text', text: '[Indexed command evidence only; full output remains in the native transcript.]' });
+  return JSON.stringify(compact);
+}
