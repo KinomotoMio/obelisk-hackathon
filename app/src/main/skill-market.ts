@@ -132,6 +132,8 @@ function sceneResults(bucket: Record<string, unknown>) {
   const unknown = count(bucket['unknown'], 'scene outcome count');
   const judged = smooth + rework + failed;
   if (bucket['judged'] !== undefined && count(bucket['judged'], 'scene judged count') !== judged) invalid('scene judged count');
+  // Only reports from before per-scene results: the scene was never judged.
+  if (judged + unknown === 0) return null;
   return { smooth, rework, failed, unknown, judged, smoothRate: judged > 0 ? smooth / judged : null };
 }
 

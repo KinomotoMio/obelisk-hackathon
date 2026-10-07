@@ -160,6 +160,7 @@ test('each measured scene carries its own outcomes when the service reports them
   const scenes = [
     { key: `0x${'01'.repeat(32)}`, tag: 'v1:artifact/resume', label: '简历与履历', dimension: 'artifact', invocations: 40, smooth: 20, rework: 6, failed: 4, unknown: 8, judged: 30, smoothRate: 0.6667 },
     { key: `0x${'02'.repeat(32)}`, tag: 'v1:role/engineer', label: '工程师', dimension: 'role', invocations: 9 },
+    { key: `0x${'03'.repeat(32)}`, tag: 'v1:task/debug', label: '调试与排障', dimension: 'task', invocations: 4, smooth: 0, rework: 0, failed: 0, unknown: 0, judged: 0, smoothRate: null },
   ];
   const { client } = fakeService({
     '/v1/skills/7': skillBody(),
@@ -168,6 +169,7 @@ test('each measured scene carries its own outcomes when the service reports them
   const { skill } = await readChainSkill(client, '7');
   assert.deepEqual(skill.usage.scenes[0].results, { smooth: 20, rework: 6, failed: 4, unknown: 8, judged: 30, smoothRate: 20 / 30 });
   assert.equal(skill.usage.scenes[1].results, null, 'a scene reported without outcomes has no rate to show');
+  assert.equal(skill.usage.scenes[2].results, null, 'a scene counted only by reports from before per-scene results was never judged');
 
   const bad = fakeService({
     '/v1/skills/7': skillBody(),

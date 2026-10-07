@@ -127,7 +127,7 @@ function showPlaygroundSource() {
 }
 
 function sceneName(scene) {
-  return scene.label || '未命名的新标签';
+  return scene.label || '词表外的标签';
 }
 
 function openSkill(skillId) {
@@ -286,13 +286,18 @@ function errorText(failure) {
               :title="row.hasResults ? `顺利 ${row.scene.results.smooth} · 返工 ${row.scene.results.rework} · 失败 ${row.scene.results.failed} · 无法判断 ${row.scene.results.unknown}` : (row.scene.tag || '')"
             >
               <div class="scene-line">
-                <span class="scene-name" :class="{ user: row.scene.kind === 'user' }">{{ sceneName(row.scene) }}</span>
+                <span
+                  class="scene-name"
+                  :class="{ user: row.scene.kind === 'user', unnamed: !row.scene.label }"
+                  :title="row.scene.label ? '' : '这个场景标签不在场景词表里，在线服务也没有它的文字'"
+                >{{ sceneName(row.scene) }}</span>
+                <span v-if="row.scene.kind === 'user'" class="scene-new" title="用户新建的场景标签，不在场景词表里">新建</span>
                 <span v-if="row.scene.dimensionLabel" class="scene-dim">{{ row.scene.dimensionLabel }}</span>
                 <span class="mono scene-count">{{ row.scene.invocations.toLocaleString() }} 次</span>
               </div>
               <div class="scene-line">
                 <div class="scene-track">
-                  <div class="scene-bar" :class="{ plain: !row.hasResults }" :style="{ width: `${row.length * 100}%` }">
+                  <div class="scene-bar" :class="{ plain: !sceneOutcomesOn }" :style="{ width: `${row.length * 100}%` }">
                     <i v-for="segment in row.segments" :key="segment.key" :class="segment.key" :style="{ width: `${segment.share * 100}%` }"></i>
                   </div>
                 </div>
@@ -475,6 +480,8 @@ function errorText(failure) {
 .scene-line { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .scene-name { font-size: var(--text-base); color: var(--fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .scene-name.user { color: var(--fg-2); }
+.scene-name.unnamed { color: var(--muted); }
+.scene-new { padding: 0 6px; border-radius: 999px; font-size: 10px; letter-spacing: 0.04em; color: var(--accent-2); border: 1px dashed rgba(167,139,250,0.45); white-space: nowrap; }
 .scene-dim { font-size: 11px; color: var(--muted); white-space: nowrap; }
 .scene-count { margin-left: auto; font-size: 11.5px; color: var(--fg-2); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .scene-track { flex: 1; min-width: 0; height: 8px; border-radius: 999px; background: rgba(255,255,255,0.03); overflow: hidden; }
@@ -486,7 +493,7 @@ function errorText(failure) {
 .scene-bar > i.failed, .scene-legend i.failed { background: var(--danger); }
 .scene-bar > i.unknown, .scene-legend i.unknown { background: rgba(255,255,255,0.32); }
 .scene-legend i.unjudged { background: rgba(255,255,255,0.12); }
-.scene-rate { width: 148px; flex-shrink: 0; display: flex; align-items: baseline; justify-content: flex-end; gap: 4px; font-size: var(--text-sm); color: var(--fg-2); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.scene-rate { width: 212px; flex-shrink: 0; display: flex; align-items: baseline; justify-content: flex-end; gap: 4px; font-size: var(--text-sm); color: var(--fg-2); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .scene-rate strong { font-size: var(--text-md); font-weight: 600; color: var(--fg); }
 .scene-rate small { margin-left: 4px; font-size: 11px; color: var(--muted); }
 .scene-rate.off { color: var(--muted); }
