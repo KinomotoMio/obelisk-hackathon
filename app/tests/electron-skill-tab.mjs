@@ -307,6 +307,7 @@ const chainSkills = {
 };
 
 let library = [];
+const savedSettings = {};
 
 function registerHandlers() {
   ipcMain.handle('skills:list', () => library.map(name => summary(views[name])));
@@ -342,6 +343,8 @@ function registerHandlers() {
   ipcMain.handle('db:getMemories', () => []);
   ipcMain.handle('db:getProjects', () => [{ project: '-work-portfolio', count: 6 }]);
   ipcMain.handle('db:getStats', () => ({}));
+  ipcMain.handle('settings:prompt-assistant', () => savedSettings.promptAssistant ?? 'claude-code');
+  ipcMain.handle('settings:set', (_event, key, value) => { savedSettings[key] = value; return true; });
   ipcMain.handle('settings:get', () => ({
     sources: [
       { id: 'claude', name: 'Claude Code', color: '#d97757', status: 'ok', statusText: 'ok', sessionCount: 5 },
@@ -552,6 +555,24 @@ async function run() {
     deriveText === '/obelisk-distill 在 Skill #3「release-checklist」v2 的基础上改出一个新版本，铸造时记录父 Skill。我想改成：',
     `"在此基础上修改" names the parent by id (${deriveText})`,
   );
+  const toastFor = await js(win, `document.querySelector('.prompt-toast [data-assistant]')?.textContent`);
+  assert(toastFor === 'Claude Code', `the toast says which assistant the prompt is for (${toastFor})`);
+
+  // Copied for Codex: the toast switches the form and remembers the choice.
+  await js(win, `window.__copiedPrompt = null; document.querySelector('[data-switch-assistant]').click()`);
+  await waitFor(win.webContents, `window.__copiedPrompt !== null`, 'copying again for Codex');
+  const codexText = await js(win, `window.__copiedPrompt`);
+  assert(
+    codexText === '用 obelisk-distill 在 Skill #3「release-checklist」v2 的基础上改出一个新版本，铸造时记录父 Skill。我想改成：',
+    `the same prompt is re-copied as a sentence for Codex (${codexText})`,
+  );
+  assert(savedSettings.promptAssistant === 'codex', 'the choice is saved in the data directory settings');
+  const fetchCodex = await clickCopy(win, '.minted-actions', '取用');
+  assert(fetchCodex === '用 obelisk-skill-assets 取用 Skill #3「release-checklist」v2，帮我：', `later copies use the Codex form (${fetchCodex})`);
+  const toastCodex = await js(win, `[...document.querySelectorAll('.prompt-toast')].map(t => t.innerText).join(' | ')`);
+  assert(toastCodex.includes('粘贴到 Codex 执行'), `the toast names Codex (${toastCodex})`);
+  await js(win, `document.querySelector('[data-switch-assistant]').click()`);
+  await waitFor(win.webContents, `document.querySelector('.prompt-toast [data-assistant]')?.textContent === 'Claude Code'`, 'back to Claude Code');
   await js(win, `document.querySelector('.prompt-toast-close')?.click()`);
   await screenshot(win, 'skill-detail-mine.png');
 
