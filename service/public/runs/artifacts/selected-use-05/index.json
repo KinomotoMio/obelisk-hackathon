@@ -1,0 +1,21 @@
+{
+  "kind": "simulated-roles-real-ai-outputs",
+  "items": [
+    {
+      "role": "job-seeker-01",
+      "file": "recruiter-message.md"
+    },
+    {
+      "role": "maintainer-01",
+      "file": "weekend-handoff.md"
+    },
+    {
+      "role": "designer-01",
+      "file": "interview-guide.md"
+    },
+    {
+      "role": "designer-01",
+      "file": "observation-sheet.md"
+    }
+  ]
+}

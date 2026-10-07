@@ -2,6 +2,234 @@
   "schema": "obelisk.playground.runs/1",
   "runs": [
     {
+      "id": "run-20261007T204252Z-d2c1",
+      "title": "已购买的协作方法用于作品集审阅",
+      "startedAt": "2026-10-07T20:42:52Z",
+      "endedAt": "2026-10-07T20:44:18Z",
+      "status": "succeeded",
+      "chainId": 968,
+      "dryRun": false,
+      "fixture": false,
+      "totals": {
+        "roles": 1,
+        "steps": 1,
+        "sessions": 1,
+        "commands": 0,
+        "transactions": 0,
+        "screenshots": 0
+      },
+      "publishedAt": "2026-10-07T20:44:57Z"
+    },
+    {
+      "id": "run-20261007T204106Z-b81c",
+      "title": "主网：把衍生方法用于范围调整和验证准备",
+      "startedAt": "2026-10-07T20:41:06Z",
+      "endedAt": "2026-10-07T20:44:31Z",
+      "status": "succeeded",
+      "chainId": 677,
+      "dryRun": false,
+      "fixture": false,
+      "totals": {
+        "roles": 1,
+        "steps": 4,
+        "sessions": 2,
+        "commands": 4,
+        "transactions": 0,
+        "screenshots": 0
+      },
+      "publishedAt": "2026-10-07T20:44:57Z"
+    },
+    {
+      "id": "run-20261007T204018Z-c05a",
+      "title": "构建者复用衍生方法与原型验证方法",
+      "startedAt": "2026-10-07T20:40:18Z",
+      "endedAt": "2026-10-07T20:44:28Z",
+      "status": "succeeded",
+      "chainId": 968,
+      "dryRun": false,
+      "fixture": false,
+      "totals": {
+        "roles": 1,
+        "steps": 4,
+        "sessions": 2,
+        "commands": 4,
+        "transactions": 0,
+        "screenshots": 0
+      },
+      "publishedAt": "2026-10-07T20:44:56Z"
+    },
+    {
+      "id": "run-20261007T203850Z-c820",
+      "title": "主网：另一位用户选用协作与原型验证方法",
+      "startedAt": "2026-10-07T20:38:50Z",
+      "endedAt": "2026-10-07T20:42:05Z",
+      "status": "succeeded",
+      "chainId": 677,
+      "dryRun": false,
+      "fixture": false,
+      "totals": {
+        "roles": 1,
+        "steps": 4,
+        "sessions": 2,
+        "commands": 2,
+        "transactions": 0,
+        "screenshots": 0
+      },
+      "publishedAt": "2026-10-07T20:43:51Z"
+    },
+    {
+      "id": "run-20261007T203712Z-08e1",
+      "title": "主网：选用公开 Skill 完成真实任务",
+      "startedAt": "2026-10-07T20:37:12Z",
+      "endedAt": "2026-10-07T20:38:48Z",
+      "status": "succeeded",
+      "chainId": 677,
+      "dryRun": false,
+      "fixture": false,
+      "totals": {
+        "roles": 1,
+        "steps": 2,
+        "sessions": 1,
+        "commands": 1,
+        "transactions": 0,
+        "screenshots": 0
+      },
+      "publishedAt": "2026-10-07T20:42:18Z"
+    },
+    {
+      "id": "run-20261007T203625Z-0299",
+      "title": "模拟用户选用市场方法完成日常工作 · 维护者",
+      "startedAt": "2026-10-07T20:36:25Z",
+      "endedAt": "2026-10-07T20:39:08Z",
+      "status": "succeeded",
+      "chainId": 968,
+      "dryRun": false,
+      "fixture": false,
+      "totals": {
+        "roles": 1,
+        "steps": 4,
+        "sessions": 2,
+        "commands": 3,
+        "transactions": 0,
+        "screenshots": 0
+      },
+      "publishedAt": "2026-10-07T20:42:18Z"
+    },
+    {
+      "id": "run-20261007T203624Z-776c",
+      "title": "模拟用户选用市场方法完成日常工作 · 求职者",
+      "startedAt": "2026-10-07T20:36:24Z",
+      "endedAt": "2026-10-07T20:38:58Z",
+      "status": "succeeded",
+      "chainId": 968,
+      "dryRun": false,
+      "fixture": false,
+      "totals": {
+        "roles": 1,
+        "steps": 4,
+        "sessions": 2,
+        "commands": 2,
+        "transactions": 0,
+        "screenshots": 0
+      },
+      "publishedAt": "2026-10-07T20:42:17Z"
+    },
+    {
+      "id": "run-20261007T203623Z-5451",
+      "title": "模拟用户选用市场方法完成日常工作 · 设计师",
+      "startedAt": "2026-10-07T20:36:23Z",
+      "endedAt": "2026-10-07T20:40:56Z",
+      "status": "succeeded",
+      "chainId": 968,
+      "dryRun": false,
+      "fixture": false,
+      "totals": {
+        "roles": 1,
+        "steps": 4,
+        "sessions": 2,
+        "commands": 3,
+        "transactions": 0,
+        "screenshots": 0
+      },
+      "publishedAt": "2026-10-07T20:42:17Z"
+    },
+    {
+      "id": "run-20261007T203551Z-aed3",
+      "title": "用户选用协作 Skill 完成日常项目安排",
+      "startedAt": "2026-10-07T20:35:51Z",
+      "endedAt": "2026-10-07T20:37:43Z",
+      "status": "succeeded",
+      "chainId": 968,
+      "dryRun": false,
+      "fixture": false,
+      "totals": {
+        "roles": 1,
+        "steps": 1,
+        "sessions": 1,
+        "commands": 2,
+        "transactions": 0,
+        "screenshots": 0
+      },
+      "publishedAt": "2026-10-07T20:42:17Z"
+    },
+    {
+      "id": "run-20261007T201826Z-c63d",
+      "title": "真实 AI 日常任务与方法沉淀扩量 b · 模拟角色 / 测试网",
+      "startedAt": "2026-10-07T20:18:26Z",
+      "endedAt": "2026-10-07T20:26:40Z",
+      "status": "succeeded",
+      "chainId": 968,
+      "dryRun": false,
+      "fixture": false,
+      "totals": {
+        "roles": 2,
+        "steps": 4,
+        "sessions": 4,
+        "commands": 17,
+        "transactions": 1,
+        "screenshots": 0
+      },
+      "publishedAt": "2026-10-07T20:42:17Z"
+    },
+    {
+      "id": "run-20261007T201826Z-f8b3",
+      "title": "真实 AI 日常任务与方法沉淀扩量 a · 模拟角色 / 测试网",
+      "startedAt": "2026-10-07T20:18:26Z",
+      "endedAt": "2026-10-07T20:28:28Z",
+      "status": "succeeded",
+      "chainId": 968,
+      "dryRun": false,
+      "fixture": false,
+      "totals": {
+        "roles": 2,
+        "steps": 4,
+        "sessions": 4,
+        "commands": 11,
+        "transactions": 0,
+        "screenshots": 0
+      },
+      "publishedAt": "2026-10-07T20:42:16Z"
+    },
+    {
+      "id": "run-20261007T200538Z-7a4e",
+      "title": "修正角色安装路径后的独立选用任务；不替换前轮零调用",
+      "startedAt": "2026-10-07T20:05:38Z",
+      "endedAt": "2026-10-07T20:10:24Z",
+      "status": "succeeded",
+      "chainId": 968,
+      "dryRun": false,
+      "fixture": false,
+      "totals": {
+        "roles": 2,
+        "steps": 4,
+        "sessions": 2,
+        "commands": 3,
+        "transactions": 0,
+        "screenshots": 0
+      },
+      "publishedAt": "2026-10-07T20:42:16Z"
+    },
+    {
       "id": "run-20261007T194022Z-9de4",
       "title": "模拟用户明确选择方法后的安装与改进；测试网，不计自主发现",
       "startedAt": "2026-10-07T19:40:22Z",

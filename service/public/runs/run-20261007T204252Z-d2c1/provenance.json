@@ -1,0 +1,79 @@
+{
+  "schema": "obelisk.playground.provenance/1",
+  "run": {
+    "id": "run-20261007T204252Z-d2c1",
+    "scenario": {
+      "name": "selected-paid-use-07",
+      "title": "已购买的协作方法用于作品集审阅",
+      "file": "playground/scenarios/selected-paid-use-07.json",
+      "sha256": "82da7656614b3a5ace59c244317f1820b2fa28f9604d7aed6b23a1dec497d41c"
+    },
+    "network": {
+      "serviceUrl": "https://obelisk-service.kinomotomiovo.workers.dev",
+      "chainId": 968
+    },
+    "startedAt": "2026-10-07T20:42:52Z",
+    "endedAt": "2026-10-07T20:44:18Z",
+    "status": "succeeded",
+    "dryRun": false,
+    "obelisk": {
+      "gitCommit": "5508db2"
+    }
+  },
+  "roles": [
+    {
+      "id": "designer-01",
+      "label": "模拟角色：设计师",
+      "wallet": {
+        "address": "0x6640773539e914Da9f1D04056DBCD3c301fE2f2F"
+      },
+      "harness": {
+        "kind": "codex",
+        "version": "codex-cli 0.160.0",
+        "model": "gpt-6.1-sol"
+      }
+    }
+  ],
+  "steps": [
+    {
+      "id": "use-purchased-method",
+      "index": 0,
+      "title": "使用已购买安装的版本安排今晚审阅",
+      "role": "designer-01",
+      "action": "prompt",
+      "scenes": [
+        "v1:task/planning"
+      ],
+      "status": "succeeded",
+      "startedAt": "2026-10-07T20:42:52Z",
+      "endedAt": "2026-10-07T20:44:18Z",
+      "harness": {
+        "kind": "codex",
+        "version": "codex-cli 0.160.0",
+        "model": "gpt-6.1-sol",
+        "maxTurns": null
+      },
+      "prompt": "$ai-building-half-hour-review 我今晚只剩半小时看作品集，帮我从现有材料里挑出最该看的三件事，哪些我现在可以决定、哪些要等真正找同学试过再说，保存成一页审阅笔记。",
+      "sessions": [
+        {
+          "source": "codex",
+          "id": "01a1181a-ce4a-7cc1-b231-eb5c4f60c5c9",
+          "obeliskId": "codex:01a1181a-ce4a-7cc1-b231-eb5c4f60c5c9"
+        }
+      ],
+      "commands": [],
+      "transactions": [],
+      "artifacts": [],
+      "screenshots": [],
+      "error": null
+    }
+  ],
+  "totals": {
+    "roles": 1,
+    "steps": 1,
+    "sessions": 1,
+    "commands": 0,
+    "transactions": 0,
+    "screenshots": 0
+  }
+}

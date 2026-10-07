@@ -1,0 +1,120 @@
+{
+  "schema": "obelisk.playground.provenance/1",
+  "run": {
+    "id": "run-20261007T203712Z-08e1",
+    "scenario": {
+      "name": "mainnet-selected-use-01",
+      "title": "主网：选用公开 Skill 完成真实任务",
+      "file": "playground/scenarios/mainnet-selected-use-01.json",
+      "sha256": "d0a5c2ba64751bcb647c19a21a54d9b03072e3c4475dc452a4f6f0df36b8b24c"
+    },
+    "network": {
+      "serviceUrl": "https://obelisk-service-mainnet.kinomotomiovo.workers.dev",
+      "chainId": 677
+    },
+    "startedAt": "2026-10-07T20:37:12Z",
+    "endedAt": "2026-10-07T20:38:48Z",
+    "status": "succeeded",
+    "dryRun": false,
+    "obelisk": {
+      "gitCommit": "5508db2"
+    }
+  },
+  "roles": [
+    {
+      "id": "mainnet-builder",
+      "label": "模拟角色：主网项目作者",
+      "wallet": {
+        "address": "0x095E78ef26707800b0D7F445dD2eC72C073AeD5F"
+      },
+      "harness": {
+        "kind": "codex",
+        "version": "codex-cli 0.160.0",
+        "model": "gpt-6.1-sol"
+      }
+    }
+  ],
+  "steps": [
+    {
+      "id": "install-root",
+      "index": 0,
+      "title": "选用公开协作方法",
+      "role": "mainnet-builder",
+      "action": "cli",
+      "scenes": [],
+      "status": "succeeded",
+      "startedAt": "2026-10-07T20:37:13Z",
+      "endedAt": "2026-10-07T20:37:16Z",
+      "harness": null,
+      "prompt": null,
+      "sessions": [],
+      "commands": [
+        {
+          "argv": [
+            "skill",
+            "fetch",
+            "8198ffb1d25bc5900824dc730bdbb4985b2284b9d470165bee4f5704402ebfd4",
+            "--harness",
+            "codex",
+            "--confirm",
+            "--project",
+            "<playground>/roles/mainnet-builder/workspace"
+          ],
+          "exitCode": 0,
+          "startedAt": "2026-10-07T20:37:13Z",
+          "endedAt": "2026-10-07T20:37:16Z",
+          "transactions": []
+        }
+      ],
+      "transactions": [],
+      "artifacts": [
+        {
+          "kind": "skill-fetch",
+          "ref": "ai-building-collaboration"
+        }
+      ],
+      "screenshots": [],
+      "error": null
+    },
+    {
+      "id": "use-root",
+      "index": 1,
+      "title": "准备一个小项目的第一周计划",
+      "role": "mainnet-builder",
+      "action": "prompt",
+      "scenes": [
+        "v1:task/planning"
+      ],
+      "status": "succeeded",
+      "startedAt": "2026-10-07T20:37:16Z",
+      "endedAt": "2026-10-07T20:38:48Z",
+      "harness": {
+        "kind": "codex",
+        "version": "codex-cli 0.160.0",
+        "model": "gpt-6.1-sol",
+        "maxTurns": null
+      },
+      "prompt": "$ai-building-collaboration 我想做个自己用的读书笔记小工具，第一版能记书名、摘录和标签就够了。我每天只能晚上看半小时，帮我整理第一周怎么跟你配合、每天看什么成果，还有什么需要我先决定。保存成一份计划。",
+      "sessions": [
+        {
+          "source": "codex",
+          "id": "01a11815-afc0-7b62-9719-915474f02416",
+          "obeliskId": "codex:01a11815-afc0-7b62-9719-915474f02416"
+        }
+      ],
+      "commands": [],
+      "transactions": [],
+      "artifacts": [],
+      "screenshots": [],
+      "error": null
+    }
+  ],
+  "totals": {
+    "roles": 1,
+    "steps": 2,
+    "sessions": 1,
+    "commands": 1,
+    "transactions": 0,
+    "screenshots": 0
+  }
+}

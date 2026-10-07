@@ -1,0 +1,100 @@
+{
+  "schema": "obelisk.playground.provenance/1",
+  "run": {
+    "id": "run-20261007T203551Z-aed3",
+    "scenario": {
+      "name": "selected-skill-use-04",
+      "title": "用户选用协作 Skill 完成日常项目安排",
+      "file": "playground/scenarios/selected-skill-use-04.json",
+      "sha256": "9945a96a29290e2ff0ce847f0f12c2b6981ec4249419ac98a39bfaa5b0c3b715"
+    },
+    "network": {
+      "serviceUrl": "https://obelisk-service.kinomotomiovo.workers.dev",
+      "chainId": 968
+    },
+    "startedAt": "2026-10-07T20:35:51Z",
+    "endedAt": "2026-10-07T20:37:43Z",
+    "status": "succeeded",
+    "dryRun": false,
+    "obelisk": {
+      "gitCommit": "5508db2"
+    }
+  },
+  "roles": [
+    {
+      "id": "builder-01",
+      "label": "模拟角色：项目构建者",
+      "wallet": {
+        "address": "0x055bFeae1781F53B189493F4F3605A247e676383"
+      },
+      "harness": {
+        "kind": "codex",
+        "version": "codex-cli 0.160.0",
+        "model": "gpt-6.1-sol"
+      }
+    }
+  ],
+  "steps": [
+    {
+      "id": "builder-selected-use",
+      "index": 0,
+      "title": "用选中的协作方法安排下一次项目验收",
+      "role": "builder-01",
+      "action": "prompt",
+      "scenes": [
+        "v1:task/planning"
+      ],
+      "status": "succeeded",
+      "startedAt": "2026-10-07T20:35:51Z",
+      "endedAt": "2026-10-07T20:37:43Z",
+      "harness": {
+        "kind": "codex",
+        "version": "codex-cli 0.160.0",
+        "model": "gpt-6.1-sol",
+        "maxTurns": null
+      },
+      "prompt": "$ai-building-collaboration 今天临时多了一个需求：读书笔记要能按标签找。我还是只能抽半小时看进展，帮我看看现有计划怎么调整，把今天能交付的、要推迟的、需要我选的事情写成一页，存进项目。",
+      "sessions": [
+        {
+          "source": "codex",
+          "id": "01a11814-6562-7ea3-84ba-c8ab0f8f15c1",
+          "obeliskId": "codex:01a11814-6562-7ea3-84ba-c8ab0f8f15c1"
+        }
+      ],
+      "commands": [
+        {
+          "argv": [
+            "--query",
+            "<tmp>"
+          ],
+          "exitCode": 0,
+          "startedAt": "2026-10-07T20:36:25Z",
+          "endedAt": "2026-10-07T20:36:26Z",
+          "transactions": []
+        },
+        {
+          "argv": [
+            "--query",
+            "<tmp>"
+          ],
+          "exitCode": 0,
+          "startedAt": "2026-10-07T20:36:32Z",
+          "endedAt": "2026-10-07T20:36:32Z",
+          "transactions": []
+        }
+      ],
+      "transactions": [],
+      "artifacts": [],
+      "screenshots": [],
+      "error": null
+    }
+  ],
+  "totals": {
+    "roles": 1,
+    "steps": 1,
+    "sessions": 1,
+    "commands": 2,
+    "transactions": 0,
+    "screenshots": 0
+  }
+}

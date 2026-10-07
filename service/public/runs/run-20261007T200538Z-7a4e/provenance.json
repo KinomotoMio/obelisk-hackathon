@@ -1,0 +1,216 @@
+{
+  "schema": "obelisk.playground.provenance/1",
+  "run": {
+    "id": "run-20261007T200538Z-7a4e",
+    "scenario": {
+      "name": "isolated-method-use-02",
+      "title": "修正角色安装路径后的独立选用任务；不替换前轮零调用",
+      "file": "playground/scenarios/isolated-method-use-02.json",
+      "sha256": "fb4296d78d90761bad720e42621664996bc02378c6d65158c3693c777c5b8486"
+    },
+    "network": {
+      "serviceUrl": "https://obelisk-service.kinomotomiovo.workers.dev",
+      "chainId": 968
+    },
+    "startedAt": "2026-10-07T20:05:38Z",
+    "endedAt": "2026-10-07T20:10:24Z",
+    "status": "succeeded",
+    "dryRun": false,
+    "obelisk": {
+      "gitCommit": "e7530c7"
+    }
+  },
+  "roles": [
+    {
+      "id": "builder-01",
+      "label": "模拟角色：项目构建者",
+      "wallet": {
+        "address": "0x055bFeae1781F53B189493F4F3605A247e676383"
+      },
+      "harness": {
+        "kind": "codex",
+        "version": "codex-cli 0.160.0",
+        "model": "gpt-6.1-sol"
+      }
+    },
+    {
+      "id": "job-seeker-01",
+      "label": "模拟角色：求职者",
+      "wallet": {
+        "address": "0x8DE8692E82a32a07D876BaF6f8289b61F0b779C1"
+      },
+      "harness": {
+        "kind": "codex",
+        "version": "codex-cli 0.160.0",
+        "model": "gpt-6.1-sol"
+      }
+    }
+  ],
+  "steps": [
+    {
+      "id": "builder-install",
+      "index": 0,
+      "title": "产品操作：安装用户选择的版本",
+      "role": "builder-01",
+      "action": "cli",
+      "scenes": [],
+      "status": "succeeded",
+      "startedAt": "2026-10-07T20:05:38Z",
+      "endedAt": "2026-10-07T20:05:41Z",
+      "harness": null,
+      "prompt": null,
+      "sessions": [],
+      "commands": [
+        {
+          "argv": [
+            "skill",
+            "fetch",
+            "8198ffb1d25bc5900824dc730bdbb4985b2284b9d470165bee4f5704402ebfd4",
+            "--harness",
+            "codex",
+            "--confirm",
+            "--project",
+            "<playground>/roles/builder-01/workspace"
+          ],
+          "exitCode": 0,
+          "startedAt": "2026-10-07T20:05:38Z",
+          "endedAt": "2026-10-07T20:05:41Z",
+          "transactions": []
+        }
+      ],
+      "transactions": [],
+      "artifacts": [
+        {
+          "kind": "skill-fetch",
+          "ref": "ai-building-collaboration"
+        }
+      ],
+      "screenshots": [],
+      "error": null
+    },
+    {
+      "id": "job-install",
+      "index": 1,
+      "title": "产品操作：安装先前预览过的求职方法",
+      "role": "job-seeker-01",
+      "action": "cli",
+      "scenes": [],
+      "status": "succeeded",
+      "startedAt": "2026-10-07T20:05:41Z",
+      "endedAt": "2026-10-07T20:05:45Z",
+      "harness": null,
+      "prompt": null,
+      "sessions": [],
+      "commands": [
+        {
+          "argv": [
+            "skill",
+            "fetch",
+            "82e621269965832b5fac1d5cae3d255a5b0b4184d5b027876b8a576dbffd30c2",
+            "--harness",
+            "codex",
+            "--confirm",
+            "--project",
+            "<playground>/roles/job-seeker-01/workspace"
+          ],
+          "exitCode": 0,
+          "startedAt": "2026-10-07T20:05:41Z",
+          "endedAt": "2026-10-07T20:05:45Z",
+          "transactions": []
+        }
+      ],
+      "transactions": [],
+      "artifacts": [
+        {
+          "kind": "skill-fetch",
+          "ref": "backend-job-application-materials"
+        }
+      ],
+      "screenshots": [],
+      "error": null
+    },
+    {
+      "id": "builder-use",
+      "index": 2,
+      "title": "为半小时验收准备今天的协作安排",
+      "role": "builder-01",
+      "action": "prompt",
+      "scenes": [
+        "v1:task/planning"
+      ],
+      "status": "succeeded",
+      "startedAt": "2026-10-07T20:05:45Z",
+      "endedAt": "2026-10-07T20:07:52Z",
+      "harness": {
+        "kind": "codex",
+        "version": "codex-cli 0.160.0",
+        "model": "gpt-6.1-sol",
+        "maxTurns": null
+      },
+      "prompt": "我今天只能抽半小时看读书笔记项目的进展。按我选用的协作方法，帮我把今天该看什么、哪些你能继续做、哪些变化需要我拍板整理成一页，直接保存到项目里。没有实现的东西别写成已经完成。",
+      "sessions": [
+        {
+          "source": "codex",
+          "id": "01a117f8-d5aa-78d0-8fe0-1fca9d33dea2",
+          "obeliskId": "codex:01a117f8-d5aa-78d0-8fe0-1fca9d33dea2"
+        }
+      ],
+      "commands": [
+        {
+          "argv": [
+            "--query",
+            "<tmp>"
+          ],
+          "exitCode": 0,
+          "startedAt": "2026-10-07T20:06:36Z",
+          "endedAt": "2026-10-07T20:06:36Z",
+          "transactions": []
+        }
+      ],
+      "transactions": [],
+      "artifacts": [],
+      "screenshots": [],
+      "error": null
+    },
+    {
+      "id": "job-use",
+      "index": 3,
+      "title": "将真实项目经历整理成面试回答",
+      "role": "job-seeker-01",
+      "action": "prompt",
+      "scenes": [
+        "v1:task/writing"
+      ],
+      "status": "succeeded",
+      "startedAt": "2026-10-07T20:07:52Z",
+      "endedAt": "2026-10-07T20:10:24Z",
+      "harness": {
+        "kind": "codex",
+        "version": "codex-cli 0.160.0",
+        "model": "gpt-6.1-sol",
+        "maxTurns": null
+      },
+      "prompt": "明天可能会问到社团报名那个项目。用我选的求职方法，帮我准备一段一分钟左右能说清楚的回答，再列几个我可能被追问、但目前还缺证据的地方。别把没测过的并发和效果写进去。保存成一份面试笔记。",
+      "sessions": [
+        {
+          "source": "codex",
+          "id": "01a117fa-c52e-75e1-a36d-2818f7806d71",
+          "obeliskId": "codex:01a117fa-c52e-75e1-a36d-2818f7806d71"
+        }
+      ],
+      "commands": [],
+      "transactions": [],
+      "artifacts": [],
+      "screenshots": [],
+      "error": null
+    }
+  ],
+  "totals": {
+    "roles": 2,
+    "steps": 4,
+    "sessions": 2,
+    "commands": 3,
+    "transactions": 0,
+    "screenshots": 0
+  }
+}

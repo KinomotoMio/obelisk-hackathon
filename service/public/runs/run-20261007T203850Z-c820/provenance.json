@@ -1,0 +1,193 @@
+{
+  "schema": "obelisk.playground.provenance/1",
+  "run": {
+    "id": "run-20261007T203850Z-c820",
+    "scenario": {
+      "name": "mainnet-selected-use-02",
+      "title": "主网：另一位用户选用协作与原型验证方法",
+      "file": "playground/scenarios/mainnet-selected-use-02.json",
+      "sha256": "e263f4410e15761f27dfcfe8568f6665d0f5ab6b73faf142234146b71c6b46fc"
+    },
+    "network": {
+      "serviceUrl": "https://obelisk-service-mainnet.kinomotomiovo.workers.dev",
+      "chainId": 677
+    },
+    "startedAt": "2026-10-07T20:38:50Z",
+    "endedAt": "2026-10-07T20:42:05Z",
+    "status": "succeeded",
+    "dryRun": false,
+    "obelisk": {
+      "gitCommit": "5508db2"
+    }
+  },
+  "roles": [
+    {
+      "id": "mainnet-designer",
+      "label": "模拟角色：主网设计者",
+      "wallet": {
+        "address": "0xEd02C85BB7f20efEb26cFA3079a2B76053819070"
+      },
+      "harness": {
+        "kind": "codex",
+        "version": "codex-cli 0.160.0",
+        "model": "gpt-6.1-sol"
+      }
+    }
+  ],
+  "steps": [
+    {
+      "id": "install-1",
+      "index": 0,
+      "title": "安装所选市场方法",
+      "role": "mainnet-designer",
+      "action": "cli",
+      "scenes": [],
+      "status": "succeeded",
+      "startedAt": "2026-10-07T20:38:50Z",
+      "endedAt": "2026-10-07T20:38:56Z",
+      "harness": null,
+      "prompt": null,
+      "sessions": [],
+      "commands": [
+        {
+          "argv": [
+            "skill",
+            "fetch",
+            "8198ffb1d25bc5900824dc730bdbb4985b2284b9d470165bee4f5704402ebfd4",
+            "--harness",
+            "codex",
+            "--confirm",
+            "--project",
+            "<playground>/roles/mainnet-designer/workspace"
+          ],
+          "exitCode": 0,
+          "startedAt": "2026-10-07T20:38:52Z",
+          "endedAt": "2026-10-07T20:38:56Z",
+          "transactions": []
+        }
+      ],
+      "transactions": [],
+      "artifacts": [
+        {
+          "kind": "skill-fetch",
+          "ref": "ai-building-collaboration"
+        }
+      ],
+      "screenshots": [],
+      "error": null
+    },
+    {
+      "id": "use-1",
+      "index": 1,
+      "title": "为社团活动准备可执行安排",
+      "role": "mainnet-designer",
+      "action": "prompt",
+      "scenes": [
+        "v1:task/planning"
+      ],
+      "status": "succeeded",
+      "startedAt": "2026-10-07T20:38:56Z",
+      "endedAt": "2026-10-07T20:40:24Z",
+      "harness": {
+        "kind": "codex",
+        "version": "codex-cli 0.160.0",
+        "model": "gpt-6.1-sol",
+        "maxTurns": null
+      },
+      "prompt": "$ai-building-collaboration 我想做一个社团活动报名页，第一版只收姓名和联系方式，不做支付。帮我写个适合周末两天完成的计划，把哪些我来决定、哪些可以交给你整理清楚。 保存到项目里。",
+      "sessions": [
+        {
+          "source": "codex",
+          "id": "01a11817-348f-7140-8934-2d2035a6c08a",
+          "obeliskId": "codex:01a11817-348f-7140-8934-2d2035a6c08a"
+        }
+      ],
+      "commands": [],
+      "transactions": [],
+      "artifacts": [],
+      "screenshots": [],
+      "error": null
+    },
+    {
+      "id": "install-2",
+      "index": 2,
+      "title": "安装所选市场方法",
+      "role": "mainnet-designer",
+      "action": "cli",
+      "scenes": [],
+      "status": "succeeded",
+      "startedAt": "2026-10-07T20:40:24Z",
+      "endedAt": "2026-10-07T20:40:29Z",
+      "harness": null,
+      "prompt": null,
+      "sessions": [],
+      "commands": [
+        {
+          "argv": [
+            "skill",
+            "fetch",
+            "2a4f68c72caae4806cfef2b1a91526e1da6d07ad982f731cbc6c7f57f61bf86b",
+            "--harness",
+            "codex",
+            "--confirm",
+            "--project",
+            "<playground>/roles/mainnet-designer/workspace"
+          ],
+          "exitCode": 0,
+          "startedAt": "2026-10-07T20:40:24Z",
+          "endedAt": "2026-10-07T20:40:29Z",
+          "transactions": []
+        }
+      ],
+      "transactions": [],
+      "artifacts": [
+        {
+          "kind": "skill-fetch",
+          "ref": "ai-building-half-hour-review"
+        }
+      ],
+      "screenshots": [],
+      "error": null
+    },
+    {
+      "id": "use-2",
+      "index": 3,
+      "title": "为社团活动准备可执行安排",
+      "role": "mainnet-designer",
+      "action": "prompt",
+      "scenes": [
+        "v1:task/planning"
+      ],
+      "status": "succeeded",
+      "startedAt": "2026-10-07T20:40:29Z",
+      "endedAt": "2026-10-07T20:42:05Z",
+      "harness": {
+        "kind": "codex",
+        "version": "codex-cli 0.160.0",
+        "model": "gpt-6.1-sol",
+        "maxTurns": null
+      },
+      "prompt": "$ai-building-half-hour-review 我现在只有半小时，报名页还只是计划，帮我列一份今天能看完的审阅清单，重点是收集哪些信息、怎么提醒参与者、哪些还不能说已经做好。 保存到项目里。",
+      "sessions": [
+        {
+          "source": "codex",
+          "id": "01a11818-9e9c-7a63-a498-4099b2aa7d4d",
+          "obeliskId": "codex:01a11818-9e9c-7a63-a498-4099b2aa7d4d"
+        }
+      ],
+      "commands": [],
+      "transactions": [],
+      "artifacts": [],
+      "screenshots": [],
+      "error": null
+    }
+  ],
+  "totals": {
+    "roles": 1,
+    "steps": 4,
+    "sessions": 2,
+    "commands": 2,
+    "transactions": 0,
+    "screenshots": 0
+  }
+}

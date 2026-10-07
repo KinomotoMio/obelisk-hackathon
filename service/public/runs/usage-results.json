@@ -1,0 +1,416 @@
+{
+  "recordedAt": "2026-10-07T20:46:06.275801+00:00",
+  "label": "模拟用户主动选择 Skill，真实 AI 执行；不是自主发现或真实客户规模",
+  "newInvocations": {
+    "testnet": 10,
+    "mainnet": 5
+  },
+  "mainnetBudget": {
+    "capBOT": "0.25",
+    "balanceBOT": "0.27453432",
+    "spentSinceFundingBOT": "0.22546568"
+  },
+  "runs": [
+    {
+      "role": "builder",
+      "chainId": 968,
+      "runId": "run-20261007T203551Z-aed3",
+      "judgments": [
+        {
+          "skill": "ai-building-collaboration",
+          "outcome": "smooth",
+          "scenes": [
+            "v1:task/planning",
+            "v1:artifact/docs"
+          ],
+          "reason": "助手核对现有计划与原始讨论，将今日交付、延期事项和待选优先级整理并存入项目，未见返工。"
+        }
+      ],
+      "wallet": "0x055bFeae1781F53B189493F4F3605A247e676383",
+      "reports": [
+        {
+          "skill": "ai-building-collaboration",
+          "skillId": "10",
+          "version": 1,
+          "fingerprint": "8198ffb1d25bc5900824dc730bdbb4985b2284b9d470165bee4f5704402ebfd4",
+          "status": "reported",
+          "cumulative": 1,
+          "added": 1,
+          "transaction": "0xe9dee8416e38a28245ed28891733f3641e44237da4de9b67c00bf35d637a0af8",
+          "explorer": "https://scan.bohr.life/tx/0xe9dee8416e38a28245ed28891733f3641e44237da4de9b67c00bf35d637a0af8"
+        }
+      ]
+    },
+    {
+      "role": "job-seeker-01",
+      "chainId": 968,
+      "runId": "run-20261007T203624Z-776c",
+      "judgments": [
+        {
+          "skill": "evidence-grounded-job-materials",
+          "outcome": "smooth",
+          "scenes": [
+            "v1:context/job-search",
+            "v1:task/writing",
+            "v1:artifact/docs"
+          ],
+          "reason": "助手核对事实后写出自然的招聘消息并保存，保留未上线和未做并发测试的边界，无返工迹象。"
+        },
+        {
+          "skill": "small-project-evidence-loop",
+          "outcome": "smooth",
+          "scenes": [
+            "v1:context/job-search",
+            "v1:task/planning",
+            "v1:artifact/docs"
+          ],
+          "reason": "助手保存了诚实的面试回答和两人可执行的验证计划，明确证据缺口与待执行状态，无返工迹象。"
+        }
+      ],
+      "wallet": "0x8DE8692E82a32a07D876BaF6f8289b61F0b779C1",
+      "reports": [
+        {
+          "skill": "evidence-grounded-job-materials",
+          "skillId": "15",
+          "version": 1,
+          "fingerprint": "3feece437dcc9073593ce19407d043622eacc885b677ec4c7d6db6a76e4e65c9",
+          "status": "reported",
+          "cumulative": 1,
+          "added": 1,
+          "transaction": "0x35f24a9796c15285aecda9d2107c2a33b0527e350603732bc105e7e8df32ec32",
+          "explorer": "https://scan.bohr.life/tx/0x35f24a9796c15285aecda9d2107c2a33b0527e350603732bc105e7e8df32ec32"
+        },
+        {
+          "skill": "small-project-evidence-loop",
+          "skillId": "16",
+          "version": 1,
+          "fingerprint": "608430d0d29afeb96f59ffc1ae04e33b6ec7315fde7f4ddd3640fdd6c48895ce",
+          "status": "reported",
+          "cumulative": 1,
+          "added": 1,
+          "transaction": "0xd9549bbdd17acde93bc2adceaab84eae1bea106578664d0a82e50454e7d6ea20",
+          "explorer": "https://scan.bohr.life/tx/0xd9549bbdd17acde93bc2adceaab84eae1bea106578664d0a82e50454e7d6ea20"
+        }
+      ]
+    },
+    {
+      "role": "designer-01",
+      "chainId": 968,
+      "runId": "run-20261007T203623Z-5451",
+      "judgments": [
+        {
+          "skill": "small-project-evidence-loop",
+          "outcome": "smooth",
+          "scenes": [
+            "v1:task/planning",
+            "v1:artifact/docs",
+            "v1:artifact/portfolio"
+          ],
+          "reason": "十分钟访谈提纲和可填写观察表已保存，并明确标注试用待执行，没有返工迹象。"
+        },
+        {
+          "skill": "ai-building-collaboration",
+          "outcome": "smooth",
+          "scenes": [
+            "v1:task/planning",
+            "v1:artifact/portfolio",
+            "v1:artifact/docs"
+          ],
+          "reason": "两个晚上的补充计划已保存并检查链接，区分已有证据与待执行试用，没有用户要求修正。"
+        }
+      ],
+      "wallet": "0x6640773539e914Da9f1D04056DBCD3c301fE2f2F",
+      "reports": [
+        {
+          "skill": "small-project-evidence-loop",
+          "skillId": "16",
+          "version": 1,
+          "fingerprint": "608430d0d29afeb96f59ffc1ae04e33b6ec7315fde7f4ddd3640fdd6c48895ce",
+          "status": "reported",
+          "cumulative": 1,
+          "added": 1,
+          "transaction": "0x2d0e9d8ba32c0a13c65505da8d7e68126b48fafd81793c12ec253b8086de0e47",
+          "explorer": "https://scan.bohr.life/tx/0x2d0e9d8ba32c0a13c65505da8d7e68126b48fafd81793c12ec253b8086de0e47"
+        },
+        {
+          "skill": "ai-building-collaboration",
+          "skillId": "10",
+          "version": 1,
+          "fingerprint": "8198ffb1d25bc5900824dc730bdbb4985b2284b9d470165bee4f5704402ebfd4",
+          "status": "reported",
+          "cumulative": 1,
+          "added": 1,
+          "transaction": "0xd1761f777391b24d5cf908b57c3118bab742b2f2797735ea5dd94df8e69f422a",
+          "explorer": "https://scan.bohr.life/tx/0xd1761f777391b24d5cf908b57c3118bab742b2f2797735ea5dd94df8e69f422a"
+        }
+      ]
+    },
+    {
+      "role": "maintainer-01",
+      "chainId": 968,
+      "runId": "run-20261007T203625Z-0299",
+      "judgments": [
+        {
+          "skill": "evidence-based-issue-handoff",
+          "outcome": "smooth",
+          "scenes": [
+            "v1:task/writing",
+            "v1:task/debug",
+            "v1:artifact/docs"
+          ],
+          "reason": "已将现象、复现限制和未知项整理为 issue 交接文件并保存，未见返工。"
+        },
+        {
+          "skill": "ai-building-collaboration",
+          "outcome": "smooth",
+          "scenes": [
+            "v1:task/planning",
+            "v1:task/writing",
+            "v1:artifact/docs"
+          ],
+          "reason": "核对文档和历史后已保存周末交接，明确可继续事项与待确认改动，未见返工。"
+        }
+      ],
+      "wallet": "0xc2b2A036cDd817e118279D8A12d2c2d5C0610Df3",
+      "reports": [
+        {
+          "skill": "evidence-based-issue-handoff",
+          "skillId": "17",
+          "version": 1,
+          "fingerprint": "004aa60e2b3d0f55569b67d0fe7ca0d7a215fd546d227e0164a9733f179adc39",
+          "status": "reported",
+          "cumulative": 1,
+          "added": 1,
+          "transaction": "0xabbb82688a9e1ab4945879b7bf9b0cda295b7fccdb380a9ea3e95141268f2235",
+          "explorer": "https://scan.bohr.life/tx/0xabbb82688a9e1ab4945879b7bf9b0cda295b7fccdb380a9ea3e95141268f2235"
+        },
+        {
+          "skill": "ai-building-collaboration",
+          "skillId": "10",
+          "version": 1,
+          "fingerprint": "8198ffb1d25bc5900824dc730bdbb4985b2284b9d470165bee4f5704402ebfd4",
+          "status": "reported",
+          "cumulative": 1,
+          "added": 1,
+          "transaction": "0xb05d66444118c886f09dc07119050a4ded13ffed98adb8d4a18cc4a25b06d68d",
+          "explorer": "https://scan.bohr.life/tx/0xb05d66444118c886f09dc07119050a4ded13ffed98adb8d4a18cc4a25b06d68d"
+        }
+      ]
+    },
+    {
+      "role": "mainnet-builder",
+      "chainId": 677,
+      "runId": "run-20261007T203712Z-08e1",
+      "judgments": [
+        {
+          "skill": "ai-building-collaboration",
+          "outcome": "smooth",
+          "scenes": [
+            "v1:task/planning",
+            "v1:artifact/docs"
+          ],
+          "reason": "助手已保存包含每日成果、验收步骤和待决定事项的第一周协作计划，未见用户要求返工。"
+        }
+      ],
+      "wallet": "0x095E78ef26707800b0D7F445dD2eC72C073AeD5F",
+      "reports": [
+        {
+          "skill": "ai-building-collaboration",
+          "skillId": "1",
+          "version": 1,
+          "fingerprint": "8198ffb1d25bc5900824dc730bdbb4985b2284b9d470165bee4f5704402ebfd4",
+          "status": "reported",
+          "cumulative": 1,
+          "added": 1,
+          "transaction": "0xc3ccc4a0aa3ee1bd2440a107be152c5dc3506c1776099bdbf3fbc6e4dc4a6787",
+          "explorer": "https://scan.botchain.ai/tx/0xc3ccc4a0aa3ee1bd2440a107be152c5dc3506c1776099bdbf3fbc6e4dc4a6787"
+        }
+      ]
+    },
+    {
+      "role": "mainnet-designer",
+      "chainId": 677,
+      "runId": "run-20261007T203850Z-c820",
+      "judgments": [
+        {
+          "skill": "ai-building-collaboration",
+          "outcome": "smooth",
+          "scenes": [
+            "v1:task/planning",
+            "v1:artifact/docs"
+          ],
+          "reason": "两天计划已保存到项目，明确了范围、分工和验收标准，未见返工。"
+        },
+        {
+          "skill": "ai-building-half-hour-review",
+          "outcome": "smooth",
+          "scenes": [
+            "v1:task/planning",
+            "v1:artifact/docs"
+          ],
+          "reason": "半小时审阅清单已保存，覆盖信息收集、提醒取舍和未完成事项，未见返工。"
+        }
+      ],
+      "wallet": "0xEd02C85BB7f20efEb26cFA3079a2B76053819070",
+      "reports": [
+        {
+          "skill": "ai-building-half-hour-review",
+          "skillId": "2",
+          "version": 1,
+          "fingerprint": "2a4f68c72caae4806cfef2b1a91526e1da6d07ad982f731cbc6c7f57f61bf86b",
+          "status": "reported",
+          "cumulative": 1,
+          "added": 1,
+          "transaction": "0xe92de504d9965830ca328d86ad2108010142e1712f07b830524525aa57ee1b58",
+          "explorer": "https://scan.botchain.ai/tx/0xe92de504d9965830ca328d86ad2108010142e1712f07b830524525aa57ee1b58"
+        },
+        {
+          "skill": "ai-building-collaboration",
+          "skillId": "1",
+          "version": 1,
+          "fingerprint": "8198ffb1d25bc5900824dc730bdbb4985b2284b9d470165bee4f5704402ebfd4",
+          "status": "reported",
+          "cumulative": 1,
+          "added": 1,
+          "transaction": "0xcbe60f984051fdbc230985198d12f514f7f7f0c3ea703637c2d304a04e6bbb52",
+          "explorer": "https://scan.botchain.ai/tx/0xcbe60f984051fdbc230985198d12f514f7f7f0c3ea703637c2d304a04e6bbb52"
+        }
+      ]
+    },
+    {
+      "role": "builder-01",
+      "chainId": 968,
+      "runId": "run-20261007T204018Z-c05a",
+      "judgments": [
+        {
+          "skill": "scope-change-handoff",
+          "outcome": "smooth",
+          "scenes": [
+            "v1:task/planning",
+            "v1:task/writing",
+            "v1:artifact/docs"
+          ],
+          "reason": "已保存范围收拢接手说明和历史快照，明确废止决定、保留任务与验收要求，无用户要求返工。"
+        },
+        {
+          "skill": "small-project-evidence-loop",
+          "outcome": "smooth",
+          "scenes": [
+            "v1:task/research",
+            "v1:task/planning",
+            "v1:artifact/docs"
+          ],
+          "reason": "已保存十分钟试用流程和可填写记录表，并明确待执行状态及原型限制，无用户要求返工。"
+        }
+      ],
+      "wallet": "0x055bFeae1781F53B189493F4F3605A247e676383",
+      "reports": [
+        {
+          "skill": "small-project-evidence-loop",
+          "skillId": "16",
+          "version": 1,
+          "fingerprint": "608430d0d29afeb96f59ffc1ae04e33b6ec7315fde7f4ddd3640fdd6c48895ce",
+          "status": "reported",
+          "cumulative": 1,
+          "added": 1,
+          "transaction": "0x5f442773e96be1851b3e36fc36403b3c242d34632ed63ea9b4b5c9eab611341f",
+          "explorer": "https://scan.bohr.life/tx/0x5f442773e96be1851b3e36fc36403b3c242d34632ed63ea9b4b5c9eab611341f"
+        },
+        {
+          "skill": "scope-change-handoff",
+          "skillId": "18",
+          "version": 1,
+          "fingerprint": "dae270f439ec7c53bbcaf4968c8e22c4b611178a35554166ba86eb9f93a5dcab",
+          "status": "reported",
+          "cumulative": 1,
+          "added": 1,
+          "transaction": "0x39486ae0872494c6ba5747cdf4957b715d6efcaaecbedd0993e574c856fd0d20",
+          "explorer": "https://scan.bohr.life/tx/0x39486ae0872494c6ba5747cdf4957b715d6efcaaecbedd0993e574c856fd0d20"
+        }
+      ]
+    },
+    {
+      "role": "mainnet-builder",
+      "chainId": 677,
+      "runId": "run-20261007T204106Z-b81c",
+      "judgments": [
+        {
+          "skill": "scope-change-handoff",
+          "outcome": "smooth",
+          "scenes": [
+            "v1:task/planning",
+            "v1:task/writing",
+            "v1:artifact/docs"
+          ],
+          "reason": "已改写并保存缩小范围的第一周计划、旧决定替代关系和接手说明，未见返工。"
+        },
+        {
+          "skill": "small-project-evidence-loop",
+          "outcome": "smooth",
+          "scenes": [
+            "v1:task/research",
+            "v1:task/writing",
+            "v1:artifact/docs"
+          ],
+          "reason": "已保存中性访谈提纲和记录表，区分表达、操作与猜测，并明确访谈待执行。"
+        }
+      ],
+      "wallet": "0x095E78ef26707800b0D7F445dD2eC72C073AeD5F",
+      "reports": [
+        {
+          "skill": "small-project-evidence-loop",
+          "skillId": "3",
+          "version": 1,
+          "fingerprint": "608430d0d29afeb96f59ffc1ae04e33b6ec7315fde7f4ddd3640fdd6c48895ce",
+          "status": "reported",
+          "cumulative": 1,
+          "added": 1,
+          "transaction": "0x5dd68af18304c09a8eacda4fcc27c44345420f4371bc26544cb62b42a3b10e01",
+          "explorer": "https://scan.botchain.ai/tx/0x5dd68af18304c09a8eacda4fcc27c44345420f4371bc26544cb62b42a3b10e01"
+        },
+        {
+          "skill": "scope-change-handoff",
+          "skillId": "4",
+          "version": 1,
+          "fingerprint": "dae270f439ec7c53bbcaf4968c8e22c4b611178a35554166ba86eb9f93a5dcab",
+          "status": "reported",
+          "cumulative": 1,
+          "added": 1,
+          "transaction": "0x152c6bc8b9933c930bde2e45782f52a32f56b5f122399902090abbc9cc3c178f",
+          "explorer": "https://scan.botchain.ai/tx/0x152c6bc8b9933c930bde2e45782f52a32f56b5f122399902090abbc9cc3c178f"
+        }
+      ]
+    },
+    {
+      "role": "designer-01",
+      "chainId": 968,
+      "runId": "run-20261007T204252Z-d2c1",
+      "judgments": [
+        {
+          "skill": "ai-building-half-hour-review",
+          "outcome": "smooth",
+          "scenes": [
+            "v1:artifact/portfolio",
+            "v1:task/planning",
+            "v1:artifact/docs"
+          ],
+          "reason": "完成材料审阅并保存一页笔记，明确当晚可决定事项与待试用验证结论，未出现返工。"
+        }
+      ],
+      "wallet": "0x6640773539e914Da9f1D04056DBCD3c301fE2f2F",
+      "reports": [
+        {
+          "skill": "ai-building-half-hour-review",
+          "skillId": "14",
+          "version": 1,
+          "fingerprint": "2a4f68c72caae4806cfef2b1a91526e1da6d07ad982f731cbc6c7f57f61bf86b",
+          "status": "reported",
+          "cumulative": 1,
+          "added": 1,
+          "transaction": "0x528bebaff5176e21c7d7aae49ea4bf63cd94e0cbc9ba1d2a12dff4571edf4f7e",
+          "explorer": "https://scan.bohr.life/tx/0x528bebaff5176e21c7d7aae49ea4bf63cd94e0cbc9ba1d2a12dff4571edf4f7e"
+        }
+      ]
+    }
+  ]
+}
