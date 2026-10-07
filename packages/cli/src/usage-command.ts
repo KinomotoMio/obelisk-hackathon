@@ -1,7 +1,8 @@
 // Copyright (C) 2026 tommy0103 and contributors.
 // SPDX-License-Identifier: AGPL-3.0-only
 
-// `obelisk usage status | enable [--confirm] | disable | report [--if-due]` (#23, vision 04 U4).
+// `obelisk usage status | enable [--confirm] | disable | report [--if-due]` (#23, vision 04 U4);
+// `obelisk usage judge` is in usage-judge-command.ts (#25).
 //
 // Agent-facing like `obelisk wallet`: one JSON object per command, `next`
 // says what to do next. Reporting is off until the user turns it on, and
@@ -23,8 +24,9 @@ import { planUsageReports, reportableFingerprints, signReportUsage, type ReportB
 import { readUsageSettings, reportedKey, writeUsageSettings, type ReportedTotals, type UsageSettings } from '../../core/src/usage-settings.ts';
 import { loadWallet } from '../../core/src/wallet.ts';
 import { skillService, type SkillChainDeps } from './skill-mint-command.ts';
+import { runUsageJudgeCommand } from './usage-judge-command.ts';
 
-export const USAGE_USAGE = 'Usage: obelisk usage status | enable [--confirm] | disable | report [--if-due]';
+export const USAGE_USAGE = 'Usage: obelisk usage status | enable [--confirm] | disable | report [--if-due] | judge [--harness claude|codex] [--limit <n>] [--batch <n>] [--model <name>] [--confirm]';
 
 /** How long a report signature stays valid for the relay. */
 const REPORT_DEADLINE_SECONDS = 600;
@@ -33,7 +35,7 @@ const REPORT_INTERVAL_MS = 24 * 3600 * 1000;
 
 export type UsageDeps = SkillChainDeps;
 
-const WHAT_IS_SENT = 'For each minted Skill version you used: its fingerprint, how many times you invoked it in total, how many of those invocations showed each fact signal (tool error, correction, repeated edit, repeated invocation), and, once invocations are judged, how many fell into each scene and result.';
+const WHAT_IS_SENT = 'For each minted Skill version you used: its fingerprint, how many times you invoked it in total, how many of those invocations showed each fact signal (tool error, correction, repeated edit, repeated invocation), and, once `obelisk usage judge` has run, how many fell into each scene and result.';
 const NEVER_SENT = 'Never sent: session content, prompts, file names, project paths, Skill names you gave, or when each invocation happened.';
 const PUBLIC = 'Reports are written on BOT Chain under your wallet address, so anyone can see which minted versions this wallet reported and its running totals.';
 const FEE = 'Paid by the Obelisk online service; this wallet is not charged.';
@@ -254,6 +256,7 @@ export async function runUsageCommand(args: string[], deps: UsageDeps = {}): Pro
     return flags.has('--confirm') ? report(deps, { ifDue: false, enabling: true }) : preview(deps, 'enable');
   }
   if (action === 'disable') { only(); return disable(deps); }
+  if (action === 'judge') return runUsageJudgeCommand(rest, deps);
   if (action === 'report') { only('--if-due'); return report(deps, { ifDue: flags.has('--if-due'), enabling: false }); }
   throw new Error(USAGE_USAGE);
 }
