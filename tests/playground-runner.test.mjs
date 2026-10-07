@@ -235,3 +235,41 @@ test('a Codex step fails when its auth.json link was replaced during the run', a
   assert.match(provenance.steps[0].error, /no longer a link to the shared sign-in/);
   assert.equal(lstatSync(join(b.codexDir, 'auth.json')).isSymbolicLink(), false);
 });
+
+test('a capture step renders an App page of the role\'s data into the run\'s screenshots', async () => {
+  const { fx, loaded } = setup({
+    ...twoRoles,
+    steps: [
+      { id: 'a-share-read', role: 'A', title: 'A 的 Share tab', route: '#/share', waitFor: '.share-table tr[data-state="read"]', caption: '已读回执' },
+      { id: 'a-missing', role: 'A', title: '不存在的页面', route: '#/missing', caption: '不会出现' },
+    ],
+  });
+  process.env.OBELISK_PLAYGROUND_CAPTURE = fx.capture;
+  try {
+    const { runDir, provenance } = await runScenario(loaded, { home: fx.home, dryRun: true, cli: fx.cli, store: memoryStore() });
+    assert.deepEqual(validateProvenance(readJson(join(runDir, 'provenance.json'))), []);
+    const [shot, missing] = provenance.steps;
+    assert.equal(shot.action, 'capture');
+    assert.equal(shot.status, 'succeeded');
+    assert.deepEqual(shot.screenshots, [{ file: 'screenshots/a-share-read.png', caption: '已读回执' }]);
+    assert.ok(existsSync(join(runDir, 'screenshots', 'a-share-read.png')));
+    const [seen] = readFileSync(join(fx.seen, 'capture.jsonl'), 'utf8').trim().split('\n').map((line) => JSON.parse(line));
+    assert.equal(seen.OBELISK_HOME, rolePaths(fx.home, 'A').obeliskHome);
+    assert.deepEqual(seen.args, ['--route', '#/share', '--out', join(runDir, 'screenshots', 'a-share-read.png'), '--wait-for', '.share-table tr[data-state="read"]']);
+    assert.equal(missing.status, 'failed');
+    assert.match(missing.error, /^capture of #\/missing exited with 1: capture failed: the page did not render/);
+    assert.deepEqual(missing.screenshots, []);
+    const screenshotEvents = readEvents(runDir).filter((e) => e.type === 'screenshot');
+    assert.deepEqual(screenshotEvents.map((e) => e.data.file), ['screenshots/a-share-read.png']);
+    assert.equal(provenance.totals.screenshots, 1);
+  } finally {
+    delete process.env.OBELISK_PLAYGROUND_CAPTURE;
+  }
+});
+
+test('a capture step needs a caption', () => {
+  assert.throws(() => parseScenario({
+    schema: 'obelisk.playground.scenario/1', name: 'n', roles: [{ id: 'A' }],
+    steps: [{ id: 's', role: 'A', route: '#/share' }],
+  }), /steps\[0\]\.caption must say what the screenshot shows/);
+});

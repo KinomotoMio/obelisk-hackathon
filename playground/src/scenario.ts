@@ -14,7 +14,9 @@
 //   "roles": [{ "id": "A", "label": "作者 A", "harness": "codex", "skills": ["obelisk", "obelisk-distill"] }],
 //   "steps": [
 //     { "id": "a-task", "role": "A", "title": "…", "prompt": "…", "scenes": ["v1:task/writing"] },
-//     { "id": "a-wallet", "role": "A", "title": "…", "cli": ["wallet", "show"] }
+//     { "id": "a-wallet", "role": "A", "title": "…", "cli": ["wallet", "show"] },
+//     { "id": "a-shot", "role": "A", "title": "…", "route": "#/share",
+//       "waitFor": ".share-table tr[data-state=\"read\"]", "scrollTo": null, "caption": "已读回执" }
 //   ]
 // }
 //
@@ -45,10 +47,12 @@ export interface ScenarioStep {
   role: string;
   title: string;
   scenes: string[];
-  /** Exactly one of prompt / cli is set. */
+  /** Exactly one of prompt / cli / capture is set. */
   prompt: string | null;
   prompts: Partial<Record<RealHarness, string>>;
   cli: string[] | null;
+  /** Capture an App page of the role's data to runs/<id>/screenshots/<step id>.png. */
+  capture: { route: string; waitFor: string | null; scrollTo: string | null; caption: string } | null;
   model: string | null;
   maxTurns: number;
   timeoutMinutes: number;
@@ -131,7 +135,10 @@ export function parseScenario(value: unknown): Scenario {
     need(typeof raw['role'] === 'string' && roleIds.has(raw['role']), `steps[${i}].role must name a role`);
     const hasPrompt = typeof raw['prompt'] === 'string' && raw['prompt'].trim() !== '';
     const hasCli = isStringArray(raw['cli']) && raw['cli'].length > 0;
-    need(hasPrompt !== hasCli, `steps[${i}] needs exactly one of prompt (a string) or cli (an array of obelisk arguments)`);
+    const hasCapture = typeof raw['route'] === 'string' && raw['route'].startsWith('#/');
+    need(Number(hasPrompt) + Number(hasCli) + Number(hasCapture) === 1, `steps[${i}] needs exactly one of prompt (a string), cli (an array of obelisk arguments) or route (an App route such as "#/share")`);
+    const optional = (key: string) => (raw[key] === undefined || raw[key] === null ? null : String(raw[key]));
+    if (hasCapture) need(typeof raw['caption'] === 'string' && raw['caption'] !== '', `steps[${i}].caption must say what the screenshot shows`);
     const prompts = isObject(raw['prompts']) ? raw['prompts'] : {};
     need(Object.entries(prompts).every(([k, v]) => HARNESSES.includes(k as RealHarness) && typeof v === 'string'), `steps[${i}].prompts must map ${HARNESSES.join(' / ')} to strings`);
     need(raw['scenes'] === undefined || isStringArray(raw['scenes']), `steps[${i}].scenes must be an array of strings`);
@@ -146,6 +153,9 @@ export function parseScenario(value: unknown): Scenario {
       prompt: hasPrompt ? (raw['prompt'] as string) : null,
       prompts: prompts as Partial<Record<RealHarness, string>>,
       cli: hasCli ? (raw['cli'] as string[]) : null,
+      capture: hasCapture
+        ? { route: raw['route'] as string, waitFor: optional('waitFor'), scrollTo: optional('scrollTo'), caption: String(raw['caption'] ?? '') }
+        : null,
       model: typeof raw['model'] === 'string' ? raw['model'] : null,
       maxTurns: positive(raw['maxTurns'], defaultTurns, `steps[${i}].maxTurns`),
       timeoutMinutes: positive(raw['timeoutMinutes'], defaultTimeout, `steps[${i}].timeoutMinutes`),

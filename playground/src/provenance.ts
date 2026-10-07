@@ -22,8 +22,12 @@ export type RunStatus = 'running' | 'succeeded' | 'failed' | 'aborted';
 export type StepStatus = 'pending' | 'running' | 'succeeded' | 'failed' | 'skipped';
 /** `fake` is the scripted stand-in used by tests and dry runs; it never calls a model. */
 export type HarnessKind = 'claude-code' | 'codex' | 'fake';
-/** How the simulated user acts: speaks a prompt to its harness, or types an `obelisk` command. */
-export type StepAction = 'prompt' | 'cli';
+/**
+ * How the step acts: the simulated user speaks a prompt to its harness or
+ * types an `obelisk` command, or the runner captures an App page of that
+ * role's data (headless, `npm run capture` in app/) as a key screenshot.
+ */
+export type StepAction = 'prompt' | 'cli' | 'capture';
 
 export interface HarnessInfo {
   kind: HarnessKind;
@@ -213,7 +217,7 @@ function checkStep(step: unknown, path: string, roleIds: Set<string>, check: Che
   check(Number.isInteger(step['index']), `${path}.index`, 'must be an integer');
   check(isString(step['title']), `${path}.title`, 'must be a string');
   check(isString(step['role']) && roleIds.has(step['role']), `${path}.role`, 'must name a role in roles');
-  check(step['action'] === 'prompt' || step['action'] === 'cli', `${path}.action`, 'must be prompt or cli');
+  check(['prompt', 'cli', 'capture'].includes(step['action'] as string), `${path}.action`, 'must be prompt, cli or capture');
   checkArray(step['scenes'], `${path}.scenes`, check, (s, p) => check(isString(s), p, 'must be a string'));
   check(STEP_STATUSES.includes(step['status'] as StepStatus), `${path}.status`, `must be one of ${STEP_STATUSES.join(', ')}`);
   check(isTimeOrNull(step['startedAt']), `${path}.startedAt`, 'must be an ISO UTC time or null');

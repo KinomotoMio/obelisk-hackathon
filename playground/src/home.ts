@@ -61,6 +61,18 @@ export function obeliskCliEntry(env: NodeJS.ProcessEnv = process.env): string {
   return env['OBELISK_PLAYGROUND_CLI']?.trim() || join(repoRoot, 'packages', 'cli', 'dist', 'cli', 'src', 'obelisk.js');
 }
 
+/**
+ * How to run the App's headless capture (#32): OBELISK_PLAYGROUND_CAPTURE (an
+ * executable taking the capture flags, for tests), else the App's own
+ * Electron in app/ (`electron . --capture`, built with `npx electron-vite build`).
+ */
+export function captureCommand(env: NodeJS.ProcessEnv = process.env): { command: string; args: string[]; cwd: string } {
+  const override = env['OBELISK_PLAYGROUND_CAPTURE']?.trim();
+  if (override) return { command: override, args: [], cwd: repoRoot };
+  const app = join(repoRoot, 'app');
+  return { command: join(app, 'node_modules', '.bin', 'electron'), args: ['.', '--capture'], cwd: app };
+}
+
 /** Built skills to install into each role: OBELISK_PLAYGROUND_SKILLS, else this checkout's staged skill repo. */
 export function skillsSource(env: NodeJS.ProcessEnv = process.env): string {
   return env['OBELISK_PLAYGROUND_SKILLS']?.trim() || join(repoRoot, 'dist', 'obelisk-skill-repo', 'skills');

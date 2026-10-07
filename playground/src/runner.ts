@@ -15,7 +15,7 @@ import { join, relative } from 'node:path';
 import type { SecretStore } from '../../packages/core/src/keychain.ts';
 import { checkCodexLink, harnessAuthEnv, readConfig } from './auth.ts';
 import { runHarness } from './harness.ts';
-import { obeliskCliEntry, repoRoot, rolePaths } from './home.ts';
+import { captureCommand, obeliskCliEntry, repoRoot, rolePaths } from './home.ts';
 import {
   EVENT_SCHEMA,
   PROVENANCE_SCHEMA,
@@ -69,6 +69,41 @@ function runShim(shim: string, argv: string[], env: Record<string, string>, cwd:
   });
 }
 
+/** Capture one App page of the role's data; returns why it failed, or null. */
+function runCapture(
+  capture: { route: string; waitFor: string | null; scrollTo: string | null },
+  out: string,
+  env: Record<string, string>,
+  logDir: string,
+  timeoutMs: number,
+): Promise<string | null> {
+  const { command, args, cwd } = captureCommand();
+  const flags = [
+    '--route', capture.route, '--out', out,
+    ...(capture.waitFor ? ['--wait-for', capture.waitFor] : []),
+    ...(capture.scrollTo ? ['--scroll-to', capture.scrollTo] : []),
+  ];
+  return new Promise((resolve) => {
+    let stderr = '';
+    const child = spawn(command, [...args, ...flags], { cwd, env, stdio: ['ignore', 'ignore', 'pipe'] });
+    child.stderr.setEncoding('utf8').on('data', (chunk: string) => { stderr += chunk; });
+    const timer = setTimeout(() => child.kill('SIGTERM'), timeoutMs);
+    child.once('error', (error: NodeJS.ErrnoException) => {
+      clearTimeout(timer);
+      resolve(error.code === 'ENOENT'
+        ? `App capture is not available (${command}); build the App first: cd app && npm ci && npx electron-vite build`
+        : error.message);
+    });
+    child.once('close', (code) => {
+      clearTimeout(timer);
+      writeFileSync(join(logDir, 'capture.err'), stderr);
+      if (code === 0) return resolve(null);
+      const reason = stderr.trim().split('\n').filter(Boolean).pop() ?? '';
+      resolve(`capture of ${capture.route} exited with ${code ?? 'a signal'}${reason ? `: ${reason.slice(0, 200)}` : ''}`);
+    });
+  });
+}
+
 export async function runScenario(loaded: LoadedScenario, options: RunOptions): Promise<{ runDir: string; provenance: PlaygroundProvenance }> {
   const { scenario } = loaded;
   const now = options.now ?? (() => new Date());
@@ -118,7 +153,7 @@ export async function runScenario(loaded: LoadedScenario, options: RunOptions): 
     })),
     steps: scenario.steps.map((step, index): StepRecord => ({
       id: step.id, index, title: step.title, role: step.role,
-      action: step.prompt !== null ? 'prompt' : 'cli',
+      action: step.prompt !== null ? 'prompt' : step.capture ? 'capture' : 'cli',
       scenes: step.scenes, status: 'pending', startedAt: null, endedAt: null,
       harness: null, prompt: null, sessions: [], commands: [], transactions: [], artifacts: [], screenshots: [], error: null,
     })),
@@ -182,6 +217,15 @@ export async function runScenario(loaded: LoadedScenario, options: RunOptions): 
       }
       error = result.error;
       if (r.kind === 'codex') error = error ?? checkCodexLink(r.paths, config);
+    } else if (step.capture) {
+      const file = `screenshots/${step.id}.png`;
+      mkdirSync(join(runDir, 'screenshots'), { recursive: true });
+      error = await runCapture(step.capture, join(runDir, file), env, logDir, step.timeoutMinutes * 60_000);
+      if (!error) {
+        const shot = { file, caption: step.capture.caption };
+        record.screenshots.push(shot);
+        emit('screenshot', step.id, r.role.id, `截图：${shot.caption}`, { ...shot, route: step.capture.route });
+      }
     } else {
       const code = await runShim(join(r.paths.bin, 'obelisk'), step.cli!, env, r.paths.workspace, logDir, step.timeoutMinutes * 60_000);
       if (code !== 0) error = `obelisk ${step.cli!.join(' ')} exited with ${code ?? 'an error'}`;

@@ -69,6 +69,17 @@ say({ type: 'turn.completed', usage: {} });`}
   const claude = script(join(bin, 'claude'), harnessBody('claude'));
   const codex = script(join(bin, 'codex'), harnessBody('codex'));
 
+  // The App's headless capture: writes a PNG for any route but #/missing, which "does not render".
+  const capture = script(join(bin, 'fake-capture'), `
+const { appendFileSync, writeFileSync } = await import('node:fs');
+const args = process.argv.slice(2);
+const flag = (name) => { const i = args.indexOf(name); return i >= 0 ? args[i + 1] : null; };
+appendFileSync(${JSON.stringify(join(seen, 'capture.jsonl'))}, JSON.stringify({ args, OBELISK_HOME: process.env.OBELISK_HOME }) + '\\n');
+if (flag('--route') === '#/missing') { process.stderr.write('capture failed: the page did not render within 20000 ms\\n'); process.exit(1); }
+writeFileSync(flag('--out'), Buffer.from([0x89, 0x50, 0x4e, 0x47]));
+console.log(flag('--out'));
+`);
+
   const skills = join(root, 'skills');
   for (const name of ['obelisk', 'obelisk-distill', 'obelisk-wallet']) {
     mkdirSync(join(skills, name), { recursive: true });
@@ -80,5 +91,5 @@ say({ type: 'turn.completed', usage: {} });`}
     writeFileSync(file, JSON.stringify({ schema: 'obelisk.playground.scenario/1', ...scenario }));
     return file;
   };
-  return { root, home, cli, claude, codex, skills, seen, scenarioFile };
+  return { root, home, cli, claude, codex, capture, skills, seen, scenarioFile };
 }
