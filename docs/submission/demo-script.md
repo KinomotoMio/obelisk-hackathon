@@ -23,11 +23,11 @@
 | 2 | **转发无效**：C 打开同一个链接，被拒绝 | 网页阅读页的拒绝页 | ✅ | [#9](https://github.com/KinomotoMio/obelisk-hackathon/issues/9)、[#10](https://github.com/KinomotoMio/obelisk-hackathon/issues/10) |
 | 3 | **已读**：B 在网页上打开，看到带水印的对话；A 的 Share tab 显示「已读」和链上记录；B 再次打开被拒绝 | 阅读页、打开回执、Share tab | ✅ | [#9](https://github.com/KinomotoMio/obelisk-hackathon/issues/9)、[#10](https://github.com/KinomotoMio/obelisk-hackathon/issues/10)、[#11](https://github.com/KinomotoMio/obelisk-hackathon/issues/11)、[#12](https://github.com/KinomotoMio/obelisk-hackathon/issues/12) |
 | 4 | **沉淀与铸造**：A 用「沉淀 Skill」说一句话，从历史中找证据、展示用到的 session，起草 Skill；在 Skill tab 审阅草稿，复制「确认并铸造」，在 Claude Code 里看过预览后铸造 | 沉淀 Skill、Skill tab 草稿审阅、铸造 | ✅ / ⚠ | [#15](https://github.com/KinomotoMio/obelisk-hackathon/issues/15)、[#16](https://github.com/KinomotoMio/obelisk-hackathon/issues/16)、[#18](https://github.com/KinomotoMio/obelisk-hackathon/issues/18)。⚠ 流程本身都能跑。但第 6、8 步用的「AI 能力履历」Skill 是写好的 [`minted-skills/ai-capability-resume`](../../minted-skills/ai-capability-resume/SKILL.md)，不是从 A 的历史里沉淀出来的。演示时可以沉淀另一个 Skill 来展示第 4 步，再单独铸造履历 Skill；或者明确说明这一点 |
-| 5 | **场景与调用量**：在 Skill tab 对比两个履历 Skill 的实测场景、调用量和顺利率；数据来自 Playground 的真实运行，界面标明来源，点开可以查看产生方法 | Skill 详情页（调用量、钱包数、趋势、族谱、实测场景、按场景的结果）、结果判断、Playground | ⚠ | 页面和判断：[#19](https://github.com/KinomotoMio/obelisk-hackathon/issues/19)、[#25](https://github.com/KinomotoMio/obelisk-hackathon/issues/25)；Playground：[#31](https://github.com/KinomotoMio/obelisk-hackathon/issues/31)、[#32](https://github.com/KinomotoMio/obelisk-hackathon/issues/32)。**依赖 Playground 数据，还没有生成**：剧本执行器和实时页面已经有了，但还没跑出两个履历 Skill 的调用量、场景和顺利率。没有这批数据，页面只能显示少量真实操作的数字，场景和顺利率会显示「尚未开启」 |
+| 5 | **场景与调用量**：在 Skill tab 对比两个履历 Skill 的实测场景、调用量和顺利率；数据来自 Playground 的真实运行，界面标明来源，点开可以查看产生方法 | Skill 详情页（调用量、钱包数、趋势、族谱、实测场景、按场景的结果）、结果判断、Playground | ⚠ | 页面和判断：[#19](https://github.com/KinomotoMio/obelisk-hackathon/issues/19)、[#25](https://github.com/KinomotoMio/obelisk-hackathon/issues/25)，同样的数据也可以在网页 `/market/skills/<id>` 上给评委看（[#35](https://github.com/KinomotoMio/obelisk-hackathon/issues/35)）；Playground：[#31](https://github.com/KinomotoMio/obelisk-hackathon/issues/31)、[#32](https://github.com/KinomotoMio/obelisk-hackathon/issues/32)。**依赖 Playground 数据，还没有生成**：剧本执行器和实时页面已经有了，但还没跑出两个履历 Skill 的调用量、场景和顺利率。没有这批数据，页面只能显示少量真实操作的数字，场景和顺利率会显示「尚未开启」 |
 | 6 | **使用**：U 在 Claude Code 中调用「AI 能力履历」生成履历，这次调用计入统计 | 履历 Skill、识别调用、汇总上报 | ✅ | [#22](https://github.com/KinomotoMio/obelisk-hackathon/issues/22)、[#23](https://github.com/KinomotoMio/obelisk-hackathon/issues/23)、[#28](https://github.com/KinomotoMio/obelisk-hackathon/issues/28)（本地链验证：调用被识别并上报，统计显示 1 次 / 1 个钱包） |
 | 7 | **衍生**：D 在 Skill 详情页复制「在此基础上修改」，在 Claude Code 里改出「设计师作品集」版并铸造，族谱新增分支 | 沉淀 Skill 的衍生流程、铸造记录父 Skill、族谱 | ✅ | [#20](https://github.com/KinomotoMio/obelisk-hackathon/issues/20)（本地链验证：#2 记录父 Skill #1，两个 Skill 的族谱都显示新分支） |
 | 8 | **出示**：U 把佐证 session 私密分享给招聘方 | 履历页的佐证 prompt、私密分享 | ✅ | [#28](https://github.com/KinomotoMio/obelisk-hackathon/issues/28)、[#12](https://github.com/KinomotoMio/obelisk-hackathon/issues/12) |
-| 9 | **截图**：上架、分成、收入、上下文付费；团队版愿景 | App 里的演示页面（标「演示数据」）；团队版一页愿景 | ✗ / ✅ | 市场与收益页面 [#35](https://github.com/KinomotoMio/obelisk-hackathon/issues/35) 还没做；团队版愿景已有 [08](../vision/08-team-edition.md)；界面示意见 [`mockups/market-and-revenue.html`](../vision/mockups/market-and-revenue.html)（示意，不是 App 截图） |
+| 9 | **市场与收益**：上架、分成、收入、上下文付费；团队版愿景 | 网页 `/market`（在线服务提供，评委用浏览器打开，不需要 App）：Skill 列表和每个 Skill 的页面是链上真实数据；`/market/stage-2` 是标明「阶段 2 预览」的上架、分成、收入、上下文付费，数字都标「示例」，分成用所选 Skill 的真实族谱；团队版一页愿景 | ✅ / ⚠ | [#35](https://github.com/KinomotoMio/obelisk-hackathon/issues/35)；团队版愿景 [08](../vision/08-team-edition.md)。⚠ 新页面要在 Worker 重新部署后才能在线上访问；测试网上已铸造的 Skill 还不多，列表会如实显示。 |
 
 另外两件和演示有关、还没做的事：
 
@@ -42,7 +42,7 @@
 | 0:30–1:30 | 私密分享（步骤 1–3） | A 的 Session 详情页 → 分享对话框 → Claude Code 里的体检和确认（预先跑完，展示结果）；C 打开链接被拒（**现场**）；B 打开看到水印（**现场**）；A 的 Share tab 变成「已读」并带链上链接（**现场**刷新） | 分享在演示前创建好，留一次打开机会给 B |
 | 1:30–2:30 | Skill 资产（步骤 4、7） | Skill tab 的草稿：证据、出处卡、出生场景；铸造预览（**现场**确认一次铸造，或展示已铸造的结果）；Skill 详情页的族谱，D 衍生的分支 | 沉淀和衍生都预先跑完 |
 | 2:30–3:30 | 真实使用与履历（步骤 5、6、8） | Skill 详情页：真实调用、钱包数、实测场景、顺利率（⚠ 依赖 Playground 数据）；U 生成的履历页：统计、能力维度、代表性问题、链上可核对的 Skill；佐证 prompt → 分享给招聘方 | 履历预先生成；调用已上报 |
-| 3:30–4:00 | 可以核对的证据，以及哪些是这次新做的 | 区块浏览器上的合约和演示交易（[主网材料](mainnet.md)）；一句话说明赛前已有与新增；后续计划（市场与分成、团队版） | — |
+| 3:30–4:00 | 可以核对的证据，以及接下来做什么 | 网页 `/market`：链上真实的 Skill、调用量和族谱，再点开「阶段 2 预览」讲钱怎么沿族谱流动（**现场**，标明示例）；区块浏览器上的合约和演示交易（[主网材料](mainnet.md)）；一句话说明赛前已有与新增 | 页面是公开网页，可以把链接直接给评委 |
 
 ## 准备与彩排清单
 
