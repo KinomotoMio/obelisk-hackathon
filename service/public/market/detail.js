@@ -79,7 +79,7 @@ function scenesCompare(skill, usage) {
   return h('div', { class: 'compare' },
     h('div', { class: 'compare-side' },
       h('div', { class: 'compare-title' }, '作者怎么说'),
-      h('p', { class: description ? 'fg2' : 'muted' }, description ?? '作者没有把正文存到在线服务，这里没有说明。'),
+      h('p', { class: description ? 'fg2' : 'muted', ...(description ? { translate: 'no' } : {}) }, description ?? '作者没有把正文存到在线服务，这里没有说明。'),
       declared.length ? h('div', { class: 'chips' }, declared.map((scene) => sceneChip(scene))) : h('p', { class: 'muted small' }, '铸造时没有声明出生场景。')),
     h('div', { class: 'compare-side' },
       h('div', { class: 'compare-title' }, '实际在哪里被用'),
@@ -107,7 +107,7 @@ function lineageTree(chainInfo, tree, currentId) {
   const byId = new Map(nodes.map((node) => [node.skillId, node]));
   const row = (node, depth) => h('li', null,
     link(`/market/skills/${node.skillId}`, { class: ['tree-node', node.skillId === currentId ? 'current' : null], style: { marginLeft: `${depth * 22}px` } },
-      h('span', { class: 'tree-name' }, api.str(node.name, 120) ?? `未命名 Skill`),
+      h('span', { class: 'tree-name', ...(node.name ? { translate: 'no' } : {}) }, api.str(node.name, 120) ?? `未命名 Skill`),
       h('span', { class: 'muted mono' }, `#${node.skillId} · v${api.num(node.versionCount) || 1} · ${shortAddress(node.author)}`),
       node.skillId === currentId ? h('span', { class: 'pill acc' }, '本页') : null),
     h('ul', null, api.list(node.childSkillIds).map((id) => byId.get(id)).filter(Boolean).map((child) => row(child, depth + 1))));
@@ -235,14 +235,14 @@ export async function renderDetail(root, id) {
     link('/market', { class: 'back' }, '← Skill 市场'),
     h('section', { class: 'detail-head' },
       h('div', { class: 'eyebrow' }, `Skill #${id}`),
-      h('h1', null, title(skill)),
+      h('h1', skill.name ? { translate: 'no' } : null, title(skill)),
       h('div', { class: 'meta' },
         h('span', { class: 'pill dim' }, versionName),
         h('span', null, '作者 ', addressLink(chainInfo, skill.author)),
         h('span', null, `铸造于 ${day(skill.createdAt)}`),
         skill.parentSkillId ? link(`/market/skills/${skill.parentSkillId}`, { class: 'pill acc' }, `基于 Skill #${skill.parentSkillId}${api.str(parent?.name, 120) ? `「${parent.name}」` : ''}`) : null,
         chainInfo ? h('span', { class: 'pill chain' }, `可在${networkName(chainInfo.chainId)}上核对`) : null),
-      skill.content?.description ? h('p', { class: 'lead' }, skill.content.description) : null),
+      skill.content?.description ? h('p', { class: 'lead', translate: 'no' }, skill.content.description) : null),
 
     commerce(offerResult.offer, raw.content, promptName, offerResult.unavailable),
 

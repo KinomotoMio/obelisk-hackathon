@@ -538,6 +538,7 @@ async function handleOpenError(error) {
 // --- share: reading --------------------------------------------------------
 
 function richText(text, into) {
+  into.setAttribute('translate', 'no');
   for (const part of splitRedactions(text)) {
     if (typeof part === 'string') into.append(part);
     else into.append(h('span', { class: 'redact', title: '发送方在分享前打码了这里' }, `[已打码：${part.redacted}]`));

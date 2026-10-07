@@ -32,18 +32,21 @@ The upstream project provides the session index, retrieval and desktop foundatio
 
 ## 复制给 Agent，安装参赛版 / Let your agent set it up
 
-将下面的 prompt 复制给有终端访问能力的 coding agent。它会使用仓库现有的隔离环境脚本；无需提供我们的部署钱包、私钥或云服务凭据。脚本目前面向具备 POSIX shell 的开发环境。
+将下面的 prompt 复制给有终端访问能力的 coding agent。参赛版可以直接在本机运行，无需创建隔离环境，也不需要我们的部署私钥或云服务凭据。
+
+The hackathon build runs natively on your computer. No separate environment or deployment credentials are required.
 
 **中文 prompt**
 
 ```text
 帮我在本机安装 Obelisk 黑客松版本：
 https://github.com/KinomotoMio/obelisk-hackathon
-使用 hackathon 分支，先阅读 README.md、AGENTS.md 和 scripts/hackathon-env.sh，检查本机依赖。
-在独立目录检出代码，按照 scripts/hackathon-env.sh 建立隔离环境。
-默认使用测试网。不要覆盖我的全局 Obelisk、已有 ~/.obelisk 数据或其他项目的 skills。
-安装完成后，告诉我如何进入这个环境、建立本地索引，并从该环境启动 Agent 或桌面 App。
-先完成本地安装与只读检查；任何上传、公开分享或链上交易都在我明确提出时再执行。
+使用 hackathon 分支，先阅读 README.md 和 AGENTS.md，检查 Node.js 与 npm。
+按 README 从源码构建并原生运行 CLI；默认使用测试网和正常的 ~/.obelisk 数据目录。
+将本仓库构建出的 Obelisk 与配套 skills 安装到我正在使用的 Agent；不要用上游发行版替代参赛版。
+如果已有 Obelisk，先说明命令将指向哪个版本，保留现有数据和可恢复的旧 Skill 文件。
+完成后建立本地会话索引，演示一次只读查询，并告诉我如何启动桌面 App。
+上传、公开分享或链上交易等我提出时再执行。
 ```
 
 **English prompt**
@@ -51,22 +54,49 @@ https://github.com/KinomotoMio/obelisk-hackathon
 ```text
 Set up the Obelisk hackathon build locally from:
 https://github.com/KinomotoMio/obelisk-hackathon
-Use the hackathon branch. Read README.md, AGENTS.md and scripts/hackathon-env.sh and check the local prerequisites first.
-Check out the code in a separate directory and use scripts/hackathon-env.sh to create the isolated environment.
-Default to testnet. Preserve my global Obelisk installation, existing ~/.obelisk data and other projects' skills.
-Then explain how to enter the environment, index my local history and launch an agent or the desktop app from it.
-Complete local setup and read-only checks first. Only upload, publish or send on-chain transactions when I explicitly request them.
+Use the hackathon branch. Read README.md and AGENTS.md, and check Node.js and npm.
+Build and run the CLI natively from source as described in the README, using testnet and the normal ~/.obelisk data directory by default.
+Install this repository's built Obelisk skill and companion skills for my coding agent. Do not substitute the upstream release for the hackathon build.
+If Obelisk is already installed, explain which version the command will use; preserve existing data and recoverable copies of replaced skill files.
+Index my local sessions, demonstrate a read-only query, and explain how to launch the desktop app.
+Only upload, publish or send on-chain transactions when I request them.
 ```
 
-已有代码时的环境入口 / From an existing checkout:
+### 从源码运行 / Run from source
+
+需要 Node.js 22.13+ 与 npm。以下命令构建本仓库，并将 `obelisk` 命令指向本地构建；若已安装上游 CLI，`npm link` 会改变该命令指向。已有数据保留在 `~/.obelisk`，默认连接测试网。
+
+Requires Node.js 22.13+ and npm. `npm link` points the `obelisk` command at this checkout, replacing an existing CLI command link. Existing data remains in `~/.obelisk`; the default service is testnet.
 
 ```sh
-sh scripts/hackathon-env.sh
-source ~/.obelisk-hackathon/env.sh a testnet
+git clone --branch hackathon https://github.com/KinomotoMio/obelisk-hackathon.git
+cd obelisk-hackathon
+npm ci
+npm run build:core
+npm run build:cli
+npm run build:skill
+cd packages/cli
+npm link
+cd ../..
+obelisk --help
 obelisk --build
 ```
 
-脚本把运行环境放在 `~/.obelisk-hackathon`，将 Agent skills 安装到它的独立 `workspace`；角色 A / B 各自有数据目录。它会安装依赖并构建本地 CLI 与 skills，App 需从该环境另行启动。详见 [环境脚本](scripts/hackathon-env.sh)。
+**Agent skills：** 将 `dist/obelisk-skill/` 安装为 Agent 的 `obelisk` skill，将 `dist/agent-skills/` 下的每个目录作为配套 skill 安装。Claude Code 使用 `~/.claude/skills/`，Codex 使用 `~/.agents/skills/`；也可以安装到你当前项目的同名目录。替换已有同名 skill 前保留副本。这里不要运行通用 `obelisk install`，它会安装上游 Skill，而非本仓库的全部参赛扩展。
+
+**Agent skills:** Install `dist/obelisk-skill/` as `obelisk`, plus each directory under `dist/agent-skills/`, in your agent's skill directory (`~/.claude/skills/` for Claude Code, `~/.agents/skills/` for Codex, or the corresponding project directory). Keep copies before replacing existing skills. The generic `obelisk install` command installs the upstream skill, not all hackathon extensions.
+
+本地钱包密钥存储目前支持 macOS Keychain 与 Linux Secret Service；Windows 原生钱包存储尚未实现。此限制与是否隔离无关。
+
+Local wallet key storage currently supports macOS Keychain and Linux Secret Service; native Windows wallet storage is not implemented yet. This is independent of environment isolation.
+
+**桌面 App / Desktop app:** 从本仓库启动，使用相同的本机数据与测试网服务 / Launch this checkout's app with the same local data and testnet service:
+
+```sh
+cd app
+npm ci
+npm run dev
+```
 
 ## 团队 / Team
 
@@ -88,7 +118,7 @@ obelisk --build
 <details>
 <summary>上游功能与开发参考 / Upstream features and development reference</summary>
 
-以下保留上游通用介绍。安装参赛版本请使用上方隔离环境入口；这里的通用 npm 安装指向上游发行版。
+以下保留上游通用介绍。安装参赛版本请使用上方源码安装指引；这里的通用 npm 安装指向上游发行版。
 
 <div align="center">
 

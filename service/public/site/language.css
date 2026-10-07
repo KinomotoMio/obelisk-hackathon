@@ -1,0 +1,5 @@
+.site-language{flex:none;border:1px solid #686078;border-radius:7px;background:transparent;color:#ded8eb;font:500 13px/1.2 system-ui,sans-serif;padding:7px 11px;margin-left:12px;cursor:pointer;white-space:nowrap}
+.site-language:hover,.site-language:focus-visible{background:#292136;border-color:#b599e3;outline-offset:3px}
+[data-language][hidden]{display:none!important}
+html[lang=en] .site-top{flex-wrap:wrap;gap:10px}
+@media(max-width:700px){.site-language{margin-left:auto}.site-top{flex-wrap:wrap}.site-nav{flex-wrap:wrap}}

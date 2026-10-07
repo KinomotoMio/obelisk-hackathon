@@ -332,7 +332,7 @@ function renderSteps() {
       },
       el('span', { class: 'rn-k' }, step.status === 'succeeded' ? el('span', { class: 'rn-tick', 'aria-hidden': 'true' }) : String(step.index + 1)),
       el('span', { class: 'rn-step-body' },
-        el('span', { class: 'rn-step-title' }, step.title),
+        el('span', { class: 'rn-step-title', translate: 'no' }, step.title),
         el('span', { class: 'rn-step-meta' },
           el('span', {}, roleName(step.role)),
           el('span', {}, actionLabel(step.action)),
@@ -550,7 +550,7 @@ async function showList() {
   $('rn-status-box').hidden = true;
   $('rn-list').hidden = false;
   $('rn-runs').replaceChildren(...(runs.length ? runs.map((run) => el('a', { class: 'rn-run-card', href: `/runs/${run.id}` },
-    el('span', { class: 'rn-run-title' }, run.title ?? run.id),
+    el('span', { class: 'rn-run-title', translate: 'no' }, run.title ?? run.id),
     el('span', { class: 'rn-run-meta' },
       el('span', { class: 'mono' }, shortRunId(run.id)),
       run.startedAt ? el('span', {}, formatDateTime(run.startedAt)) : null,
