@@ -115,6 +115,7 @@ function registerHandlers() {
   ipcMain.handle('playground:screenshot', (_event, runId, file) => readScreenshot(dir, runId, file));
   ipcMain.handle('playground:skill-sources', (_event, query) => skillSources(dir, query));
   ipcMain.handle('playground:reveal-record', () => {});
+  ipcMain.handle('settings:prompt-assistant', () => 'claude-code');
   ipcMain.handle('shares:list', () => ({ shares: [readShare], network: 'BOT Chain testnet (968)', serviceUrl: 'https://service.example' }));
   ipcMain.handle('skills:list', () => []);
   ipcMain.handle('skills:describe-scenes', (_event, tags) => tags.map(tag => ({ tag, kind: 'unknown', label: tag })));
@@ -194,7 +195,7 @@ async function run() {
 
   writePlaygroundFixture(dir, {
     live,
-    screenshots: { 'screenshots/b-open.png': sharePng, 'screenshots/a-distill-mint.png': mintPng },
+    screenshots: { 'screenshots/b-open.png': sharePng, 'screenshots/a-distill-mint.png': mintPng, 'screenshots/a-capture.png': mintPng },
   });
 
   // The run list: the live run first, a record that cannot be read last.
@@ -310,6 +311,10 @@ async function run() {
   await js(win, `window.location.hash = '#/playground/runs/run-20261006T090000Z-dry'`);
   await waitFor(win.webContents, `document.querySelector('[data-banner="dry-run"]')`, 'dry-run banner');
   assert((await js(win, `document.querySelector('.pg-run .pill').textContent.trim()`)) === '空跑 · 未上链', 'a dry run is not presented as on chain');
+  await waitFor(win.webContents, `document.querySelector('[data-step="a-capture"] [data-step-shot] img')`, 'capture step thumbnail');
+  const captureStep = await js(win, `document.querySelector('[data-step="a-capture"]').innerText.replace(/\\s+/g, ' ')`);
+  assert(captureStep.includes('截图') && captureStep.includes('A 的 Skill 列表 · 草稿待确认'), `a capture step shows its caption and thumbnail (${captureStep})`);
+  await screenshot(win, 'playground-capture-step.png');
   await js(win, `window.location.hash = '#/playground/runs/run-20261005T140000Z-fail'`);
   await waitFor(win.webContents, `document.querySelector('[data-banner="failed"]')`, 'failure banner');
   const failed = await js(win, `document.querySelector('[data-banner="failed"]').innerText`);

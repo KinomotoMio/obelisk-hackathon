@@ -257,8 +257,20 @@ const serviceHost = computed(() => {
                     <span v-if="step.status !== 'succeeded' && step.status !== 'pending'" class="step-status">{{ stepStatusLabel(step.status) }}</span>
                     <span v-if="step.sessions.length" class="mono">{{ step.sessions.length }} session</span>
                     <span v-if="step.transactions.length" class="mono tx">{{ step.transactions.length }} 交易</span>
+                    <span v-if="step.action === 'capture'" class="shot-tag">截图</span>
                   </span>
                 </span>
+              </button>
+              <button
+                v-for="shot in step.screenshots.filter(entry => screenshots[entry.file]?.url)"
+                :key="shot.file"
+                class="step-shot"
+                :data-step-shot="shot.file"
+                :title="`${shot.caption} · 点开看大图`"
+                @click="openShot(shot.file)"
+              >
+                <img :src="screenshots[shot.file].url" :alt="shot.caption" />
+                <span>{{ shot.caption }}</span>
               </button>
             </li>
           </ol>
@@ -560,6 +572,15 @@ const serviceHost = computed(() => {
 .step-meta .mono { font-size: 10.5px; }
 .step-meta .tx { color: var(--chain); }
 .step-status { color: var(--accent-2); }
+.shot-tag { color: var(--accent-2); }
+.step-shot {
+  display: flex; align-items: center; gap: 8px; width: calc(100% - 40px); margin: 2px 0 6px 40px;
+  padding: 4px; border-radius: 6px; border: 1px solid var(--hairline); background: rgba(255,255,255,0.02);
+  text-align: left; font: inherit; font-size: 11px; color: var(--fg-2); transition: border-color 0.1s, background 0.1s;
+}
+.step-shot:hover { border-color: var(--hairline-strong); background: var(--surface-strong); }
+.step-shot img { width: 64px; height: 40px; object-fit: cover; object-position: top left; border-radius: 4px; flex-shrink: 0; }
+.step-shot span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .step.failed .step-status { color: var(--danger); }
 .step.skipped .step-status { color: var(--muted); }
 

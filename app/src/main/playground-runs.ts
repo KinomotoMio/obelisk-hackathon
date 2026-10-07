@@ -176,7 +176,7 @@ export function checkRecord(raw: unknown) {
       index: step['index'] as number,
       title: text(step['title'], 300) ?? String(step['id']),
       role: step['role'] as string,
-      action: step['action'] as 'prompt' | 'cli',
+      action: step['action'] as 'prompt' | 'cli' | 'capture',
       scenes: (step['scenes'] as unknown[]).slice(0, 16).map(scene),
       status: step['status'] as 'pending' | 'running' | 'succeeded' | 'failed' | 'skipped',
       startedAt: (step['startedAt'] as string | null) ?? null,

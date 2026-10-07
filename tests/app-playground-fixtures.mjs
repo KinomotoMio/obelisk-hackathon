@@ -230,6 +230,10 @@ export function pastRuns({ now = Date.now() } = {}) {
       artifacts: [{ kind: 'skill-draft', ref: SKILL_NAME }],
     }),
     step(1, 'u-report', 'U', 'U 上报调用统计', { action: 'cli', status: 'succeeded', startedAt: iso(dryStart + 9_000), endedAt: iso(dryStart + 12_000) }),
+    step(2, 'a-capture', 'A', '截取 A 的 Skill 列表', {
+      action: 'capture', harness: null, status: 'succeeded', startedAt: iso(dryStart + 12_000), endedAt: iso(dryStart + 15_000),
+      screenshots: [{ file: 'screenshots/a-capture.png', caption: 'A 的 Skill 列表 · 草稿待确认' }],
+    }),
   ];
   const dryId = 'run-20261006T090000Z-dry';
   const dry = {
@@ -237,12 +241,13 @@ export function pastRuns({ now = Date.now() } = {}) {
       id: dryId,
       scenario: { name: 'smoke', title: '冒烟：沉淀并铸造一个 Skill', file: 'playground/scenarios/smoke.json', sha256: hex('smoke', 64) },
       network: { serviceUrl: null, chainId: null },
-      startedAt: iso(dryStart), endedAt: iso(dryStart + 12_000), status: 'succeeded', dryRun: true,
+      startedAt: iso(dryStart), endedAt: iso(dryStart + 15_000), status: 'succeeded', dryRun: true,
       obelisk: { gitCommit: '3515592' },
     }, dryRoles, drySteps),
     events: events(dryId, [
       { at: iso(dryStart), type: 'run.started', text: '运行开始 · 剧本「冒烟：沉淀并铸造一个 Skill」（空跑）' },
-      { at: iso(dryStart + 12_000), type: 'run.finished', text: '运行结束 · 成功', data: { status: 'succeeded', error: null } },
+      { at: iso(dryStart + 15_000), type: 'screenshot', stepId: 'a-capture', role: 'A', text: '截图：A 的 Skill 列表 · 草稿待确认', data: { file: 'screenshots/a-capture.png', caption: 'A 的 Skill 列表 · 草稿待确认' } },
+      { at: iso(dryStart + 15_000), type: 'run.finished', text: '运行结束 · 成功', data: { status: 'succeeded', error: null } },
     ]),
   };
   const failStart = now - 2 * day;
@@ -289,7 +294,10 @@ export const BROKEN_RUN = 'run-20261004T100000Z-broken';
 export function writePlaygroundFixture(dir, { now = Date.now(), live = liveRun({ now }), screenshots } = {}) {
   const files = live.record.steps.flatMap(s => s.screenshots.map(shot => shot.file));
   writeRun(dir, LIVE_RUN, live, screenshots ?? Object.fromEntries(files.map(file => [file, TINY_PNG])));
-  for (const [runId, run] of Object.entries(pastRuns({ now }))) writeRun(dir, runId, run);
+  for (const [runId, run] of Object.entries(pastRuns({ now }))) {
+    const files = run.record.steps.flatMap(s => s.screenshots.map(shot => shot.file));
+    writeRun(dir, runId, run, Object.fromEntries(files.map(file => [file, screenshots?.[file] ?? TINY_PNG])));
+  }
   writeRun(dir, BROKEN_RUN, { record: '{"schema": "obelisk.playground.provenance/1", "run": {', events: [] });
   return dir;
 }
