@@ -165,6 +165,22 @@ function creationInvite(promptName) {
     h('p', { class: 'muted small' }, '发布前会向你说明许可和需要留给前面分享者的份额，由你确认。每一次有价值的改进，都能成为新的起点。'));
 }
 
+function buyerAccess(offer) {
+  const input = h('input', { type: 'text', placeholder: '你的钱包地址 0x…', 'aria-label': '查询取用状态的钱包地址', class: 'search' });
+  const status = h('p', { class: 'muted small', role: 'status' }, '只需公开钱包地址，不需要私钥或助记词。');
+  const button = h('button', { class: 'btn', type: 'button', onclick: async () => {
+    if (!api.isAddress(input.value.trim())) { replace(status, '请输入完整的钱包地址。'); return; }
+    button.disabled = true;
+    try {
+      const result = await api.access(offer.offerId, input.value.trim());
+      replace(status, result.author ? '这是你发布的 Skill，你可以取用自己的内容。' : result.perpetual ? '你已取得此版本、此许可的持续取用授权。'
+        : /^\d+$/.test(result.credits) && BigInt(result.credits) > 0n ? `你还有 ${result.credits} 次正文取用额度。` : '这个钱包还没有取得此上架方案的取用授权。');
+    } catch (error) { replace(status, error.message); }
+    finally { button.disabled = false; }
+  } }, '查询');
+  return h('details', null, h('summary', null, '查看我的取用状态'), h('div', { class: 'toolbar' }, input, button), status);
+}
+
 function commerce(offer, locked, promptName) {
   if (!offer) return panel('取用方式', null, h('p', { class: 'fg2' }, locked ? '作者尚未开放购买，请稍后再来看看。' : '正文已公开。取用前，你的助手会展示内容并核对版本。'));
   const mode = { free: '免费取用', 'per-use': '按次取用', buyout: '此版本买断' }[offer.mode];
@@ -174,7 +190,7 @@ function commerce(offer, locked, promptName) {
     h('p', { class: 'lead' }, offer.mode === 'free' ? '免费' : `${offer.price} BOT`),
     h('p', { class: 'fg2' }, `${mode} · ${license}`),
     h('p', { class: 'muted' }, offer.mode === 'per-use' ? '每次购买获得一次正文取用；请结合上面的使用场景和效果判断是否适合你的任务。' : '结合真实使用记录和你的任务，决定是否把这份方法带进自己的工作。'),
-    promptBox(offer.mode === 'free' ? '交给助手取用' : '让助手帮我购买', { skill: 'obelisk-skill-assets', text: `我想取用 ${promptName}。请查看当前上架方案 #${offer.offerId}，说明价格、许可和网络费用，得到我的确认后再购买并安装。` }));
+    promptBox(offer.mode === 'free' ? '交给助手取用' : '让助手帮我购买', { skill: 'obelisk-skill-assets', text: `我想取用 ${promptName}。请查看当前上架方案 #${offer.offerId} 和我已有的授权，说明价格、许可和网络费用，得到我的确认后再购买或使用已有额度，并安装。` }), buyerAccess(offer));
 }
 
 export async function renderDetail(root, id) {

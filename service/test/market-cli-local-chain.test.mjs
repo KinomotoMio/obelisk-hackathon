@@ -48,6 +48,8 @@ test('CLI licensed mint -> list -> buy -> use -> Codex install; retry buys only 
     const purchase = await runMarketCommand(['buy', '1', '--confirm', 'purchase-1'], buyer);
     const retry = await runMarketCommand(['buy', '1', '--confirm', 'purchase-1'], buyer);
     assert.equal(retry.transaction, purchase.transaction);
+    const access = await app.call('GET', `/v1/market/access/1?wallet=${purchase.wallet}`);
+    assert.equal(access.body.credits, '1');
     const used = await runMarketCommand(['use', '1', '--confirm', 'use-1'], buyer);
     const installed = await runSkillFetchCommand([minted.fingerprint, '--receipt', used.transaction, '--harness', 'codex', '--confirm'], buyer);
     assert.equal(installed.status, 'installed');
@@ -61,5 +63,8 @@ test('CLI licensed mint -> list -> buy -> use -> Codex install; retry buys only 
     assert.equal(creator.assets[0].name, 'licensed-method');
     assert.equal(creator.rows[0].direct, '0.00095');
     assert.equal(creator.rows[0].derived, '0');
+    const operations = await app.call('GET', '/v1/market/operations');
+    assert.equal(operations.body.totalWei, parseEther('0.00005').toString());
+    assert.equal(operations.body.rows[0].allocations.length, 2);
   } finally { stopLocalChain(); }
 });

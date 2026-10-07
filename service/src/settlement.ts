@@ -80,7 +80,27 @@ export async function handleSettlementRoute(request: Request, route: string[], d
     return deliverContent(deps, route[2]!, await readSkillContentPayload(request));
   }
   if (request.method !== 'GET') return null;
+  if (route.length === 2 && route[1] === 'operations') {
+    const contract = address(deps);
+    const [platform, fee] = await Promise.all([
+      deps.publicClient.readContract({ address: contract, abi: skillMarketAbi, functionName: 'platform' }),
+      deps.publicClient.readContract({ address: contract, abi: skillMarketAbi, functionName: 'platformBps' }),
+    ]);
+    return { ...await readIncome(deps, platform, new URL(request.url).searchParams), platformBps: fee };
+  }
   if (route.length === 3 && route[1] === 'offers') return { offer: await readOffer(deps, route[2]!) };
+  if (route.length === 3 && route[1] === 'access') {
+    if (!/^[1-9]\d{0,30}$/.test(route[2]!)) throw new RequestError(400, 'invalid_offer', 'Expected an offer id');
+    const wallet = parseAddressParam(new URL(request.url).searchParams.get('wallet') ?? '');
+    const offerId = BigInt(route[2]!);
+    const contract = address(deps);
+    const offer = await deps.publicClient.readContract({ address: contract, abi: skillMarketAbi, functionName: 'getOffer', args: [offerId] });
+    const [perpetual, credits] = await Promise.all([
+      deps.publicClient.readContract({ address: contract, abi: skillMarketAbi, functionName: 'perpetual', args: [wallet, offer.fingerprint, offer.license] }),
+      deps.publicClient.readContract({ address: contract, abi: skillMarketAbi, functionName: 'credits', args: [wallet, offerId] }),
+    ]);
+    return { wallet, offerId: offerId.toString(), author: getAddress(offer.author) === wallet, perpetual, credits: credits.toString() };
+  }
   if (route.length === 3 && route[1] === 'income') return readIncome(deps, parseAddressParam(route[2]!), new URL(request.url).searchParams);
   if (route.length === 3 && route[1] === 'creator') return readCreator(deps, parseAddressParam(route[2]!));
   return null;

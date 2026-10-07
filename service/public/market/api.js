@@ -46,6 +46,7 @@ export const skill = (id) => getJson(`/v1/skills/${id}`);
 export const usage = (id) => getJson(`/v1/skills/${id}/usage?weeks=8`);
 export const lineage = (id) => getJson(`/v1/skills/${id}/lineage`);
 export const offer = (fingerprint) => getJson(`/v1/market/offers/${encodeURIComponent(fingerprint)}`);
+export const access = (offerId, wallet) => getJson(`/v1/market/access/${encodeURIComponent(offerId)}?wallet=${encodeURIComponent(wallet)}`);
 
 /** An explorer page for an address or transaction, when the chain has an explorer. */
 export function explorer(chainInfo, kind, value) {
