@@ -12,6 +12,7 @@
     "postinstall": "node node_modules/electron/install.js",
     "start": "electron-vite preview",
     "dev": "electron-vite dev",
+    "capture": "electron . --capture",
     "build": "electron-vite build && electron-builder",
     "pack": "electron-vite build && electron-builder --dir",
     "dist": "electron-vite build && electron-builder --mac --win --linux",

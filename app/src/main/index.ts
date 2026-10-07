@@ -22,6 +22,7 @@ import { listSentShares } from '../../../packages/core/src/share-status.ts';
 import { describeSceneTag, SCENE_DIMENSIONS } from '../../../packages/core/src/scenes.ts';
 import { networkLabel, ObeliskServiceClient, resolveServiceUrl } from '../../../packages/core/src/obelisk-service.ts';
 import { readChainSkill } from './skill-market.ts';
+import { CaptureUsageError, parseCaptureArgs, runCapture, type CaptureRequest } from './capture.ts';
 import { displayDir, listRuns, readRun, readScreenshot, resolvePlaygroundDir, skillSources } from './playground-runs.ts';
 import { storedSessionCursor } from '../../../packages/core/src/provider-indexing.ts';
 import { createBuiltinProviderRegistry } from '../../../packages/core/src/providers/builtins.ts';
@@ -509,7 +510,55 @@ function onObeliskChange(filePath) {
   }
 }
 
+// Headless capture (`--capture`, see capture.ts): render one page of this
+// data directory to a PNG and exit, with no window, indexer or watcher.
+let captureRequest: CaptureRequest | null = null;
+let captureUsageError: string | null = null;
+try {
+  captureRequest = parseCaptureArgs(process.argv);
+} catch (error) {
+  if (!(error instanceof CaptureUsageError)) throw error;
+  captureUsageError = error.message;
+}
+
+async function captureAndExit(request: CaptureRequest) {
+  app.dock?.hide();
+  openDb(getRuntimePaths().dbPath);
+  const win = new BrowserWindow({
+    width: request.width,
+    height: request.height,
+    show: false,
+    backgroundColor: '#0a0b14',
+    webPreferences: {
+      preload: path.join(__dirname, '..', 'preload', 'index.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+      offscreen: true,
+    },
+  });
+  win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+  win.webContents.on('will-navigate', (event, url) => {
+    if (!isSameDocumentNavigation(url, win.webContents.getURL())) event.preventDefault();
+  });
+  const pageUrl = process.env.ELECTRON_RENDERER_URL
+    ? `${process.env.ELECTRON_RENDERER_URL}/`
+    : `file://${path.join(__dirname, '..', 'renderer', 'index.html')}`;
+  const result = await runCapture(win, pageUrl, request);
+  closeDb();
+  (result.code === 0 ? process.stdout : process.stderr).write(`${result.message}\n`);
+  app.exit(result.code);
+}
+
 app.whenReady().then(() => {
+  if (captureUsageError) {
+    process.stderr.write(`capture: ${captureUsageError}\n`);
+    app.exit(2);
+    return;
+  }
+  if (captureRequest) {
+    void captureAndExit(captureRequest);
+    return;
+  }
   startBackgroundResources({ runStartupBuild: true });
   createWindow();
 
@@ -526,6 +575,7 @@ app.on('before-quit', () => {
 });
 
 app.on('window-all-closed', () => {
+  if (captureRequest) return;
   void stopBackgroundResources({ stopWorker: true });
   if (process.platform !== 'darwin') app.quit();
 });
