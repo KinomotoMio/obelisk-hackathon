@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-only
-import { decodeFunctionData, formatEther, getAddress, recoverTypedDataAddress, type Address, type Hex } from 'viem';
+import { decodeEventLog, decodeFunctionData, formatEther, getAddress, recoverTypedDataAddress, type Address, type Hex } from 'viem';
 import { skillMarketAbi } from '../../chain/abi/index.ts';
 import { skillAccessTypes } from '../../chain/eip712.ts';
 import { RequestError } from './actions.ts';
 import { parseAddressParam } from './reads.ts';
-import { parseFingerprint, readStored, readSkillContentPayload, type SkillRouteDeps } from './skills.ts';
+import { parseFingerprint, readStored, readSkillContentPayload, readSkillRecord, readVersion, type SkillRouteDeps } from './skills.ts';
+import { skillRegistryAbi } from '../../chain/abi/index.ts';
 
 function address(deps: SkillRouteDeps): Address {
   if (!deps.config.market) throw new RequestError(503, 'market_not_deployed', 'Skill settlement is not deployed on this network yet');
@@ -53,9 +54,15 @@ export async function readIncome(deps: SkillRouteDeps, wallet: Address, query: U
       deps.publicClient.readContract({ address: contract, abi: skillMarketAbi, functionName: 'allocations', args: [receiptId] }),
     ]);
     const mine = parts.filter(part => part.recipient.toLowerCase() === wallet.toLowerCase());
+    const soldSkillId = parts.find(part => part.skillId !== 0n)?.skillId;
+    const txRecord = await deps.skillContent?.get(`market-receipts/${deps.config.chain.id}/${receiptId}`);
+    const transaction = txRecord ? JSON.parse(txRecord).transaction : null;
     return { receiptId: receiptId.toString(), offerId: receipt.offerId.toString(), buyer: receipt.buyer,
       paidWei: receipt.amount.toString(), timestamp: Number(receipt.timestamp),
       incomeWei: mine.reduce((sum, part) => sum + part.amount, 0n).toString(),
+      directWei: mine.filter(part => part.skillId === soldSkillId).reduce((sum, part) => sum + part.amount, 0n).toString(),
+      derivedWei: mine.filter(part => part.skillId !== 0n && part.skillId !== soldSkillId).reduce((sum, part) => sum + part.amount, 0n).toString(),
+      transaction,
       allocations: parts.map(part => ({ recipient: part.recipient, amountWei: part.amount.toString(), skillId: part.skillId.toString() })),
     };
   }));
@@ -66,13 +73,58 @@ export async function readIncome(deps: SkillRouteDeps, wallet: Address, query: U
 
 export async function handleSettlementRoute(request: Request, route: string[], deps: SkillRouteDeps) {
   if (route[0] !== 'market') return null;
+  if (request.method === 'POST' && route.length === 2 && route[1] === 'receipts') {
+    return recordPurchase(deps, await readSkillContentPayload(request));
+  }
   if (request.method === 'POST' && route.length === 3 && route[1] === 'content') {
     return deliverContent(deps, route[2]!, await readSkillContentPayload(request));
   }
   if (request.method !== 'GET') return null;
   if (route.length === 3 && route[1] === 'offers') return { offer: await readOffer(deps, route[2]!) };
   if (route.length === 3 && route[1] === 'income') return readIncome(deps, parseAddressParam(route[2]!), new URL(request.url).searchParams);
+  if (route.length === 3 && route[1] === 'creator') return readCreator(deps, parseAddressParam(route[2]!));
   return null;
+}
+
+/** Index only chain-proven public receipts; transaction links need no trusted uploader. */
+export async function recordPurchase(deps: SkillRouteDeps, payload: unknown) {
+  const contract = address(deps);
+  const hash = payload && typeof payload === 'object' ? (payload as Record<string, unknown>).transaction : null;
+  if (typeof hash !== 'string' || !/^0x[0-9a-fA-F]{64}$/.test(hash)) throw new RequestError(400, 'invalid_transaction', 'Expected a transaction hash');
+  if (!deps.skillContent) throw new RequestError(503, 'storage_unavailable', 'Receipt index unavailable');
+  const receipt = await deps.publicClient.getTransactionReceipt({ hash: hash as Hex });
+  if (receipt.status !== 'success' || !receipt.to || getAddress(receipt.to) !== getAddress(contract)) throw new RequestError(403, 'not_purchase', 'Expected a successful market transaction');
+  for (const log of receipt.logs) {
+    if (getAddress(log.address) !== getAddress(contract)) continue;
+    let event;
+    try { event = decodeEventLog({ abi: skillMarketAbi, data: log.data, topics: log.topics }); } catch { continue; }
+    if (event.eventName !== 'Purchased') continue;
+    const receiptId = event.args.receiptId.toString();
+    await deps.skillContent.putIfAbsent(`market-receipts/${deps.config.chain.id}/${receiptId}`, JSON.stringify({ transaction: hash.toLowerCase() }));
+    return { indexed: true, receiptId, transaction: hash.toLowerCase() };
+  }
+  throw new RequestError(403, 'not_purchase', 'No purchase receipt in this transaction');
+}
+
+export async function readCreator(deps: SkillRouteDeps, wallet: Address) {
+  const contract = address(deps);
+  const total = await deps.publicClient.readContract({ address: deps.config.contracts.SkillRegistry, abi: skillRegistryAbi, functionName: 'skillsByAuthorCount', args: [wallet] });
+  const assets = await Promise.all(Array.from({ length: Math.min(24, Number(total)) }, async (_, i) => {
+    const id = await deps.publicClient.readContract({ address: deps.config.contracts.SkillRegistry, abi: skillRegistryAbi, functionName: 'skillsByAuthorAt', args: [wallet, total - 1n - BigInt(i)] });
+    const skill = (await readSkillRecord(deps, id))!;
+    const version = await readVersion(deps, id, skill.versionCount - 1);
+    const [stored, offer, royalty] = await Promise.all([
+      readStored(deps, version.fingerprint), readOffer(deps, version.fingerprint),
+      deps.publicClient.readContract({ address: contract, abi: skillMarketAbi, functionName: 'royaltyBps', args: [id] }),
+    ]);
+    return { skillId: id.toString(), name: stored?.name ?? `Skill #${id}`, fingerprint: version.fingerprint,
+      versionIndex: skill.versionCount - 1, parentSkillId: skill.parentSkillId.toString(), royaltyBps: royalty, offer };
+  }));
+  const [income, platformBps] = await Promise.all([
+    readIncome(deps, wallet, new URLSearchParams()),
+    deps.publicClient.readContract({ address: contract, abi: skillMarketAbi, functionName: 'platformBps' }),
+  ]);
+  return { ...income, assets, assetCount: total.toString(), assetsTruncated: total > 24n, platformBps };
 }
 
 /** A successful UseSkill transaction is a durable delivery receipt. Retrying

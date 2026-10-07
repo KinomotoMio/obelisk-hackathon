@@ -9,7 +9,8 @@ import { ready, startLocalChain, stopLocalChain, makeApp, publicClient } from '.
 import { resolveObeliskPaths } from '../../packages/core/src/paths.ts';
 import { createWallet } from '../../packages/core/src/wallet.ts';
 import { saveSkillDraft } from '../../packages/core/src/skills.ts';
-import { runSkillMintCommand } from '../../packages/cli/src/skill-mint-command.ts';
+import { runSkillMintCommand, skillService } from '../../packages/cli/src/skill-mint-command.ts';
+import { readCreatorMarket } from '../../app/src/main/creator-market.ts';
 import { runMarketCommand } from '../../packages/cli/src/market-command.ts';
 import { runSkillFetchCommand } from '../../packages/cli/src/skill-fetch-command.ts';
 
@@ -54,5 +55,11 @@ test('CLI licensed mint -> list -> buy -> use -> Codex install; retry buys only 
     const income = await runMarketCommand(['income'], author);
     assert.equal(income.count, '1');
     assert.equal(income.totalWei, parseEther('0.00095').toString());
+    assert.equal(income.rows[0].transaction, purchase.transaction);
+    const creator = await readCreatorMarket(skillService(author), minted.author);
+    assert.equal(creator.ok, true);
+    assert.equal(creator.assets[0].name, 'licensed-method');
+    assert.equal(creator.rows[0].direct, '0.00095');
+    assert.equal(creator.rows[0].derived, '0');
   } finally { stopLocalChain(); }
 });

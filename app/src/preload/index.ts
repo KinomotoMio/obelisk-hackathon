@@ -69,6 +69,7 @@ contextBridge.exposeInMainWorld('obelisk', {
   skillsGet: (name: string) => invoke('skills:get', name),
   skillsDescribeScenes: (tags: string[]) => invoke('skills:describe-scenes', tags),
   skillsChainDetail: (skillId: string) => invoke('skills:chain-detail', skillId),
+  skillsCreatorMarket: () => invoke('skills:creator-market'),
   onSkillsUpdated: (callback: (filePath: unknown) => void) => {
     const listener = (_: IpcRendererEvent, filePath: unknown) => callback(filePath);
     ipcRenderer.on('obelisk:skills-updated', listener);

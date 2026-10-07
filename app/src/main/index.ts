@@ -23,6 +23,7 @@ import { describeSceneTag, SCENE_DIMENSIONS } from '../../../packages/core/src/s
 import { networkNameZh, ObeliskServiceClient, resolveServiceUrl } from '../../../packages/core/src/obelisk-service.ts';
 import { readChainSkill } from './skill-market.ts';
 import { importWalletFromApp, readWalletActivation, readWalletOverview } from './wallet.ts';
+import { readCreatorMarket } from './creator-market.ts';
 import { systemSecretStore } from '../../../packages/core/src/keychain.ts';
 import { CaptureUsageError, parseCaptureArgs, runCapture, type CaptureRequest } from './capture.ts';
 import { publishedRunPage, resolvePlaygroundDir, skillSources } from './playground-runs.ts';
@@ -1125,6 +1126,14 @@ ipcMain.handle('shares:recipient', async (_, address) => {
 const walletContext = () => ({ paths: OBELISK_PATHS, secrets: systemSecretStore() });
 
 ipcMain.handle('wallet:get', () => readWalletOverview(walletContext, OBELISK_DIR));
+ipcMain.handle('skills:creator-market', async () => {
+  const wallet = await readWalletOverview(walletContext, OBELISK_DIR);
+  if (wallet.state !== 'ready') return { ok: false, message: '先在设置中准备你的钱包，就能查看自己发布的 Skill 和收入。' };
+  try {
+    skillServiceClient ??= new ObeliskServiceClient(resolveServiceUrl(process.env));
+    return readCreatorMarket(skillServiceClient, wallet.address);
+  } catch (error) { return { ok: false, message: (error as Error).message }; }
+});
 ipcMain.handle('wallet:activation', () => readWalletActivation(walletContext, shareService));
 
 // One import at a time: two racing imports would both find the keychain empty.

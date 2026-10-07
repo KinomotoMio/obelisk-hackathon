@@ -13,6 +13,7 @@ import { promptAssistant } from '../prompt-copy.js';
 import { assistantLabel } from '../assistant-prompts.mjs';
 import SkillSceneTags from '../components/SkillSceneTags.vue';
 import SkillStage from '../components/SkillStage.vue';
+import CreatorRevenue from '../components/CreatorRevenue.vue';
 
 defineOptions({ name: 'SkillList' });
 
@@ -43,6 +44,7 @@ function fingerprintOf(skill) {
 <template>
   <div class="skill-wrap">
     <div class="skill-list">
+      <CreatorRevenue />
       <div v-if="state.skillsError" class="detail-banner broken">
         <svg class="detail-banner-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M8 2l6.5 11.5h-13z M8 6.5v3M8 11.6v.4"/>

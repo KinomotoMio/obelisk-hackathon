@@ -360,6 +360,13 @@ export class ObeliskServiceClient {
     });
   }
 
+  creatorMarket(wallet: Address): Promise<unknown> {
+    return this.#request(`/v1/market/creator/${wallet}`, { timeoutMs: 45_000 });
+  }
+  recordMarketTransaction(transaction: Hex): Promise<unknown> {
+    return this.#request('/v1/market/receipts', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ transaction }) });
+  }
+
   relay(body: { action: string; message: Record<string, unknown>; signature: Hex }): Promise<RelayOutcome> {
     return this.#request<RelayOutcome>('/v1/relay', {
       method: 'POST',

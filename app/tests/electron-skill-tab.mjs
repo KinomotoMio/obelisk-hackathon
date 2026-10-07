@@ -311,6 +311,10 @@ const savedSettings = {};
 
 function registerHandlers() {
   ipcMain.handle('skills:list', () => library.map(name => summary(views[name])));
+  ipcMain.handle('skills:creator-market', () => ({ ok: true, wallet: `0x${'11'.repeat(20)}`, network: 'BOT Chain 测试网', testnet: true,
+    total: '0.0095', count: '1', platformPercent: 5, assets: [{ skillId: '1', name: 'release-checklist', royaltyPercent: 20,
+      offer: { price: '0.01', mode: '版本买断', license: '商用许可' } }],
+    rows: [{ receiptId: '1', offerId: '1', direct: '0.0095', derived: '0', income: '0.0095', date: '2026-10-08T00:00:00Z', transactionUrl: null }], truncated: false }));
   ipcMain.handle('skills:get', (_event, name) => (library.includes(name) ? views[name] : null));
   ipcMain.handle('skills:describe-scenes', (_event, tags) => tags.map(describeScene));
   ipcMain.handle('skills:chain-detail', (_event, skillId) => (chainSkills[skillId]
@@ -430,6 +434,8 @@ async function run() {
     `drafts waiting for review are listed apart from minted Skills (${JSON.stringify(sections)})`,
   );
   const listText = await js(win, `document.querySelector('.skill-list').innerText`);
+  assert(listText.includes('我的发布与回报') && listText.includes('0.0095') && listText.includes('测试币演示，不代表实际营收'), 'creator sees own settled income and explicit testnet label');
+  assert(listText.includes('直接销售') && listText.includes('衍生分成') && listText.includes('配置上架'), 'creator view separates sales and inherited income and offers a publishing action');
   assert(listText.includes('求职与实习') && !listText.includes('v1:'), 'birth scenes are listed by their vocabulary labels');
   assert(listText.includes('已铸造 v2'), 'a minted Skill shows its latest version');
   assert(await js(win, `document.querySelector('.sidebar-item.active .badge')?.textContent.trim() === '3'`), 'the sidebar counts the Skills');

@@ -116,7 +116,13 @@ export async function runMarketCommand(args: string[], deps: SkillChainDeps = {}
     receipt = await client.waitForTransactionReceipt({ hash: journal.hash, timeout: 60_000 });
   }
   if (receipt.status !== 'success') throw new Error(`Transaction ${journal.hash} reverted; no purchase or allocation was applied`);
+  let receiptIndexError: string | null = null;
+  if (action === 'buy') {
+    try { await service.recordMarketTransaction(journal.hash); }
+    catch (error) { receiptIndexError = `Payment succeeded; receipt link indexing failed. Retry this same request id to finish indexing: ${error instanceof Error ? error.message : 'unavailable'}`; }
+  }
   return { status: 'confirmed', ...plan, transaction: journal.hash, requestId,
+    ...(receiptIndexError ? { receiptIndexError } : {}),
     explorer: chain.explorerUrl ? `${chain.explorerUrl}/tx/${journal.hash}` : null,
     next: action === 'buy' ? `obelisk market use ${id}` : action === 'use'
       ? `obelisk skill fetch ${offer!.fingerprint.slice(2)} --receipt ${journal.hash}` : 'The offer is on chain; inspect it in the market.' };
