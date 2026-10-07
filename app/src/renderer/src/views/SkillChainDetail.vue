@@ -18,6 +18,7 @@ import {
   versionLabel,
 } from '../skill-library.mjs';
 import { derivePrompt, fetchPrompt } from '../skill-prompts.mjs';
+import { runStatus, sourceSummary } from '../playground.mjs';
 import PromptCopyButton from '../components/PromptCopyButton.vue';
 
 // A minted Skill as anyone sees it (#19, mockups/skill-detail.html 画面 2):
@@ -80,6 +81,28 @@ const trendQuiet = computed(() => trend.value.every(point => point.invocations =
 const lineage = computed(() => (skill.value?.lineage ? lineageRows(skill.value.lineage.nodes) : []));
 const versions = computed(() => [...(usage.value?.versions ?? [])].sort((a, b) => b.index - a.index));
 
+// Playground runs this Skill appears in (#32): its numbers then include data
+// simulated users produced, so the page says so and links each run's record.
+const playgroundSources = ref([]);
+const playground = computed(() => (playgroundSources.value.length ? sourceSummary(playgroundSources.value) : null));
+watch(skill, async (value) => {
+  playgroundSources.value = [];
+  if (!value || !window.obelisk?.playgroundSkillSources) return;
+  try {
+    playgroundSources.value = await window.obelisk.playgroundSkillSources({
+      chainId: value.chainId,
+      skillId: value.skillId,
+      name: value.name ?? local.value?.name ?? null,
+      fingerprints: [value.version.fingerprint, ...(value.usage?.versions ?? []).map(version => version.fingerprint)],
+    });
+  } catch {
+    playgroundSources.value = [];
+  }
+});
+function showPlaygroundSource() {
+  document.querySelector('[data-panel="playground-source"]')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
 function sceneName(scene) {
   return scene.label || '未命名的新标签';
 }
@@ -110,6 +133,7 @@ function errorText(failure) {
             <span class="pill version">{{ versionLabel(skill.version.index) }}</span>
             <span class="pill chain"><span class="dot"></span>已铸造 · {{ chainLabel(skill.chainId) }}</span>
             <span v-if="local" class="pill mine">我的 Skill</span>
+            <button v-if="playground" class="pill source" data-source="playground" @click="showPlaygroundSource">来源：Playground</button>
           </div>
           <div class="detail-path">{{ title }}</div>
           <div class="detail-meta">
@@ -146,6 +170,7 @@ function errorText(failure) {
           <h3 class="skill-panel-title">真实调用</h3>
           <div class="big">{{ usage ? usage.totalInvocations.toLocaleString() : '—' }}</div>
           <div class="note" v-if="usage">来自 {{ usage.uniqueWalletsExact ? '' : '至少 ' }}{{ usage.uniqueWallets.toLocaleString() }} 个钱包</div>
+          <button v-if="playground" class="source-link" @click="showPlaygroundSource">含 Playground 数据 · {{ playground.runs }} 次运行</button>
         </section>
         <section class="skill-panel kpi" data-kpi="smooth">
           <h3 class="skill-panel-title">顺利率</h3>
@@ -169,6 +194,27 @@ function errorText(failure) {
           <div class="note">{{ outcomesOn ? '事实信号，直接统计' : '尚未开启' }}</div>
         </section>
       </div>
+
+      <section v-if="playground" class="skill-panel source-panel" data-panel="playground-source">
+        <h3 class="skill-panel-title"><span>来源：Playground</span><span class="count">{{ playground.runs }} 次运行</span></h3>
+        <p class="source-text">
+          这个 Skill 出现在 Playground 的模拟运行里<template v-if="playground.mintedBy.length">：由{{ playground.mintedBy.join('、') }} 铸造</template>，涉及 {{ playground.roles }} 个模拟用户、{{ playground.sessions }} 个 session。这里的调用数据包含这些运行上报的记录；链上的统计暂时不区分是否来自 Playground。
+        </p>
+        <div class="source-runs">
+          <router-link
+            v-for="source in playgroundSources"
+            :key="source.id"
+            class="source-run"
+            :data-source-run="source.id"
+            :to="{ name: 'PlaygroundRun', params: { runId: source.id } }"
+          >
+            <span class="source-run-title">{{ source.title }}</span>
+            <span class="mono source-run-time">{{ fmtListTime(source.startedAt) }}</span>
+            <span class="source-run-status" :class="runStatus({ run: source }).tone">{{ runStatus({ run: source }).label }}</span>
+            <span class="source-run-go">查看出处记录 →</span>
+          </router-link>
+        </div>
+      </section>
 
       <section v-if="usage" class="skill-panel trend-panel">
         <h3 class="skill-panel-title">
@@ -306,6 +352,8 @@ function errorText(failure) {
 .pill.version { background: var(--surface-strong); color: var(--fg-2); font-family: var(--font-mono); }
 .pill.chain { background: var(--chain-soft); color: var(--chain); }
 .pill.mine { background: var(--accent-soft); color: var(--accent-2); }
+.pill.source { background: var(--warn-soft); color: var(--warn); font: inherit; font-size: var(--text-xs); font-weight: 500; }
+.pill.source:hover { background: rgba(251,191,36,0.22); }
 .chain-link { color: var(--chain); text-decoration: none; }
 .chain-link:hover { text-decoration: underline; text-underline-offset: 2px; }
 .local-link { color: var(--accent-2); text-decoration: none; font: inherit; }
@@ -337,6 +385,25 @@ function errorText(failure) {
 .trend-axis { display: flex; justify-content: space-between; align-items: baseline; font-size: var(--text-sm); color: var(--muted); }
 .trend-axis strong { color: var(--fg); font-weight: 600; }
 
+.source-link { margin-top: 4px; font: inherit; font-size: var(--text-sm); color: var(--warn); }
+.source-link:hover { text-decoration: underline; text-underline-offset: 2px; }
+.source-panel { border-color: rgba(251,191,36,0.22); background: linear-gradient(to right, rgba(251,191,36,0.06), rgba(255,255,255,0.015) 60%); }
+.source-panel .skill-panel-title { color: var(--warn); }
+.source-text { font-size: var(--text-base); color: var(--fg-2); line-height: 1.65; max-width: 820px; }
+.source-runs { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+.source-run {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; gap: 14px; align-items: center;
+  padding: 8px 12px; border-radius: 8px; border: 1px solid var(--hairline); background: rgba(255,255,255,0.02);
+  color: var(--fg); text-decoration: none; font-size: var(--text-base); transition: background 0.1s, border-color 0.1s;
+}
+.source-run:hover { background: var(--surface-strong); border-color: var(--hairline-strong); }
+.source-run-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.source-run-time { font-size: 11px; color: var(--muted); }
+.source-run-status { font-size: var(--text-xs); color: var(--muted); }
+.source-run-status.live, .source-run-status.ok { color: #4ade80; }
+.source-run-status.danger { color: var(--danger); }
+.source-run-status.warn { color: var(--warn); }
+.source-run-go { font-size: var(--text-sm); color: var(--accent-2); }
 .grid-2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
 @container (max-width: 820px) {
   .grid-2 { grid-template-columns: minmax(0, 1fr); }
