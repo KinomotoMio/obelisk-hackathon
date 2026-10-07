@@ -20,6 +20,8 @@ const SkillList = () => import('./views/SkillList.vue');
 const SkillDetail = () => import('./views/SkillDetail.vue');
 const SkillChainDetail = () => import('./views/SkillChainDetail.vue');
 const ShareList = () => import('./views/ShareList.vue');
+const PlaygroundList = () => import('./views/PlaygroundList.vue');
+const PlaygroundRun = () => import('./views/PlaygroundRun.vue');
 
 const routes = [
   {
@@ -92,6 +94,17 @@ const routes = [
     path: '/share',
     name: 'ShareList',
     component: ShareList
+  },
+  {
+    path: '/playground',
+    name: 'PlaygroundList',
+    component: PlaygroundList
+  },
+  {
+    path: '/playground/runs/:runId',
+    name: 'PlaygroundRun',
+    component: PlaygroundRun,
+    props: true
   },
   {
     path: '/settings',

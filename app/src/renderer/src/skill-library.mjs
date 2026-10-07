@@ -34,6 +34,11 @@ export function chainLabel(chainId) {
   return CHAINS[chainId]?.label ?? `链 ${chainId}`;
 }
 
+/** The block explorer of a known chain, or null (a local chain has none). */
+export function chainExplorer(chainId) {
+  return CHAINS[chainId]?.explorer ?? null;
+}
+
 /** The explorer page of a mint transaction, or null when it cannot be linked. */
 export function explorerTxUrl(mint) {
   const explorer = CHAINS[mint?.chainId]?.explorer;
