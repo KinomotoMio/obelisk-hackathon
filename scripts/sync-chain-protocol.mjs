@@ -40,7 +40,8 @@ export function renderChainProtocol(fromDir = chainDir) {
       if (typeof address !== 'string') throw new Error(`chain/deployments/${record.chainId}.json has no ${name} address`);
       contracts[name] = address;
     }
-    pinned[record.chainId] = { chainId: record.chainId, contracts };
+    pinned[record.chainId] = { chainId: record.chainId, contracts,
+      ...(record.contracts?.SkillMarket?.address ? { market: record.contracts.SkillMarket.address } : {}) };
   }
 
   return [
@@ -55,6 +56,7 @@ export function renderChainProtocol(fromDir = chainDir) {
     'export interface PinnedDeployment {',
     '  readonly chainId: number;',
     '  readonly contracts: Readonly<Record<ObeliskContractName, `0x${string}`>>;',
+    '  readonly market?: `0x${string}`;',
     '}',
     '',
     `export const pinnedDeployments: Readonly<Record<number, PinnedDeployment>> = ${JSON.stringify(pinned, null, 2)};`,

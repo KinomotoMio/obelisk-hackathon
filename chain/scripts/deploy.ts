@@ -46,6 +46,7 @@ interface DeploymentRecord {
   contracts: Partial<Record<ContractName, DeployedContract>>;
   /** Deployment transactions sent but not yet confirmed by a receipt. */
   pending?: Partial<Record<ContractName, Hex>>;
+  marketConfig?: { platform: Hex; feeBps: number };
 }
 
 const deploymentsDir = join(dirname(fileURLToPath(import.meta.url)), "..", "deployments");
@@ -98,7 +99,10 @@ async function ensure(name: ContractName, args: readonly unknown[] = []): Promis
   }
   // UsageStats is bound to a SkillRegistry at construction; a new
   // SkillRegistry invalidates the recorded UsageStats.
-  if (name === "SkillRegistry") delete record.contracts.UsageStats;
+  if (name === "SkillRegistry") {
+    delete record.contracts.UsageStats;
+    delete record.contracts.SkillMarket;
+  }
   delete record.contracts[name];
   record.complete = false;
 
@@ -153,6 +157,26 @@ const stats = await viem.getContractAt("UsageStats", usageStats);
 const wired = await stats.read.skillRegistry();
 if (getAddress(wired) !== getAddress(skillRegistry)) {
   throw new Error(`UsageStats at ${usageStats} reads SkillRegistry ${wired}, expected ${skillRegistry}`);
+}
+
+// Explicit configuration adds settlement without replacing the existing registries.
+// Keep this in the deployment record so restart and source verification use identical arguments.
+const platformInput = process.env.MARKET_PLATFORM_ADDRESS;
+if (platformInput || record.marketConfig) {
+  const platform = platformInput ? getAddress(platformInput) : record.marketConfig!.platform;
+  const feeBps = Number(process.env.MARKET_FEE_BPS ?? record.marketConfig?.feeBps ?? '500');
+  if (!Number.isInteger(feeBps) || feeBps < 0 || feeBps > 2000) throw new Error('MARKET_FEE_BPS must be 0–2000');
+  if (record.marketConfig && (getAddress(record.marketConfig.platform) !== platform || record.marketConfig.feeBps !== feeBps)) {
+    throw new Error('Market configuration differs from the recorded deployment; do not silently replace settlement rules');
+  }
+  record.marketConfig = { platform, feeBps };
+  save(record);
+  const marketAddress = await ensure('SkillMarket', [skillRegistry, platform, feeBps]);
+  const market = await viem.getContractAt('SkillMarket', marketAddress);
+  if (getAddress(await market.read.registry()) !== getAddress(skillRegistry)
+    || getAddress(await market.read.platform()) !== platform || await market.read.platformBps() !== feeBps) {
+    throw new Error('SkillMarket configuration does not match the deployment record');
+  }
 }
 
 record.complete = true;

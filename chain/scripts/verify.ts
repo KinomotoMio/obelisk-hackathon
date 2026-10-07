@@ -27,6 +27,7 @@ if (!existsSync(recordPath)) throw new Error(`No deployment record at ${recordPa
 const record = JSON.parse(readFileSync(recordPath, "utf8")) as {
   complete: boolean;
   contracts: Record<string, { address: string } | undefined>;
+  marketConfig?: { platform: string; feeBps: number };
 };
 if (!record.complete) throw new Error(`${recordPath} is not complete; finish the deployment first (re-run the deploy).`);
 
@@ -42,6 +43,10 @@ const contracts: { name: string; constructorArgs: unknown[] }[] = [
   { name: "SkillRegistry", constructorArgs: [] },
   { name: "UsageStats", constructorArgs: [address("SkillRegistry")] },
 ];
+if (record.contracts.SkillMarket) {
+  if (!record.marketConfig) throw new Error('SkillMarket requires recorded marketConfig for verification');
+  contracts.push({ name: 'SkillMarket', constructorArgs: [address('SkillRegistry'), record.marketConfig.platform, record.marketConfig.feeBps] });
+}
 
 console.log(`Verifying ${recordPath} on ${networkName} (chainId ${chainId})`);
 let failed = 0;

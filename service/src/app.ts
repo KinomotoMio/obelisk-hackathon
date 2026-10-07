@@ -34,6 +34,7 @@ import { parseAddressParam, parseContractParam, readKey, readNonce, readTransact
 import type { Relayer, RelayRecord } from './relayer.ts';
 import { createShare, MAX_SHARE_BODY_BYTES, openShare, parseShareId, readShare, revokeShare, type ShareDeps, type ShareStore } from './shares.ts';
 import { readSkillList } from './market.ts';
+import { handleSettlementRoute } from './settlement.ts';
 import { handleSkillRoute, type SkillContentStore } from './skills.ts';
 import { checkTransactions, parseHashes, type TxCheckCache } from './txcheck.ts';
 import { handleUsageRoute, type UsageTrendStore } from './usage.ts';
@@ -214,6 +215,8 @@ export async function handleRequest(request: Request, deps: AppDeps): Promise<Re
     if (sitePath) return await sitePageResponse(deps, sitePath);
     if (parts[0] !== 'v1') throw new RequestError(404, 'not_found', `No route for ${request.method} ${pathname}`);
     const route = parts.slice(1);
+    const settlementResult = await handleSettlementRoute(request, route, deps);
+    if (settlementResult !== null) return json(settlementResult);
 
     if (request.method === 'GET' && route.length === 1 && route[0] === 'skills') return json(await readSkillList(deps, new URL(request.url).searchParams));
     const usageResult = await handleUsageRoute(request, route, deps);
@@ -258,6 +261,7 @@ export async function handleRequest(request: Request, deps: AppDeps): Promise<Re
         rpcUrl: config.chain.id === localDevChain.id ? config.rpcUrl : config.chain.rpcUrls.default.http[0],
         nativeCurrency: config.chain.nativeCurrency,
         contracts: config.contracts,
+        market: config.market ?? null,
         relayer: deps.relayerAddress,
       });
     }

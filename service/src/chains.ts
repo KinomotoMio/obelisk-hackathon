@@ -69,6 +69,8 @@ export interface ServiceChainConfig {
   contracts: ContractAddresses;
   /** Base URL of the block explorer, without a trailing slash; null for the local chain. */
   explorerUrl: string | null;
+  /** Optional until the settlement contract is deployed on this chain. */
+  market?: Address;
 }
 
 export interface ChainEnv {
@@ -103,6 +105,7 @@ export function resolveChainConfig(env: ChainEnv): ServiceChainConfig {
       rpcUrl: env.RPC_URL || localDevChain.rpcUrls.default.http[0]!,
       contracts,
       explorerUrl: null,
+      ...(parsed.SkillMarket ? { market: getAddress(parsed.SkillMarket) } : {}),
     };
   }
   const chain = knownChains.find((candidate) => candidate.id === chainId);
@@ -114,6 +117,7 @@ export function resolveChainConfig(env: ChainEnv): ServiceChainConfig {
     rpcUrl: env.RPC_URL || chain.rpcUrls.default.http[0]!,
     contracts: contractsFromRecord(record),
     explorerUrl: chain.blockExplorers?.default.url ?? null,
+    ...(pinnedDeployments[chainId]?.market ? { market: getAddress(pinnedDeployments[chainId]!.market!) } : {}),
   };
 }
 
