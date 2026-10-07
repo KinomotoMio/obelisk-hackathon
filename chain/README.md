@@ -81,6 +81,7 @@ npm test            # compile + all contract tests (node:test, in-process chain)
 npm run typecheck   # compile + tsc
 npm run export-abi  # rewrite abi/ after an ABI change (a test fails if you forget)
 npm run deploy:local   # full deploy into a throwaway in-process chain (chainId 31337)
+npm run verify:testnet # verify the committed testnet contracts' source on the explorer
 ```
 
 Solidity 0.8.28 with `evmVersion: cancun`, the optimizer, and the IR pipeline.
@@ -112,8 +113,50 @@ Re-running is safe. Each contract is recorded as soon as its deployment is
 mined, and a later run reuses recorded contracts that still have code. An
 interrupted run therefore resumes instead of deploying everything again. If
 `SkillRegistry` is redeployed, `UsageStats` is redeployed as well, because it is
-bound to one registry. Mainnet (`npm run deploy:mainnet`, chain id 677) uses the
-same flow and is tracked in #5.
+bound to one registry.
+
+## Verifying the source on the explorer
+
+Both explorers are Blockscout instances with a public API, so verifying needs
+no key and no account:
+
+```sh
+cd chain
+npm run verify:testnet   # every contract in deployments/968.json, on scan.bohr.life
+npm run verify:mainnet   # every contract in deployments/677.json, on scan.botchain.ai
+```
+
+It runs with the production build profile, the one the deploy used (solc
+0.8.28, cancun, optimizer 200 runs, viaIR), so the explorer rebuilds the same
+bytecode. Contracts that are already verified are skipped. The testnet
+contracts were verified this way on 2026-10-07, for example
+<https://scan.bohr.life/address/0x84b17B83C976E2b0C447A4df09c52D80e4f40B98#code>.
+
+## Switching to mainnet (#5)
+
+Mainnet is chain id 677, RPC `https://rpc.botchain.ai`, explorer
+<https://scan.botchain.ai/>. One address, `0x2f8A318ad91cBa234Af92ad6029F9bE395a20F9f`,
+both deploys the contracts and relays for the online service (its key is the
+Hardhat keystore entry and the Worker's `RELAYER_PRIVATE_KEY`). The deploy
+uses about 4.2M gas, which is about 0.084 BOT at 20 gwei. Each relayed action
+costs about 0.004 BOT. Ask for at least 0.5 BOT.
+
+| # | Who | Step |
+| --- | --- | --- |
+| 1 | Owner | Get mainnet BOT sent to `0x2f8A…0F9f` and check it arrived: `curl -s -X POST https://rpc.botchain.ai -H 'content-type: application/json' -d '{"jsonrpc":"2.0","id":1,"method":"eth_getBalance","params":["0x2f8A318ad91cBa234Af92ad6029F9bE395a20F9f","latest"]}'` |
+| 2 | Owner | `cd chain && npm run deploy:mainnet` and enter the keystore password. If it stops for any reason, run it again: it resumes. It is done when it prints `Wrote …/deployments/677.json` (`complete: true`). |
+| 3 | Agent | `npm run verify:mainnet` in `chain/` (no key), then open the four `#code` links it prints. |
+| 4 | Agent | Run `npm run sync:chain` at the repository root, then `node --test tests/chain-protocol-sync.test.mjs` and `cd service && npm test`. Set `"CHAIN_ID": "677"` in `service/wrangler.jsonc`, then commit `chain/deployments/677.json`, `packages/core/src/chain-protocol.ts` and `wrangler.jsonc`, and push. No other code changes: the service and CLI read the addresses from the synced copy. |
+| 5 | Owner | `cd service && npm run deploy` (already logged in to `wrangler`; the relayer secret stays the same). Then `curl https://obelisk-service.kinomotomiovo.workers.dev/v1/health` should show `"chainId": 677` and the relayer's balance. |
+| 6 | Agent | Rebuild the CLI and the App from the pushed commit (`npm run build:cli`, App build). A CLI built before step 4 refuses a service on 677 with "which this CLI has no deployment for". Then run a CLI smoke test on mainnet: wallet activate, skill mint, usage report, share send and revoke. Record the transaction links for the submission. |
+
+What does not carry over from the testnet: encryption keys (each wallet runs
+`obelisk wallet activate` again on mainnet), minted Skills (mint them again;
+local records of testnet mints stay, but they are not reported on 677),
+shares, and usage totals. The Playground scenarios set `chainId: 968`
+(`playground/scenarios/`), so change them as well if the Playground should
+run on mainnet. To roll back, set `CHAIN_ID` back to `"968"` and deploy the
+Worker again.
 
 ## Outputs for the online service and CLI
 
