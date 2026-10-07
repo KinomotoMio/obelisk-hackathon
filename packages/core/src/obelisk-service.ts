@@ -101,6 +101,63 @@ export interface VersionUsageInfo {
   wallet?: { address: Address; cumulative: number; reportedAt: string | null };
 }
 
+/** One usage bucket as the service names it; `tag` is null for a key it cannot name. */
+export interface UsageSceneBucket {
+  key: Hex;
+  tag: string | null;
+  label: string | null;
+  dimension: string | null;
+  invocations: number;
+}
+
+/** `GET /v1/skills/:skillId/usage`: a Skill's usage across all its versions (#24). */
+export interface SkillUsageInfo {
+  chainId: number;
+  contract: Address;
+  skillId: string;
+  author: Address;
+  parentSkillId: string | null;
+  birthScenes: { tag: string; label: string | null; dimension: string | null }[];
+  totalInvocations: number;
+  uniqueWallets: number;
+  uniqueWalletsExact: boolean;
+  lastReportAt: string | null;
+  scenes: UsageSceneBucket[];
+  outcomes: { key: Hex; id: string | null; invocations: number }[];
+  results: {
+    smooth: number;
+    rework: number;
+    failed: number;
+    unknown: number;
+    judged: number;
+    smoothRate: number | null;
+    signals: Record<string, number>;
+  };
+  trend: { unit: 'week'; source: string; available: boolean; weeks: { start: string; invocations: number }[] };
+  versions: { index: number; fingerprint: Hex; publishedAt: string; totalInvocations: number; uniqueWallets: number; lastReportAt: string | null }[];
+}
+
+/** `GET /v1/skills/:skillId/lineage`: the family tree a Skill belongs to (族谱). */
+export interface SkillLineageInfo {
+  chainId: number;
+  contract: Address;
+  skillId: string;
+  rootSkillId: string;
+  path: string[];
+  nodes: {
+    skillId: string;
+    parentSkillId: string | null;
+    depth: number;
+    author: Address;
+    name: string | null;
+    versionCount: number;
+    latestFingerprint: Hex;
+    createdAt: string;
+    childSkillIds: string[];
+  }[];
+  truncated: boolean;
+}
+
 export type RelayOutcome =
   | { status: 'confirmed'; action: string; signer: Address; txHash: Hex; blockNumber: string; explorerUrl: string | null }
   | { status: 'pending'; action: string; signer: Address; txHash: Hex; explorerUrl: string | null };
@@ -241,6 +298,17 @@ export class ObeliskServiceClient {
   usage(fingerprint: Hex, { wallet }: { wallet?: Address } = {}): Promise<VersionUsageInfo> {
     const query = wallet ? `?wallet=${wallet}` : '';
     return this.#request<VersionUsageInfo>(`/v1/usage/${fingerprint}${query}`);
+  }
+
+  /** A Skill's usage across all its versions, with a weekly trend of `weeks` weeks. */
+  skillUsage(skillId: string, { weeks }: { weeks?: number } = {}): Promise<SkillUsageInfo> {
+    const query = weeks === undefined ? '' : `?weeks=${weeks}`;
+    return this.#request<SkillUsageInfo>(`/v1/skills/${encodeURIComponent(skillId)}/usage${query}`);
+  }
+
+  /** The family tree (族谱) the Skill belongs to, from its root ancestor down. */
+  skillLineage(skillId: string): Promise<SkillLineageInfo> {
+    return this.#request<SkillLineageInfo>(`/v1/skills/${encodeURIComponent(skillId)}/lineage`);
   }
 
   storeSkillContent(
