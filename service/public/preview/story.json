@@ -1,0 +1,845 @@
+{
+  "schema": "obelisk.preview.story/1",
+  "title": "演示闭环",
+  "summary": "七类角色在同一个流程里各自看到什么，链上又记下了什么：私密分享、已读回执、沉淀并铸造 Skill、真实调用与统计、衍生、向招聘方出示佐证。",
+  "source": {
+    "kind": "illustrative",
+    "label": "示意内容",
+    "note": "本页的界面和数据是示意，交易没有链接。Playground 用真实 AI 运行和真实链上交易跑完这个剧本后，这里会换成真实截图和数据，每笔记录都能点到区块浏览器，并附出处记录。"
+  },
+  "run": null,
+  "roles": [
+    {
+      "id": "A",
+      "label": "作者 A",
+      "wallet": "0xA1c9…4e02",
+      "about": "分享自己的 session，把方法沉淀成 Skill 并铸造"
+    },
+    {
+      "id": "B",
+      "label": "接收者 B",
+      "wallet": "0x7a3f…c21e",
+      "about": "被指定的接收者，只能打开 1 次"
+    },
+    {
+      "id": "C",
+      "label": "旁人 C",
+      "wallet": "0x33aa…90b1",
+      "about": "拿到了转发的链接，但不是接收者"
+    },
+    {
+      "id": "users",
+      "label": "用户 1–12",
+      "wallet": null,
+      "count": 12,
+      "about": "12 个钱包，各自在 AI 编程助手里真实使用 Skill"
+    },
+    {
+      "id": "U",
+      "label": "用户 U",
+      "wallet": "0x9c07…1d3a",
+      "about": "用「AI 能力履历」生成自己的履历"
+    },
+    {
+      "id": "D",
+      "label": "衍生作者 D",
+      "wallet": "0xD4e0…77f5",
+      "about": "在 A 的 Skill 基础上改出设计师版"
+    },
+    {
+      "id": "H",
+      "label": "招聘方 H",
+      "wallet": "0x5f91…a3c8",
+      "about": "收到 U 私密出示的佐证"
+    }
+  ],
+  "steps": [
+    {
+      "id": "share",
+      "title": "A 把 session 分享给 B，只能打开 1 次",
+      "roles": [
+        "A",
+        "B"
+      ],
+      "point": "分享规则写在链上：只有 B 的钱包能打开，只能打开 1 次，24 小时后失效。内容在 A 的电脑上加密，服务看不到原文。",
+      "playgroundStep": null,
+      "screens": [
+        {
+          "role": "A",
+          "where": "Claude Code",
+          "blocks": [
+            {
+              "t": "msg",
+              "from": "user",
+              "text": "把修复支付回调的那段 session 分享给 0x7a3f…c21e，只能打开 1 次"
+            },
+            {
+              "t": "msg",
+              "from": "tool",
+              "text": "隐私体检：第 14 条里有 ⟦API key⟧，第 22 条里有 ⟦内网地址⟧，发送前已遮盖"
+            },
+            {
+              "t": "msg",
+              "from": "asst",
+              "text": "已加密并写入分享授权 #S-0142。链接只对 0x7a3f…c21e 有效。"
+            }
+          ]
+        },
+        {
+          "role": "A",
+          "where": "App · Share",
+          "blocks": [
+            {
+              "t": "row",
+              "text": "修复支付回调…",
+              "pill": {
+                "tone": "dim",
+                "text": "未读"
+              },
+              "hl": true
+            },
+            {
+              "t": "kv",
+              "items": [
+                [
+                  "接收者",
+                  "0x7a3f…c21e"
+                ],
+                [
+                  "次数",
+                  "1 次"
+                ],
+                [
+                  "有效期",
+                  "24 小时"
+                ],
+                [
+                  "遮盖",
+                  "2 处"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "role": "B",
+          "where": "聊天工具",
+          "blocks": [
+            {
+              "t": "msg",
+              "from": "asst",
+              "who": "A",
+              "text": "给你看下我怎么修的这个回调 → obelisk…/s/0x9fd3…"
+            },
+            {
+              "t": "note",
+              "text": "B 收到的只是一条链接。能不能打开，由链上的规则决定。"
+            }
+          ]
+        }
+      ],
+      "timeline": [
+        {
+          "at": "21:00:02",
+          "role": "A",
+          "text": "登记加密公钥",
+          "tx": {
+            "command": "wallet activate"
+          }
+        },
+        {
+          "at": "21:00:05",
+          "role": "B",
+          "text": "登记加密公钥",
+          "tx": {
+            "command": "wallet activate"
+          }
+        },
+        {
+          "at": "21:01:10",
+          "role": "A",
+          "text": "写入分享授权 #S-0142：接收者 B，1 次，24 小时",
+          "tx": {
+            "command": "share send"
+          }
+        }
+      ]
+    },
+    {
+      "id": "forwarded",
+      "title": "C 打开转发的链接",
+      "roles": [
+        "C",
+        "A"
+      ],
+      "point": "链接被转发也没用：C 的钱包不是接收者，服务在交出解密钥匙之前就按链上规则拒绝，什么内容也没有泄露。",
+      "playgroundStep": null,
+      "screens": [
+        {
+          "role": "C",
+          "where": "浏览器 · 阅读页",
+          "blocks": [
+            {
+              "t": "denied",
+              "title": "这份分享属于 0x7a3f…c21e",
+              "text": "你连接的钱包 0x33aa…90b1 不是接收者，无法打开"
+            }
+          ]
+        },
+        {
+          "role": "A",
+          "where": "App · Share",
+          "blocks": [
+            {
+              "t": "row",
+              "text": "修复支付回调…",
+              "pill": {
+                "tone": "dim",
+                "text": "未读"
+              }
+            },
+            {
+              "t": "note",
+              "text": "打开次数仍是 0 / 1。转发的链接不会消耗次数。"
+            }
+          ]
+        }
+      ],
+      "timeline": [
+        {
+          "at": "21:02:41",
+          "role": "C",
+          "text": "打开链接，规则核对未通过",
+          "tx": null
+        }
+      ]
+    },
+    {
+      "id": "read",
+      "title": "B 打开；A 收到已读回执",
+      "roles": [
+        "A",
+        "B",
+        "C"
+      ],
+      "point": "B 用自己的钱包签名证明身份，打开回执写在链上，A 的 App 立刻显示已读。次数用完后，同一个链接对谁都打不开了。",
+      "playgroundStep": null,
+      "screens": [
+        {
+          "role": "A",
+          "where": "App · Share",
+          "blocks": [
+            {
+              "t": "row",
+              "text": "修复支付回调…",
+              "pill": {
+                "tone": "ok",
+                "text": "已读 21:03"
+              },
+              "hl": true
+            },
+            {
+              "t": "note",
+              "text": "接收者 0x7a3f…c21e · 1 次 · 24 小时 · 打开回执已上链"
+            }
+          ]
+        },
+        {
+          "role": "B",
+          "where": "网页阅读页",
+          "blocks": [
+            {
+              "t": "pill",
+              "tone": "ok",
+              "text": "已验证：你是指定接收者",
+              "hl": true
+            },
+            {
+              "t": "msg",
+              "from": "asst",
+              "text": "回调处理在写入订单状态之前就返回了成功，所以重试时订单会被重复确认……"
+            },
+            {
+              "t": "note",
+              "text": "页面带有接收者地址的水印"
+            }
+          ]
+        },
+        {
+          "role": "C",
+          "where": "浏览器 · 阅读页",
+          "blocks": [
+            {
+              "t": "denied",
+              "title": "这份分享属于 0x7a3f…c21e",
+              "text": "你无法打开"
+            }
+          ]
+        }
+      ],
+      "timeline": [
+        {
+          "at": "21:03:07",
+          "role": "B",
+          "text": "打开链接，写入打开回执",
+          "tx": {
+            "command": "share open"
+          }
+        }
+      ]
+    },
+    {
+      "id": "mint",
+      "title": "A 在 Claude Code 中说一句话沉淀「AI 能力履历」，在 App 中确认并铸造",
+      "roles": [
+        "A",
+        "users"
+      ],
+      "point": "Skill 从 A 真实做过的事情里提炼出来，并列出用到的 session 作为证据。铸造把这个版本的指纹和出生场景写在链上，从此有了可以追溯的作者。",
+      "playgroundStep": null,
+      "screens": [
+        {
+          "role": "A",
+          "where": "Claude Code",
+          "blocks": [
+            {
+              "t": "msg",
+              "from": "user",
+              "text": "沉淀 Skill：把我这几次帮人改简历的方法整理成一个 Skill"
+            },
+            {
+              "t": "msg",
+              "from": "tool",
+              "text": "obelisk search … 找到 6 个相关 session，其中 4 个有完整的修改过程"
+            },
+            {
+              "t": "msg",
+              "from": "asst",
+              "text": "已起草「AI 能力履历」：从对话历史中找出做过的项目和佐证，生成一页履历。请在 App 的 Skill tab 审阅。"
+            }
+          ]
+        },
+        {
+          "role": "A",
+          "where": "App · Skill",
+          "blocks": [
+            {
+              "t": "row",
+              "text": "AI 能力履历 · 草稿",
+              "pill": {
+                "tone": "acc",
+                "text": "待铸造"
+              }
+            },
+            {
+              "t": "kv",
+              "items": [
+                [
+                  "证据 session",
+                  "4 个"
+                ],
+                [
+                  "出生场景",
+                  "求职 · 简历"
+                ],
+                [
+                  "指纹",
+                  "8f3a…21d0"
+                ]
+              ]
+            },
+            {
+              "t": "row",
+              "text": "确认并铸造",
+              "pill": {
+                "tone": "chain",
+                "text": "已铸造 #12 · 版本 1"
+              },
+              "hl": true
+            }
+          ]
+        },
+        {
+          "role": "users",
+          "where": "Skill 市场",
+          "blocks": [
+            {
+              "t": "row",
+              "text": "AI 能力履历 · #12",
+              "pill": {
+                "tone": "chain",
+                "text": "新铸造"
+              },
+              "hl": true
+            },
+            {
+              "t": "kv",
+              "items": [
+                [
+                  "作者",
+                  "0xA1c9…4e02"
+                ],
+                [
+                  "出生场景",
+                  "求职 · 简历"
+                ],
+                [
+                  "真实调用",
+                  "0"
+                ]
+              ]
+            },
+            {
+              "t": "note",
+              "text": "任何人都能看到它是谁、从哪些场景里来；调用量要等真实使用后才会增长。"
+            }
+          ]
+        }
+      ],
+      "timeline": [
+        {
+          "at": "21:14:30",
+          "role": "A",
+          "text": "铸造 Skill #12「AI 能力履历」，版本 1",
+          "tx": {
+            "command": "skill mint"
+          }
+        }
+      ]
+    },
+    {
+      "id": "usage",
+      "title": "用户 1–12 在 Claude Code 中真实使用 Skill",
+      "roles": [
+        "users",
+        "A"
+      ],
+      "point": "调用量来自每次真实的 Skill 加载，由用户自己的电脑统计后上报。只发计数和场景，不发对话内容；同一个钱包重复上报不会重复计数。",
+      "playgroundStep": null,
+      "screens": [
+        {
+          "role": "users",
+          "where": "Claude Code（12 个钱包）",
+          "blocks": [
+            {
+              "t": "msg",
+              "from": "user",
+              "text": "帮我把这份后端经历整理成一页简历"
+            },
+            {
+              "t": "msg",
+              "from": "tool",
+              "text": "加载 Skill「AI 能力履历」v1 · 指纹 8f3a…21d0"
+            },
+            {
+              "t": "msg",
+              "from": "tool",
+              "text": "obelisk usage report → 上报 1 次调用，场景：求职 · 简历"
+            }
+          ]
+        },
+        {
+          "role": "A",
+          "where": "App · Skill 详情",
+          "blocks": [
+            {
+              "t": "stats",
+              "items": [
+                {
+                  "label": "真实调用",
+                  "value": "12"
+                },
+                {
+                  "label": "钱包",
+                  "value": "12"
+                },
+                {
+                  "label": "顺利率",
+                  "value": "83%"
+                }
+              ]
+            },
+            {
+              "t": "bars",
+              "items": [
+                {
+                  "label": "求职",
+                  "value": 9,
+                  "max": 12
+                },
+                {
+                  "label": "简历",
+                  "value": 7,
+                  "max": 12
+                },
+                {
+                  "label": "转岗",
+                  "value": 3,
+                  "max": 12
+                }
+              ]
+            },
+            {
+              "t": "note",
+              "text": "顺利率按已判断的调用计算；无法判断的另外列出。"
+            }
+          ]
+        }
+      ],
+      "timeline": [
+        {
+          "at": "21:20–21:40",
+          "role": "users",
+          "text": "12 个钱包各自上报调用统计",
+          "count": 12,
+          "tx": {
+            "command": "usage report"
+          }
+        }
+      ]
+    },
+    {
+      "id": "resume",
+      "title": "U 生成自己的能力履历",
+      "roles": [
+        "U",
+        "A"
+      ],
+      "point": "U 按实测场景选中这个 Skill。这次调用同样计入统计，作者 A 看到调用量继续增长。",
+      "playgroundStep": null,
+      "screens": [
+        {
+          "role": "U",
+          "where": "Claude Code",
+          "blocks": [
+            {
+              "t": "msg",
+              "from": "user",
+              "text": "用 AI 能力履历，根据我最近三个月的 session 生成我的履历"
+            },
+            {
+              "t": "msg",
+              "from": "asst",
+              "text": "已生成：后端开发 · 4 个项目 · 每个项目附 1 个佐证 session"
+            }
+          ]
+        },
+        {
+          "role": "U",
+          "where": "App · AI 能力履历",
+          "blocks": [
+            {
+              "t": "row",
+              "text": "支付系统重构",
+              "pill": {
+                "tone": "acc",
+                "text": "佐证 2 个"
+              }
+            },
+            {
+              "t": "row",
+              "text": "订单回调排障",
+              "pill": {
+                "tone": "acc",
+                "text": "佐证 1 个"
+              }
+            },
+            {
+              "t": "row",
+              "text": "数据迁移脚本",
+              "pill": {
+                "tone": "acc",
+                "text": "佐证 1 个"
+              }
+            }
+          ]
+        },
+        {
+          "role": "A",
+          "where": "App · Skill 详情",
+          "blocks": [
+            {
+              "t": "stats",
+              "items": [
+                {
+                  "label": "真实调用",
+                  "value": "13"
+                },
+                {
+                  "label": "钱包",
+                  "value": "13"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "timeline": [
+        {
+          "at": "21:45:12",
+          "role": "U",
+          "text": "上报调用统计",
+          "tx": {
+            "command": "usage report"
+          }
+        }
+      ]
+    },
+    {
+      "id": "derive",
+      "title": "D 衍生「设计师作品集版」",
+      "roles": [
+        "D",
+        "A"
+      ],
+      "point": "D 在 A 的 Skill 基础上修改并铸造，链上记下父 Skill。族谱多出一个分支，A 的贡献随衍生版本一起被看见。",
+      "playgroundStep": null,
+      "screens": [
+        {
+          "role": "D",
+          "where": "Claude Code",
+          "blocks": [
+            {
+              "t": "msg",
+              "from": "user",
+              "text": "在「AI 能力履历」基础上改一个设计师作品集版本"
+            },
+            {
+              "t": "msg",
+              "from": "asst",
+              "text": "已起草「设计师作品集」：项目改为按作品展示，佐证加入设计稿评审记录。父 Skill：#12。"
+            },
+            {
+              "t": "msg",
+              "from": "tool",
+              "text": "obelisk skill mint → 已铸造 #13，父 Skill #12"
+            }
+          ]
+        },
+        {
+          "role": "A",
+          "where": "App · 族谱",
+          "blocks": [
+            {
+              "t": "tree",
+              "items": [
+                {
+                  "depth": 0,
+                  "text": "#12 AI 能力履历",
+                  "note": "作者 A"
+                },
+                {
+                  "depth": 1,
+                  "text": "#13 设计师作品集",
+                  "note": "作者 D · 新分支",
+                  "hl": true
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "timeline": [
+        {
+          "at": "21:52:40",
+          "role": "D",
+          "text": "铸造 Skill #13「设计师作品集」，父 Skill #12",
+          "tx": {
+            "command": "skill mint"
+          }
+        }
+      ]
+    },
+    {
+      "id": "evidence",
+      "title": "U 向招聘方 H 出示佐证",
+      "roles": [
+        "U",
+        "H"
+      ],
+      "point": "履历上的每一条都能点开佐证。U 用同样的私密分享只给 H 看那一段 session，H 看完，U 收到已读回执。",
+      "playgroundStep": null,
+      "screens": [
+        {
+          "role": "U",
+          "where": "App · Share",
+          "blocks": [
+            {
+              "t": "row",
+              "text": "订单回调排障（佐证）",
+              "pill": {
+                "tone": "ok",
+                "text": "已读 22:03"
+              },
+              "hl": true
+            },
+            {
+              "t": "kv",
+              "items": [
+                [
+                  "接收者",
+                  "0x5f91…a3c8"
+                ],
+                [
+                  "次数",
+                  "1 次"
+                ],
+                [
+                  "有效期",
+                  "7 天"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "role": "H",
+          "where": "网页阅读页",
+          "blocks": [
+            {
+              "t": "pill",
+              "tone": "ok",
+              "text": "已验证：你是指定接收者"
+            },
+            {
+              "t": "msg",
+              "from": "user",
+              "who": "U",
+              "text": "回调里先写订单状态，再返回成功"
+            },
+            {
+              "t": "msg",
+              "from": "asst",
+              "text": "已调整顺序，并补了重复回调的测试……"
+            }
+          ]
+        }
+      ],
+      "timeline": [
+        {
+          "at": "22:01:18",
+          "role": "U",
+          "text": "写入分享授权 #S-0157：接收者 H，1 次，7 天",
+          "tx": {
+            "command": "share send"
+          }
+        },
+        {
+          "at": "22:03:02",
+          "role": "H",
+          "text": "打开链接，写入打开回执",
+          "tx": {
+            "command": "share open"
+          }
+        }
+      ]
+    },
+    {
+      "id": "overview",
+      "title": "查看族谱、调用量与收入",
+      "roles": [
+        "A",
+        "D"
+      ],
+      "point": "族谱、调用量和顺利率都从链上读出。上架、分成和收入属于阶段 2，这里的数字是演示数据。",
+      "playgroundStep": null,
+      "screens": [
+        {
+          "role": "A",
+          "where": "App · Skill 详情",
+          "blocks": [
+            {
+              "t": "stats",
+              "items": [
+                {
+                  "label": "真实调用",
+                  "value": "13"
+                },
+                {
+                  "label": "钱包",
+                  "value": "13"
+                },
+                {
+                  "label": "衍生",
+                  "value": "1"
+                }
+              ]
+            },
+            {
+              "t": "tree",
+              "items": [
+                {
+                  "depth": 0,
+                  "text": "#12 AI 能力履历",
+                  "note": "13 次调用"
+                },
+                {
+                  "depth": 1,
+                  "text": "#13 设计师作品集",
+                  "note": "作者 D"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "role": "A",
+          "where": "App · 收入（阶段 2 · 演示数据）",
+          "blocks": [
+            {
+              "t": "bars",
+              "items": [
+                {
+                  "label": "直接调用",
+                  "value": 62,
+                  "max": 100,
+                  "text": "62%"
+                },
+                {
+                  "label": "衍生分成",
+                  "value": 23,
+                  "max": 100,
+                  "text": "23%"
+                },
+                {
+                  "label": "上下文付费",
+                  "value": 15,
+                  "max": 100,
+                  "text": "15%"
+                }
+              ]
+            },
+            {
+              "t": "note",
+              "text": "分成规则与收入为阶段 2 设计，未上链。"
+            }
+          ]
+        },
+        {
+          "role": "D",
+          "where": "App · Skill 详情",
+          "blocks": [
+            {
+              "t": "kv",
+              "items": [
+                [
+                  "父 Skill",
+                  "#12 AI 能力履历 · 作者 A"
+                ],
+                [
+                  "版本",
+                  "1"
+                ],
+                [
+                  "铸造",
+                  "21:52"
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "timeline": []
+    }
+  ]
+}
