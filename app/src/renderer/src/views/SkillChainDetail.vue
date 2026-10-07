@@ -12,6 +12,10 @@ import {
   lineageRows,
   localMintOf,
   percent,
+  SCENE_OUTCOME_LEGEND,
+  SCENE_SAMPLE_MIN,
+  sceneFinding,
+  sceneRow,
   shortAddress,
   shortFingerprint,
   trendPoints,
@@ -72,6 +76,25 @@ const outcomesOn = computed(() => Boolean(usage.value?.outcomesReported));
 const scenesOn = computed(() => Boolean(usage.value?.scenes.length));
 const sceneTotal = computed(() => usage.value?.scenes.reduce((sum, scene) => sum + scene.invocations, 0) ?? 0);
 const topScene = computed(() => usage.value?.scenes[0] ?? null);
+const overallRate = computed(() => (results.value && results.value.judged > 0 ? results.value.smooth / results.value.judged : null));
+const sceneRows = computed(() => {
+  const largest = Math.max(0, ...(usage.value?.scenes ?? []).map(scene => scene.invocations));
+  return (usage.value?.scenes ?? []).map(scene => sceneRow(scene, largest, overallRate.value));
+});
+const sceneOutcomesOn = computed(() => sceneRows.value.some(row => row.hasResults));
+const finding = computed(() => sceneFinding(sceneRows.value, overallRate.value));
+const findingText = computed(() => {
+  const value = finding.value;
+  if (!value) return '';
+  const overall = percent(overallRate.value, 1);
+  if (value.kind === 'low') {
+    const names = value.rows.map(row => `「${sceneName(row.scene)}」`).join('');
+    const rates = value.rows.map(row => percent(row.rate, 1)).join('、');
+    return `在${names}场景顺利率明显偏低（${rates}，整体 ${overall}）。`;
+  }
+  if (value.kind === 'even') return `各场景的顺利率和整体（${overall}）接近。`;
+  return '各场景可判断的调用还不够多，暂时比较不出顺利率。';
+});
 
 const TREND = { width: 800, height: 110, pad: 14 };
 const trend = computed(() => trendPoints(usage.value?.trend.weeks ?? [], TREND));
@@ -246,7 +269,7 @@ function errorText(failure) {
           <p v-else class="skill-panel-empty">作者还没有上传正文和描述。</p>
           <div class="callout">
             <template v-if="scenesOn && topScene">
-              实测 {{ percent(topScene.invocations, sceneTotal) }} 的调用来自「{{ sceneName(topScene) }}」，共 {{ usage.scenes.length }} 类场景。
+              实测 {{ percent(topScene.invocations, sceneTotal) }} 的调用来自「{{ sceneName(topScene) }}」，共 {{ usage.scenes.length }} 类场景。<span v-if="findingText" data-finding>{{ findingText }}</span>
             </template>
             <template v-else>实测场景统计尚未开启，还不能和作者的描述对照。</template>
           </div>
@@ -254,11 +277,39 @@ function errorText(failure) {
         <section class="skill-panel" data-panel="scenes">
           <h3 class="skill-panel-title"><span>实测场景</span><span class="count">来自真实调用</span></h3>
           <template v-if="scenesOn">
-            <div v-for="scene in usage.scenes" :key="scene.tag || sceneName(scene)" class="scene-row" :title="scene.tag || ''">
-              <span class="scene-name" :class="{ user: scene.kind === 'user' }">{{ sceneName(scene) }}</span>
-              <div class="bar"><i :style="{ width: percent(scene.invocations, topScene.invocations) }"></i></div>
-              <span class="mono scene-count">{{ scene.invocations }} 次</span>
+            <div
+              v-for="row in sceneRows"
+              :key="row.scene.tag || sceneName(row.scene)"
+              class="scene-row"
+              :class="{ low: row.low }"
+              :data-scene="row.scene.tag || ''"
+              :title="row.hasResults ? `顺利 ${row.scene.results.smooth} · 返工 ${row.scene.results.rework} · 失败 ${row.scene.results.failed} · 无法判断 ${row.scene.results.unknown}` : (row.scene.tag || '')"
+            >
+              <div class="scene-line">
+                <span class="scene-name" :class="{ user: row.scene.kind === 'user' }">{{ sceneName(row.scene) }}</span>
+                <span v-if="row.scene.dimensionLabel" class="scene-dim">{{ row.scene.dimensionLabel }}</span>
+                <span class="mono scene-count">{{ row.scene.invocations.toLocaleString() }} 次</span>
+              </div>
+              <div class="scene-line">
+                <div class="scene-track">
+                  <div class="scene-bar" :class="{ plain: !row.hasResults }" :style="{ width: `${row.length * 100}%` }">
+                    <i v-for="segment in row.segments" :key="segment.key" :class="segment.key" :style="{ width: `${segment.share * 100}%` }"></i>
+                  </div>
+                </div>
+                <span v-if="row.enough" class="scene-rate" data-rate>
+                  <strong>{{ percent(row.rate, 1) }}</strong> 顺利<span v-if="row.low" class="scene-low">偏低</span>
+                  <small>{{ row.judged }} 次可判断</small>
+                </span>
+                <span v-else-if="row.hasResults" class="scene-rate off" data-rate="few">样本不足<small>{{ row.judged }} 次可判断</small></span>
+                <span v-else class="scene-rate off">未判断</span>
+              </div>
             </div>
+            <div v-if="sceneOutcomesOn" class="scene-legend">
+              <span v-for="item in SCENE_OUTCOME_LEGEND" :key="item.key"><i :class="item.key"></i>{{ item.label }}</span>
+            </div>
+            <p v-if="sceneOutcomesOn" class="note">
+              顺利率 = 顺利 ÷（顺利 + 返工 + 失败），"无法判断"不计入。可判断的调用少于 {{ SCENE_SAMPLE_MIN }} 次的场景只显示样本不足。一次调用可以同时属于几个场景。
+            </p>
           </template>
           <p v-else class="skill-panel-empty">场景与顺利率统计尚未开启。开启后，这里按真实调用所在的场景显示分布，和作者的描述并排对照。</p>
         </section>
@@ -419,12 +470,31 @@ function errorText(failure) {
   border-radius: 0 8px 8px 0; font-size: var(--text-base); color: var(--fg-2); line-height: 1.55;
 }
 
-.scene-row { display: grid; grid-template-columns: minmax(80px, 140px) minmax(0, 1fr) 64px; gap: 12px; align-items: center; padding: 6px 0; }
+.scene-row { display: flex; flex-direction: column; gap: 5px; padding: 8px 0; border-bottom: 1px solid var(--hairline); }
+.scene-row:last-of-type { border-bottom: 0; }
+.scene-line { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .scene-name { font-size: var(--text-base); color: var(--fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .scene-name.user { color: var(--fg-2); }
-.scene-count { font-size: 11.5px; color: var(--fg-2); text-align: right; }
-.bar { height: 8px; border-radius: 999px; background: var(--surface-strong); overflow: hidden; }
-.bar > i { display: block; height: 100%; border-radius: 999px; background: var(--accent); }
+.scene-dim { font-size: 11px; color: var(--muted); white-space: nowrap; }
+.scene-count { margin-left: auto; font-size: 11.5px; color: var(--fg-2); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.scene-track { flex: 1; min-width: 0; height: 8px; border-radius: 999px; background: rgba(255,255,255,0.03); overflow: hidden; }
+.scene-bar { display: flex; height: 100%; border-radius: 999px; overflow: hidden; background: rgba(255,255,255,0.12); }
+.scene-bar.plain { background: var(--accent); }
+.scene-bar > i, .scene-legend i { display: block; height: 100%; }
+.scene-bar > i.smooth, .scene-legend i.smooth { background: #4ade80; }
+.scene-bar > i.rework, .scene-legend i.rework { background: var(--warn); }
+.scene-bar > i.failed, .scene-legend i.failed { background: var(--danger); }
+.scene-bar > i.unknown, .scene-legend i.unknown { background: rgba(255,255,255,0.32); }
+.scene-legend i.unjudged { background: rgba(255,255,255,0.12); }
+.scene-rate { width: 148px; flex-shrink: 0; display: flex; align-items: baseline; justify-content: flex-end; gap: 4px; font-size: var(--text-sm); color: var(--fg-2); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.scene-rate strong { font-size: var(--text-md); font-weight: 600; color: var(--fg); }
+.scene-rate small { margin-left: 4px; font-size: 11px; color: var(--muted); }
+.scene-rate.off { color: var(--muted); }
+.scene-row.low .scene-rate strong { color: var(--danger); }
+.scene-low { margin-left: 2px; padding: 0 6px; border-radius: 999px; font-size: 10.5px; background: var(--danger-soft); color: var(--danger); }
+.scene-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 10px; font-size: 11px; color: var(--muted); }
+.scene-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.scene-legend i { width: 8px; height: 8px; border-radius: 2px; }
 
 .scene-tags { display: flex; flex-wrap: wrap; gap: 6px; }
 .scene-tag {

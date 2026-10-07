@@ -155,3 +155,25 @@ test('a Skill with no stored body has no name or description, and says nothing i
   assert.equal(result.skill.description, null);
   assert.equal(result.skill.parentSkillId, null);
 });
+
+test('each measured scene carries its own outcomes when the service reports them', async () => {
+  const scenes = [
+    { key: `0x${'01'.repeat(32)}`, tag: 'v1:artifact/resume', label: '简历与履历', dimension: 'artifact', invocations: 40, smooth: 20, rework: 6, failed: 4, unknown: 8, judged: 30, smoothRate: 0.6667 },
+    { key: `0x${'02'.repeat(32)}`, tag: 'v1:role/engineer', label: '工程师', dimension: 'role', invocations: 9 },
+  ];
+  const { client } = fakeService({
+    '/v1/skills/7': skillBody(),
+    '/v1/skills/7/usage?weeks=8': usageBody({ scenes }),
+  });
+  const { skill } = await readChainSkill(client, '7');
+  assert.deepEqual(skill.usage.scenes[0].results, { smooth: 20, rework: 6, failed: 4, unknown: 8, judged: 30, smoothRate: 20 / 30 });
+  assert.equal(skill.usage.scenes[1].results, null, 'a scene reported without outcomes has no rate to show');
+
+  const bad = fakeService({
+    '/v1/skills/7': skillBody(),
+    '/v1/skills/7/usage?weeks=8': usageBody({ scenes: [{ ...scenes[0], judged: 99 }] }),
+  });
+  const refused = await readChainSkill(bad.client, '7');
+  assert.equal(refused.skill.usage, null);
+  assert.match(refused.skill.usageError, /scene judged count/);
+});

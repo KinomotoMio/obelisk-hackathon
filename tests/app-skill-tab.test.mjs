@@ -159,3 +159,29 @@ test('the weekly trend scales to its tallest week, and an empty week sits on the
   assert.equal(percent(1, 8), '13%');
   assert.equal(percent(1, 0), null);
 });
+
+test('a measured scene shows its own 顺利率 only with enough judged calls, and low scenes are called out', async () => {
+  const { sceneRow, sceneFinding, SCENE_SAMPLE_MIN } = await import('../app/src/renderer/src/skill-library.mjs');
+  const scene = (invocations, smooth, rework, failed, unknown) => ({
+    invocations,
+    results: { smooth, rework, failed, unknown, judged: smooth + rework + failed, smoothRate: smooth + rework + failed ? smooth / (smooth + rework + failed) : null },
+  });
+  const overall = 0.86;
+  const mobile = sceneRow(scene(918, 690, 60, 18, 150), 918, overall);
+  const release = sceneRow(scene(201, 120, 30, 20, 31), 918, overall);
+  const few = sceneRow(scene(68, 2, 1, 0, 1), 918, overall);
+  const plain = sceneRow({ invocations: 12, results: null }, 918, overall);
+  assert.equal(mobile.length, 1);
+  assert.deepEqual(mobile.segments.map(s => [s.key, Math.round(s.share * 1000)]), [['smooth', 752], ['rework', 65], ['failed', 20], ['unknown', 163]]);
+  assert.equal(mobile.low, false);
+  assert.equal(Math.round(release.rate * 100), 71);
+  assert.equal(release.low, true, '71% against 86% overall is clearly lower');
+  assert.equal(few.enough, false);
+  assert.equal(few.rate, null, `fewer than ${SCENE_SAMPLE_MIN} judged calls show no rate`);
+  assert.equal(plain.hasResults, false);
+  assert.deepEqual(plain.segments, []);
+  assert.deepEqual(sceneFinding([mobile, release, few], overall).rows, [release]);
+  assert.equal(sceneFinding([mobile, sceneRow(scene(100, 85, 10, 5, 0), 918, overall)], overall).kind, 'even');
+  assert.equal(sceneFinding([few], overall).kind, 'few');
+  assert.equal(sceneFinding([plain], overall), null, 'no per-scene outcomes, nothing to compare');
+});

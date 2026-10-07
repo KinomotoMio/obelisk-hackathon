@@ -150,6 +150,62 @@ export function percent(part, whole) {
   return whole > 0 ? `${Math.round((part / whole) * 100)}%` : null;
 }
 
+// --- Measured scenes ----------------------------------------------------------
+
+/** Below this many judged calls a scene's 顺利率 is not shown: 样本不足. */
+export const SCENE_SAMPLE_MIN = 5;
+/** A scene this far below the Skill's overall 顺利率 is called out as 明显偏低. */
+export const SCENE_LOW_GAP = 0.15;
+
+const OUTCOMES = [
+  { key: 'smooth', label: '顺利' },
+  { key: 'rework', label: '返工' },
+  { key: 'failed', label: '失败' },
+  { key: 'unknown', label: '无法判断' },
+];
+export const SCENE_OUTCOME_LEGEND = [...OUTCOMES, { key: 'unjudged', label: '未判断' }];
+
+/**
+ * One measured scene as the 实测场景 panel draws it. The bar's length is the
+ * scene's calls against the largest scene; inside it, each outcome's share of
+ * this scene's calls, and what is left was never judged. The rate is shown
+ * only with enough judged calls behind it.
+ */
+export function sceneRow(scene, largest, overallRate) {
+  const results = scene.results ?? null;
+  const total = Math.max(scene.invocations, results ? results.smooth + results.rework + results.failed + results.unknown : 0);
+  const segments = results
+    ? OUTCOMES.filter(outcome => results[outcome.key] > 0).map(outcome => ({ ...outcome, count: results[outcome.key], share: results[outcome.key] / total }))
+    : [];
+  const judged = results?.judged ?? 0;
+  const enough = judged >= SCENE_SAMPLE_MIN;
+  const rate = enough ? results.smoothRate : null;
+  return {
+    scene,
+    length: largest > 0 ? scene.invocations / largest : 0,
+    segments,
+    judged,
+    hasResults: Boolean(results),
+    enough,
+    rate,
+    low: rate !== null && overallRate !== null && overallRate !== undefined && rate <= overallRate - SCENE_LOW_GAP,
+  };
+}
+
+/**
+ * What the measured scenes say next to the author's description: the scenes
+ * whose 顺利率 is clearly lower than the Skill's overall one, or that the
+ * scenes agree, or that there are too few judged calls to compare.
+ */
+export function sceneFinding(rows, overallRate) {
+  if (!rows.some(row => row.hasResults) || overallRate === null || overallRate === undefined) return null;
+  const compared = rows.filter(row => row.enough);
+  const low = compared.filter(row => row.low).sort((a, b) => a.rate - b.rate);
+  if (low.length) return { kind: 'low', rows: low };
+  if (compared.length >= 2) return { kind: 'even', rows: compared };
+  return { kind: 'few', rows: [] };
+}
+
 /** The local library's mint of a chain Skill, when this user minted it here. */
 export function localMintOf(summaries, chainId, skillId) {
   return summaries.find(summary => {

@@ -121,6 +121,20 @@ export function checkMintedSkill(raw: MintedSkillInfo) {
   };
 }
 
+// A scene's own judged outcomes, when the service reports them per scene
+// (older services and reports carry only the count): null then, so the page
+// does not show a rate it was never given.
+function sceneResults(bucket: Record<string, unknown>) {
+  if (!['smooth', 'rework', 'failed', 'unknown'].every((key) => bucket[key] !== undefined)) return null;
+  const smooth = count(bucket['smooth'], 'scene outcome count');
+  const rework = count(bucket['rework'], 'scene outcome count');
+  const failed = count(bucket['failed'], 'scene outcome count');
+  const unknown = count(bucket['unknown'], 'scene outcome count');
+  const judged = smooth + rework + failed;
+  if (bucket['judged'] !== undefined && count(bucket['judged'], 'scene judged count') !== judged) invalid('scene judged count');
+  return { smooth, rework, failed, unknown, judged, smoothRate: judged > 0 ? smooth / judged : null };
+}
+
 export function checkUsage(raw: SkillUsageInfo) {
   const body = record(raw, 'usage');
   const results = record(body['results'], 'usage results');
@@ -134,7 +148,7 @@ export function checkUsage(raw: SkillUsageInfo) {
     lastReportAt: optionalDate(body['lastReportAt'], 'report time'),
     scenes: list(body['scenes'], 'scenes', (item) => {
       const bucket = record(item, 'scene');
-      return { ...scene(bucket['tag']), invocations: count(bucket['invocations'], 'scene count') };
+      return { ...scene(bucket['tag']), invocations: count(bucket['invocations'], 'scene count'), results: sceneResults(bucket) };
     }),
     outcomesReported: Array.isArray(body['outcomes']) && body['outcomes'].length > 0,
     results: {
