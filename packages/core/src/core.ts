@@ -434,6 +434,24 @@ export function findSkillInvocations(filter?: SkillInvocationFilter): SkillInvoc
   }
 }
 
+// The recognized Skill loads together with the read-only index they came
+// from, for reading what followed each one (usage signals and judgment, #25).
+export async function withSkillInvocations<T>(fn: (db: SqliteDb, invocations: SkillInvocation[]) => T | Promise<T>): Promise<T> {
+  const providerRegistry = refreshQueryIndex();
+  const db = openReadDb();
+  try {
+    let invocations: SkillInvocation[];
+    try {
+      invocations = recognizeSkillInvocations(db, providerRegistry);
+    } catch (error) {
+      return rethrowUnlessSchemaBlocked(error);
+    }
+    return await fn(db, invocations);
+  } finally {
+    db.close();
+  }
+}
+
 // One session's detail from the freshly refreshed index, by id or unique id
 // prefix (sharing, #8). Read-only, like a query.
 export function readSessionDetail(ref: string): SessionDetailForRead {
