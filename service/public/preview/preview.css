@@ -227,7 +227,9 @@
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
   }
   .pv-nav { width: 40px; height: 34px; font-size: 12px; }
-  .site-foot { padding-bottom: 80px; }
+  /* Room for the fixed pager (34px buttons + 12px padding + 12px gap) so the
+     end of the page scrolls clear of it. */
+  body { padding-bottom: calc(72px + env(safe-area-inset-bottom)); }
 }
 
 @media (prefers-reduced-motion: reduce) {
