@@ -14,8 +14,12 @@
 //   auth use <harness> role-login            roles were signed in one by one
 //   auth status                              what each harness uses, and whether its secret is stored
 //   run <scenario.json> [--dry-run] [--service-url <url>]
+//   serve [--port <n>] [--service-url <url>]     the run page on this machine, live while a run goes (#32)
+//   publish <run id> [--out <dir>] [--force] [--check]
+//                                            copy a finished run into service/public/runs/<id>/ (#32)
+//   fixture <dir> [--live] [--seconds <n>]   write the made-up fixture run into <dir>/runs/ (page development)
 //
-// Home: OBELISK_PLAYGROUND_HOME, default ~/.obelisk-playground.
+// Home: OBELISK_PLAYGROUND_HOME, default ~/.obelisk-hackathon/playground.
 
 import { existsSync, readdirSync, realpathSync } from 'node:fs';
 import { join, resolve } from 'node:path';
@@ -23,10 +27,14 @@ import { pathToFileURL } from 'node:url';
 
 import { systemSecretStore, type SecretStore } from '../../packages/core/src/keychain.ts';
 import { KEYCHAIN_SERVICE, SECRETS, checkAuthMode, prepareCodexLogin, readConfig, storeSecret, writeConfig, type AuthMode, type SecretName } from './auth.ts';
+import { FIXTURE_LENGTH_S, replayFixture, writeFixture } from './fixture.ts';
 import { playgroundHome, rolePaths } from './home.ts';
+import { publishRun, PublishError } from './publish.ts';
 import { readRole, prepareRole, roleShellExports } from './roles.ts';
 import { runScenario } from './runner.ts';
 import { loadScenario, type RealHarness } from './scenario.ts';
+import { startLiveServer } from './serve.ts';
+import { resolveServiceUrl } from '../../packages/core/src/obelisk-service.ts';
 
 const USAGE = `Usage: npm run playground -- <command>
   validate <scenario.json>
@@ -35,7 +43,18 @@ const USAGE = `Usage: npm run playground -- <command>
   auth set <${Object.keys(SECRETS).join('|')}>
   auth use <claude-code|codex> keychain <secret> | role-file [<auth.json>] | role-login
   auth status
-  run <scenario.json> [--dry-run] [--service-url <url>]`;
+  run <scenario.json> [--dry-run] [--service-url <url>]
+  serve [--port <n>] [--service-url <url>]
+  publish <run id> [--out <dir>] [--force] [--check]
+  fixture <dir> [--live] [--seconds <n>]`;
+
+function option(args: string[], name: string): string | null {
+  const at = args.indexOf(name);
+  if (at < 0) return null;
+  const value = args[at + 1];
+  if (!value || value.startsWith('--')) throw new Error(`${name} needs a value`);
+  return value;
+}
 
 /** Read one line without echoing it (from a TTY), or all of stdin when piped. */
 export async function readHidden(prompt: string, input: NodeJS.ReadStream = process.stdin, output: NodeJS.WriteStream = process.stderr): Promise<string> {
@@ -157,6 +176,48 @@ export async function main(argv: string[], { store = systemSecretStore(), env = 
     });
     json({ run: provenance.run.id, status: provenance.run.status, runDir, totals: provenance.totals });
     return provenance.run.status === 'succeeded' ? 0 : 1;
+  }
+  if (command === 'serve') {
+    const args = argv.slice(1);
+    const port = Number(option(args, '--port') ?? '4318');
+    if (!Number.isInteger(port) || port < 0 || port > 65535) throw new Error('--port must be a port number');
+    const serviceUrl = option(args, '--service-url') ?? resolveServiceUrl(env);
+    const { url } = await startLiveServer({ home, port, serviceUrl: serviceUrl.replace(/\/+$/, '') });
+    print(`Run pages: ${url}/runs  (runs in ${join(home, 'runs')}; on-chain check through ${serviceUrl})`);
+    print('Ctrl-C to stop.');
+    return new Promise<number>(() => {});
+  }
+  if (command === 'publish' && sub) {
+    const args = argv.slice(2);
+    const outDir = option(args, '--out');
+    try {
+      const result = publishRun({ home, runId: sub, outDir: outDir ? resolve(outDir) : undefined, force: args.includes('--force'), check: args.includes('--check') });
+      json(result);
+      if (result.written && !outDir) print(`Published to ${result.target}. Commit it and deploy the service (npm run deploy in service/) to put it on the web at /runs/${sub}.`);
+      return 0;
+    } catch (error) {
+      if (error instanceof PublishError) {
+        process.stderr.write(`Not published: ${error.message}\n`);
+        return 1;
+      }
+      throw error;
+    }
+  }
+  if (command === 'fixture' && sub) {
+    const dir = resolve(sub);
+    if (resolve(dir) === resolve(playgroundHome(env)) && !env['OBELISK_PLAYGROUND_HOME']) {
+      throw new Error('Write the fixture into a directory of its own, not the Playground home: its made-up runs would show up next to real ones');
+    }
+    const args = argv.slice(2);
+    if (args.includes('--live')) {
+      const seconds = Number(option(args, '--seconds') ?? String(FIXTURE_LENGTH_S));
+      print(`Replaying the fixture into ${join(dir, 'runs')} over ${seconds}s; watch it with OBELISK_PLAYGROUND_HOME=${dir} npm run playground -- serve`);
+      const runDir = await replayFixture(dir, { seconds });
+      json({ fixture: runDir });
+      return 0;
+    }
+    json({ fixture: writeFixture(dir) });
+    return 0;
   }
   process.stderr.write(`${USAGE}\n`);
   return 2;
