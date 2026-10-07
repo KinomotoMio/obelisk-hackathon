@@ -1,0 +1,71 @@
+{
+  "schema": "obelisk.playground.scenario/1",
+  "name": "daily-expansion-03-b",
+  "title": "真实 AI 日常任务与方法沉淀扩量 b · 模拟角色 / 测试网",
+  "network": {
+    "serviceUrl": "https://obelisk-service.kinomotomiovo.workers.dev",
+    "chainId": 968
+  },
+  "defaults": {
+    "harness": "codex",
+    "timeoutMinutes": 8
+  },
+  "roles": [
+    {
+      "id": "maintainer-01",
+      "label": "模拟角色：项目维护者",
+      "skills": [
+        "obelisk",
+        "obelisk-skill-assets",
+        "obelisk-distill"
+      ]
+    },
+    {
+      "id": "builder-01",
+      "label": "模拟角色：项目构建者",
+      "skills": [
+        "obelisk",
+        "obelisk-skill-assets",
+        "obelisk-distill"
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "id": "maintainer-01-task",
+      "role": "maintainer-01",
+      "title": "继续日常项目任务",
+      "prompt": "关于那个偶尔 502 的网站，我要把问题交给另一个同学一起看。帮我写一份他接到就能开始排查的简短问题报告，再做一个观察记录表。已有的只有晚上容易出问题、静态页大多正常、偶尔 upstream timed out，别替我断言是数据库或内存的问题。",
+      "scenes": [
+        "v1:task/writing"
+      ]
+    },
+    {
+      "id": "maintainer-01-distill",
+      "role": "maintainer-01",
+      "title": "从工作中留下可复用方法",
+      "prompt": "这次排障交接挺常见的。帮我把从零散现象整理出可接手问题报告的做法沉淀成一个 Skill 草稿，尤其别把猜测写成结论，记上这次讨论的出处。有合适的现成方法可以在它基础上改。",
+      "scenes": [
+        "v1:task/planning"
+      ]
+    },
+    {
+      "id": "builder-01-task",
+      "role": "builder-01",
+      "title": "继续日常项目任务",
+      "prompt": "读书笔记项目我先决定只做备份恢复，导出再导入同一种格式就行，先别加分享功能。帮我把之前的计划收拢成一个能交给搭档的小任务说明，列出第一版要做什么、遇到重复笔记怎么讨论、我半小时内怎么验收。现在还是先写清楚，不用写代码。",
+      "scenes": [
+        "v1:task/writing"
+      ]
+    },
+    {
+      "id": "builder-01-distill",
+      "role": "builder-01",
+      "title": "从工作中留下可复用方法",
+      "prompt": "刚才我们把越聊越大的项目收回到一个小交付，这个过程我以后还会遇到。帮我整理一个给 AI 搭档用的 Skill 草稿，重点是范围变更后怎么回看旧决定、怎么留下能接手的任务说明。保留这次对话出处，也保留借鉴过的协作方法来源。",
+      "scenes": [
+        "v1:task/planning"
+      ]
+    }
+  ]
+}

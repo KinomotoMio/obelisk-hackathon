@@ -1,0 +1,71 @@
+{
+  "schema": "obelisk.playground.scenario/1",
+  "name": "daily-expansion-03-a",
+  "title": "真实 AI 日常任务与方法沉淀扩量 a · 模拟角色 / 测试网",
+  "network": {
+    "serviceUrl": "https://obelisk-service.kinomotomiovo.workers.dev",
+    "chainId": 968
+  },
+  "defaults": {
+    "harness": "codex",
+    "timeoutMinutes": 8
+  },
+  "roles": [
+    {
+      "id": "job-seeker-01",
+      "label": "模拟角色：求职者",
+      "skills": [
+        "obelisk",
+        "obelisk-skill-assets",
+        "obelisk-distill"
+      ]
+    },
+    {
+      "id": "designer-01",
+      "label": "模拟角色：设计师",
+      "skills": [
+        "obelisk",
+        "obelisk-skill-assets",
+        "obelisk-distill"
+      ]
+    }
+  ],
+  "steps": [
+    {
+      "id": "job-seeker-01-task",
+      "role": "job-seeker-01",
+      "title": "继续日常项目任务",
+      "prompt": "实习申请发出去之后，我发现不同公司问的东西差别挺大。帮我把现有项目经历分别改成适合小团队后台开发、偏业务接口开发的两版自我介绍，再整理几条追问时能诚实回答的说法。别把没做过的经历加进去，保存下来。",
+      "scenes": [
+        "v1:task/writing"
+      ]
+    },
+    {
+      "id": "job-seeker-01-distill",
+      "role": "job-seeker-01",
+      "title": "从工作中留下可复用方法",
+      "prompt": "这几次改简历和面试材料，有哪些做法下次还能用？帮我整理成一个小方法，尤其是怎么把实际做过的事情说清楚，又不硬编成绩。留成可复用的 Skill 草稿，带上出处；有参考前人的方法就保留来源。",
+      "scenes": [
+        "v1:task/planning"
+      ]
+    },
+    {
+      "id": "designer-01-task",
+      "role": "designer-01",
+      "title": "继续日常项目任务",
+      "prompt": "作品集我想再具体一点。现在失物招领项目只有草图和三次访谈，帮我准备一次找同学试用原型的访谈提纲，再写一个记录表。重点看看他们能不能认出物品、愿不愿意留下联系方式，不要诱导他们夸设计。存进这个项目。",
+      "scenes": [
+        "v1:task/writing"
+      ]
+    },
+    {
+      "id": "designer-01-distill",
+      "role": "designer-01",
+      "title": "从工作中留下可复用方法",
+      "prompt": "把刚才作品集和访谈准备里能复用的经验整理一下吧。我想以后做小项目时有一个轻量的方法，能分清自己猜的、用户说的和真正试过的。帮我留成一个 Skill 草稿，带上对应讨论的出处。",
+      "scenes": [
+        "v1:task/planning"
+      ]
+    }
+  ]
+}
