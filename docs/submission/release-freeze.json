@@ -3,7 +3,7 @@
   "businessCommit": "bbe06198b5722bf8452382d4ef16f565c94375e8",
   "createdAt": "2026-10-07T20:15:28.249Z",
   "network": 677,
-  "status": "mainnet-contracts-deployed-service-published-business-smoke-pending",
+  "status": "mainnet-live-with-activation-and-skill-publication",
   "contracts": [
     "KeyRegistry",
     "ShareRegistry",
@@ -25,7 +25,8 @@
     "walletBalanceBeforeBOT": "0.5",
     "executionCapBOT": "0.25",
     "actualDeploymentBOT": "0.12109314",
-    "context": "User configured funded deployment wallet and replied that it holds 0.5 BOT; operator announced 0.25 BOT maximum, preserving half."
+    "context": "User configured funded deployment wallet and replied that it holds 0.5 BOT; operator announced 0.25 BOT maximum, preserving half.",
+    "actualTotalBOT": "0.13229802"
   },
   "knownLimitations": [
     "Tool-read Skill usage is not included in the native-injection counter; do not invent counts.",

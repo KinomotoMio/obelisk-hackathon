@@ -1,0 +1,20 @@
+{
+  "chainId": 677,
+  "totalSpentBOT": 0.13229802,
+  "executionCapBOT": 0.25,
+  "transactions": [
+    {
+      "action": "mainnet-activate",
+      "transaction": "0x544aa99ae13fc4d8a7ef29978ccbd6b55de8dc85272cbf5b9d264d5efaef1161",
+      "feeWei": "3802580000000000",
+      "status": "0x1"
+    },
+    {
+      "action": "mainnet-mint-result",
+      "transaction": "0xc75eb72fed195d9f5887448ea62688bec76e31b7f24509f3e7d5f9d34c4af8fc",
+      "feeWei": "7402300000000000",
+      "status": "0x1"
+    }
+  ],
+  "skillUrl": "https://obelisk-service-mainnet.kinomotomiovo.workers.dev/market/skills/1"
+}
