@@ -9,12 +9,17 @@ import { resolveObeliskPaths } from '../../core/src/paths.ts';
 import { systemSecretStore } from '../../core/src/keychain.ts';
 import { loadWallet } from '../../core/src/wallet.ts';
 import { skillService, type SkillChainDeps } from './skill-mint-command.ts';
+import { searchMarket } from './market-search.ts';
 
 const USAGE = 'obelisk market income | buy <offerId> | use <offerId> | list <skillId> --mode free|per-use|buyout --license personal|commercial --price <BOT> --royalty-bps <0-10000> [--version <zero-based>] [--confirm <request-id>]';
 const clean = (value: unknown) => JSON.parse(JSON.stringify(value, (_, v) => typeof v === 'bigint' ? v.toString() : v)) as Record<string, unknown>;
 
 export async function runMarketCommand(args: string[], deps: SkillChainDeps = {}) {
   const [action, target] = args;
+  if (action === 'search') {
+    if (args.length > 2) throw new Error('obelisk market search ["keywords"]');
+    return searchMarket(target ?? '', deps);
+  }
   if (!['income', 'list', 'buy', 'use'].includes(action ?? '')) throw new Error(USAGE);
   const options: Record<string, string> = {};
   for (let i = action === 'income' ? 1 : 2; i < args.length; i += 2) {
