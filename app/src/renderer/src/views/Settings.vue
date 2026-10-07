@@ -6,6 +6,7 @@ import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import { PROMPT_ASSISTANTS, renderPrompt } from '../assistant-prompts.mjs';
 import { promptAssistant, setPromptAssistant } from '../prompt-copy.js';
 import { continueEditingPrompt } from '../skill-prompts.mjs';
+import SettingsWallet from '../components/SettingsWallet.vue';
 
 defineOptions({ name: 'Settings' });
 
@@ -149,6 +150,9 @@ function fmtRelative(iso) {
 <template>
   <div class="settings-wrap">
     <div class="settings-content">
+
+      <!-- Wallet (#6): first, since sharing and minting start from it -->
+      <SettingsWallet />
 
       <!-- Data Sources -->
       <section class="settings-section">
