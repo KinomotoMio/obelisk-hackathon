@@ -8,7 +8,7 @@
 //   ASSETS       static files from public/: the web reader (#10)
 //   RELAYER_PRIVATE_KEY  secret; the relay wallet that pays gas
 
-import { createPublicClient, createWalletClient, http, type Hex } from 'viem';
+import { createPublicClient, createWalletClient, type Hex } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 
 import { RequestError } from './actions.ts';
@@ -16,6 +16,7 @@ import { errorResponse, handleRequest, relayResponse, type TxIndex } from './app
 import { resolveChainConfig, type ChainEnv, type ServiceChainConfig } from './chains.ts';
 import { HourlyRateLimiter, parseLimit } from './limits.ts';
 import { Relayer, type RelayRecord } from './relayer.ts';
+import { requestScopedHttp } from './rpc.ts';
 import type { KeyPackage, ShareStore, ShareTransactions } from './shares.ts';
 import type { SkillContentStore } from './skills.ts';
 import { usageTrendRecorder, type UsageTrendEntry, type UsageTrendStore } from './usage.ts';
@@ -49,10 +50,8 @@ function chainClients(env: Env) {
   } catch (error) {
     throw new RequestError(500, 'service_misconfigured', error instanceof Error ? error.message : String(error));
   }
-  // Concurrent reads go out as one JSON-RPC batch: a usage or lineage read
-  // makes dozens of view calls, and each HTTP request counts against the
-  // Worker's subrequest limit. BOT Chain's RPC accepts batches.
-  const transport = http(config.rpcUrl, { timeout: 15_000, retryCount: 2, batch: { batchSize: 100, wait: 0 } });
+  // Batched per Worker request; see rpc.ts for why not across requests.
+  const transport = requestScopedHttp(config.rpcUrl, { timeout: 15_000, retryCount: 2 });
   const publicClient = createPublicClient({ chain: config.chain, transport });
   const walletClient = account ? createWalletClient({ account, chain: config.chain, transport }) : null;
   return { config, publicClient, account, walletClient };
