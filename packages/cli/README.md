@@ -110,7 +110,15 @@ per invocation of a reportable version once its session has been quiet for
   `<data dir>/judge`. Codex runs with `--ephemeral --ignore-user-config`
   (no MCP servers, hooks, or notify scripts from `config.toml`; the login
   still comes from `CODEX_HOME`, so an isolated `CODEX_HOME` is honoured)
-  and answers against a JSON Schema.
+  and answers against a JSON Schema. Each judged scene is also reported with
+  its outcome (`scene-outcome:<tag>|<outcome>`), so every scene has its own
+  顺利率.
+
+A report holds at most 32 buckets per array. A version with more goes out as
+several reports with the same invocation total (UsageStats keeps the keys a
+report leaves out); `transactions` in the preview says how many. Only buckets
+that grew since the last report are sent, so a rerun after an interruption
+sends only what is left.
 
 Signals and judgments are kept per invocation in
 `<data dir>/usage-annotations.json`, and the last reported totals in

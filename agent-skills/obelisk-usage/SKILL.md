@@ -48,7 +48,8 @@ the `{ "error": ... }` envelope and exit with code 1.
    and offer `obelisk usage report`.
 2. Show the user, in a few lines:
    - which Skills would be reported (`versions`: name, Skill id and version,
-     invocations, and `willAdd`),
+     invocations, and `willAdd`; if `transactions` is more than 1, that the
+     per-scene results go out as that many reports),
    - `sends` and `neverSent` in plain words,
    - that the reports are public under their wallet address (`public`),
    - that the service pays the fee.
