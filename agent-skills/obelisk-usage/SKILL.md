@@ -36,8 +36,8 @@ are public under the wallet address.
 | `obelisk usage report` | Sends what increased since the last report. Fails while reporting is off. | Yes |
 | `obelisk usage report --if-due` | The same, at most once a day; does nothing while reporting is off. For schedulers. | Yes |
 | `obelisk usage disable` | Turns reporting off. Totals already reported stay on chain. | No |
-| `obelisk usage judge [--harness claude\|codex] [--limit <n>]` | **Preview only.** How many invocations would be judged, in how many runs of the local harness, and what each run reads. | No |
-| `obelisk usage judge --confirm` | Runs the judge on the user's own Claude Code or Codex and stores scenes and outcomes locally. | No (local only) |
+| `obelisk usage judge [--harness codex\|claude] [--limit <n>]` | **Preview only.** How many invocations would be judged, in how many runs of the local harness, and what each run reads. | No |
+| `obelisk usage judge --confirm` | Runs the judge on the user's own Codex or Claude Code and stores scenes and outcomes locally. | No (local only) |
 
 Each command prints one JSON object; `next` says what to do next. Errors use
 the `{ "error": ... }` envelope and exit with code 1.
@@ -69,7 +69,7 @@ more times, the same Skill loaded again. Scenes and outcomes (顺利 / 有返工
 
 1. Run `obelisk usage judge`. If it returns `nothing_to_judge`, say so.
 2. Show the user: how many invocations and which Skills, how many runs of
-   which harness (`claude` or `codex`), that each run reads the part of the
+   which harness (`codex` or `claude`), that each run reads the part of the
    session after the Skill load (`reads`), that it uses their own
    subscription (`cost`), and that the text and reasons stay on this computer
    (`stays`). Ask them to confirm.

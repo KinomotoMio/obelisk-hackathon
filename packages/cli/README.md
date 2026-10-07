@@ -90,7 +90,7 @@ obelisk usage enable             # preview: what is sent, what never is, that it
 obelisk usage enable --confirm   # turn on and send the first reports
 obelisk usage report [--if-due]  # send what grew (--if-due: at most once a day)
 obelisk usage disable            # stop; reported totals stay on chain
-obelisk usage judge [--harness claude|codex] [--limit 20] [--batch 5]   # preview judging scenes and outcomes
+obelisk usage judge [--harness codex|claude] [--limit 20] [--batch 5]   # preview judging scenes and outcomes
 obelisk usage judge --confirm    # run the local harness; judged invocations are never redone
 ```
 
@@ -102,11 +102,15 @@ per invocation of a reportable version once its session has been quiet for
 - **Fact signals**, by rule and free: a tool error after the load, the person
   interrupting or opening a message like a correction, one file edited three
   or more times, the same version loaded again in the session.
-- **Scenes and outcome**, by `obelisk usage judge`: the user's own Claude
-  Code (`claude -p`) or Codex (`codex exec`) reads what followed each load
-  (about 5,000 characters, several invocations per run) and picks up to three
-  vocabulary scenes and smooth, rework, failed, or unknown. It runs without
-  tools, Skills, or a saved session, from `<data dir>/judge`.
+- **Scenes and outcome**, by `obelisk usage judge`: the user's own Codex
+  (`codex exec`, used when installed) or Claude Code (`claude -p`) reads what
+  followed each load (about 5,000 characters, several invocations per run)
+  and picks up to three vocabulary scenes and smooth, rework, failed, or
+  unknown. It runs without tools, Skills, or a saved session, from
+  `<data dir>/judge`. Codex runs with `--ephemeral --ignore-user-config`
+  (no MCP servers, hooks, or notify scripts from `config.toml`; the login
+  still comes from `CODEX_HOME`, so an isolated `CODEX_HOME` is honoured)
+  and answers against a JSON Schema.
 
 Signals and judgments are kept per invocation in
 `<data dir>/usage-annotations.json`, and the last reported totals in
