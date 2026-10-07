@@ -90,7 +90,9 @@ async function main(argv: string[]) {
   const [command, args] = /\.(?:c|m)?[jt]s$/.test(cli)
     ? [process.execPath, ['--disable-warning=ExperimentalWarning', cli, ...argv]]
     : [cli, argv];
-  const child = spawn(command, args, { stdio: ['inherit', 'pipe', 'inherit'] });
+  const realHome = process.env['OBELISK_PLAYGROUND_REAL_HOME'];
+  const env = realHome ? { ...process.env, HOME: realHome } : process.env;
+  const child = spawn(command, args, { env, stdio: ['inherit', 'pipe', 'inherit'] });
   let captured = '';
   child.stdout.setEncoding('utf8').on('data', (chunk: string) => {
     process.stdout.write(chunk);

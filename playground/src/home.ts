@@ -8,8 +8,9 @@
 //   <home>/roles/<id>/role.json        label, wallet address
 //   <home>/roles/<id>/obelisk/         the role's OBELISK_HOME (index, Skill library, wallet record)
 //   <home>/roles/<id>/claude/          the role's CLAUDE_CONFIG_DIR (sessions, skills)
-//   <home>/roles/<id>/codex/           the role's CODEX_HOME (sessions, skills)
-//   <home>/roles/<id>/workspace/       the harness's working directory
+//   <home>/roles/<id>/codex/           the role's CODEX_HOME (sessions)
+//   <home>/roles/<id>/workspace/       the harness's working directory; .agents/skills holds Codex's skills
+//   <home>/roles/<id>/home/            HOME while the role's Codex runs
 //   <home>/roles/<id>/bin/obelisk      recording shim, first on the harness's PATH
 //   <home>/runs/<run id>/              provenance.json, events.jsonl, steps/<step id>/…
 //
@@ -37,6 +38,8 @@ export interface RolePaths {
   claudeDir: string;
   codexDir: string;
   workspace: string;
+  /** HOME for the role's Codex, so it does not load the owner's ~/.agents/skills. */
+  home: string;
   bin: string;
 }
 
@@ -52,6 +55,7 @@ export function rolePaths(home: string, id: string): RolePaths {
     claudeDir: join(root, 'claude'),
     codexDir: join(root, 'codex'),
     workspace: join(root, 'workspace'),
+    home: join(root, 'home'),
     bin: join(root, 'bin'),
   };
 }

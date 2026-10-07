@@ -36,10 +36,15 @@ export function makeFixture() {
   const bin = join(root, 'bin');
   mkdirSync(bin, { recursive: true });
 
+  // claude / codex: record argv and the auth-relevant env, run one obelisk command, then report.
+  const seen = join(root, 'seen');
+  mkdirSync(seen);
+
   // obelisk: wallet create → an address derived from OBELISK_HOME; skill mint → a transaction; env → what it saw.
   const cli = script(join(bin, 'fake-obelisk.mjs'), `
 const { createHash } = await import('node:crypto');
 const [group, action, name] = process.argv.slice(2);
+(await import('node:fs')).appendFileSync(${JSON.stringify(join(seen, 'obelisk-home.txt'))}, process.env.HOME + '\\n');
 const out = (v) => process.stdout.write(JSON.stringify(v) + '\\n');
 if (group === 'wallet' && action === 'create') out({ status: 'created', address: '0x' + createHash('sha256').update(process.env.OBELISK_HOME).digest('hex').slice(0, 40) });
 else if (group === 'skill' && action === 'scenes') out({ vocabulary: 'v1' });
@@ -49,13 +54,10 @@ else if (group === 'env') out({ OBELISK_HOME: process.env.OBELISK_HOME, CLAUDE_C
 else { process.stderr.write('fake obelisk: unsupported ' + process.argv.slice(2).join(' ') + '\\n'); process.exit(3); }
 `);
 
-  // claude / codex: record argv and the auth-relevant env, run one obelisk command, then report.
-  const seen = join(root, 'seen');
-  mkdirSync(seen);
   const harnessBody = (kind) => `
 const { spawnSync } = await import('node:child_process');
 const { writeFileSync } = await import('node:fs');
-const env = Object.fromEntries(['CLAUDE_CODE_OAUTH_TOKEN', 'CODEX_API_KEY', 'CLAUDE_CONFIG_DIR', 'CODEX_HOME', 'OBELISK_HOME', 'CLAUDECODE', 'CLAUDE_CODE_PROJECT_DIR_NAME'].map((k) => [k, process.env[k] ?? null]));
+const env = Object.fromEntries(['CLAUDE_CODE_OAUTH_TOKEN', 'CODEX_API_KEY', 'CLAUDE_CONFIG_DIR', 'CODEX_HOME', 'OBELISK_HOME', 'CLAUDECODE', 'CLAUDE_CODE_PROJECT_DIR_NAME', 'HOME'].map((k) => [k, process.env[k] ?? null]));
 writeFileSync(${JSON.stringify(join(seen, kind))} + '.json', JSON.stringify({ argv: process.argv.slice(2), env, cwd: process.cwd() }));
 if (process.argv[2] === '--version') { console.log('9.9.9 (${kind})'); process.exit(0); }
 const mint = spawnSync('obelisk', ['skill', 'mint', 'ai-resume'], { encoding: 'utf8' });

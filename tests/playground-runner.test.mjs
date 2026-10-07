@@ -51,7 +51,7 @@ test('preparing a role gives it its own data, harness homes, provider roots, shi
   for (const id of ['deepseek', 'kimi', 'omp', 'pi']) assert.ok(roots[id].startsWith(join(a.root, 'none')), `${id} points inside the role`);
   assert.ok(statSync(join(a.bin, 'obelisk')).mode & 0o100, 'shim is executable');
   assert.deepEqual(readdirSync(join(a.claudeDir, 'skills')).sort(), ['obelisk', 'obelisk-distill']);
-  assert.deepEqual(readdirSync(join(a.codexDir, 'skills')).sort(), ['obelisk', 'obelisk-distill']);
+  assert.deepEqual(readdirSync(join(a.workspace, '.agents', 'skills')).sort(), ['obelisk', 'obelisk-distill'], 'Codex reads project skills from .agents/skills');
   assert.deepEqual(readdirSync(join(b.claudeDir, 'skills')).sort(), ['obelisk', 'obelisk-distill', 'obelisk-wallet'], 'no list installs every built skill');
   const [ra, rb] = [readJson(a.record), readJson(b.record)];
   assert.match(ra.address, /^0x[0-9a-f]{40}$/);
@@ -155,6 +155,9 @@ test('Codex runs in the role with a shared auth file linked in and its own wordi
   const seen = readJson(join(fx.seen, 'codex.json'));
   assert.equal(seen.env.CODEX_HOME, b.codexDir);
   assert.equal(seen.env.CODEX_API_KEY, null);
+  assert.equal(seen.env.HOME, b.home, "Codex runs with the role's HOME, away from the owner's ~/.agents/skills");
+  const homes = readFileSync(join(fx.seen, 'obelisk-home.txt'), 'utf8').trim().split('\n');
+  assert.equal(homes.at(-1), process.env.HOME, 'the shim gives obelisk the real HOME back');
   assert.equal(seen.argv[0], 'exec');
   assert.equal(seen.argv[seen.argv.indexOf('--add-dir') + 1], b.obeliskHome);
   assert.equal(seen.argv.at(-1), '$obelisk 用这个 Skill');

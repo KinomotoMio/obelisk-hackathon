@@ -186,6 +186,14 @@ export async function runScenario(loaded: LoadedScenario, options: RunOptions): 
     mkdirSync(logDir, { recursive: true });
     const commandLog = join(logDir, 'commands.jsonl');
     const env = { ...roleEnv(r.paths, { id: r.role.id, cli, serviceUrl, commandLog }), ...(authEnv.get(r.role.id) ?? {}) };
+    if (r.kind === 'codex' && step.prompt !== null) {
+      // Codex also loads user skills from ~/.agents/skills; give it the role's
+      // own HOME so the owner's personal skills stay out of the simulated user.
+      // The obelisk shim restores the real HOME for the CLI (system keychain).
+      mkdirSync(r.paths.home, { recursive: true });
+      if (env['HOME']) env['OBELISK_PLAYGROUND_REAL_HOME'] = env['HOME'];
+      env['HOME'] = r.paths.home;
+    }
     record.status = 'running';
     record.startedAt = iso(now);
     save();

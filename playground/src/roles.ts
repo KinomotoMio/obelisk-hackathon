@@ -86,14 +86,18 @@ function writeSettings(role: RolePaths) {
   writeFileSync(file, `${JSON.stringify({ ...current, providerRoots: providerRoots(role) }, null, 2)}\n`);
 }
 
-/** Copy built skills into the role's Claude Code and Codex skill directories. */
+/**
+ * Copy built skills into the role's Claude Code skills (CLAUDE_CONFIG_DIR/skills)
+ * and into its workspace's .agents/skills, which Codex reads as project skills
+ * ($CODEX_HOME/skills is the deprecated user location).
+ */
 export function installSkills(role: RolePaths, wanted: string[] | null, source = skillsSource()): string[] {
   if (!existsSync(source)) throw new Error(`No built skills at ${source}; run \`npm run build:skill && bash packaging/stage-skill-repo.sh dist/obelisk-skill-repo\` first, or set OBELISK_PLAYGROUND_SKILLS.`);
   const available = readdirSync(source, { withFileTypes: true }).filter((d) => d.isDirectory()).map((d) => d.name).sort();
   const names = wanted ?? available;
   const missing = names.filter((name) => !available.includes(name));
   if (missing.length) throw new Error(`Skills not found in ${source}: ${missing.join(', ')}`);
-  for (const dir of [join(role.claudeDir, 'skills'), join(role.codexDir, 'skills')]) {
+  for (const dir of [join(role.claudeDir, 'skills'), join(role.workspace, '.agents', 'skills')]) {
     for (const name of names) {
       rmSync(join(dir, name), { recursive: true, force: true });
       cpSync(join(source, name), join(dir, name), { recursive: true });
