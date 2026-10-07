@@ -13,6 +13,8 @@ HANDOFF.md
 app/build/*
 !app/build/icon.icns
 !app/build/icon.svg
+!app/build/icon.png
+!app/build/icons.mjs
 app/scripts/
 app/*.html
 chain/artifacts/

@@ -20,6 +20,7 @@
     "dist:win": "electron-vite build && electron-builder --win",
     "dist:linux": "electron-vite build && electron-builder --linux",
     "generate:session-share": "node scripts/generate-session-share.mjs",
+    "icons": "electron build/icons.mjs",
     "verify:icons": "node scripts/verify-icons.mjs",
     "test:electron": "electron-vite build && electron --no-sandbox tests/electron-concurrency.mjs",
     "test:electron:images": "electron-vite build && electron --no-sandbox tests/electron-session-images.mjs",

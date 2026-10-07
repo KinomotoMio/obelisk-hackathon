@@ -1,7 +1,24 @@
 <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-  <rect x="1" y="1" width="62" height="62" rx="15" fill="#12131f" stroke="rgba(255,255,255,0.1)"/>
-  <path d="M 17 63 L 51.9 1.5 A 15 15 0 0 1 62.5 12.1 Z" fill="#c4b5fd" opacity="0.55"/>
-  <polygon points="17,63 63,24 63,40" fill="#a78bfa" opacity="0.5"/>
-  <path d="M 17 63 L 62.5 51.9 A 15 15 0 0 1 48 63 Z" fill="#6366f1" opacity="0.5"/>
-  <polygon points="17,9 15.2,15 14.3,63 19.7,63 18.8,15" fill="#f5f3ee"/>
+  <!-- Obelisk's mark on a dark tile, on Apple's macOS icon grid: at 1024 px the
+       tile is 824 × 824, centred (100 px margin), corner radius ≈ 185 px, with
+       a soft shadow below it inside the margin. 1 unit = 16 px. -->
+  <defs>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="0.75" stdDeviation="0.875" flood-color="#000" flood-opacity="0.4"/>
+    </filter>
+    <clipPath id="tile"><rect x="1" y="1" width="62" height="62" rx="13.93"/></clipPath>
+  </defs>
+  <rect x="6.25" y="6.25" width="51.5" height="51.5" rx="11.5625" fill="#12131f" filter="url(#shadow)"/>
+  <!-- The original 62-unit tile (x = y = 1), scaled to 51.5 units at 6.25. -->
+  <g transform="translate(6.25 6.25) scale(0.8306452) translate(-1 -1)">
+    <rect x="1" y="1" width="62" height="62" rx="13.93" fill="#12131f"/>
+    <g clip-path="url(#tile)">
+      <path d="M 17 63 L 51.9 1.5 A 15 15 0 0 1 62.5 12.1 Z" fill="#c4b5fd" opacity="0.55"/>
+      <polygon points="17,63 63,24 63,40" fill="#a78bfa" opacity="0.5"/>
+      <path d="M 17 63 L 62.5 51.9 A 15 15 0 0 1 48 63 Z" fill="#6366f1" opacity="0.5"/>
+      <polygon points="17,9 15.2,15 14.3,63 19.7,63 18.8,15" fill="#f5f3ee"/>
+    </g>
+    <!-- A faint edge, kept inside the tile so the tile stays 824 px. -->
+    <rect x="1.5" y="1.5" width="61" height="61" rx="13.43" fill="none" stroke="rgba(255,255,255,0.1)"/>
+  </g>
 </svg>
