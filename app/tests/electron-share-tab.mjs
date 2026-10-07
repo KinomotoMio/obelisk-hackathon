@@ -107,7 +107,7 @@ const sentShares = [
   sent('e4', { title: '部署脚本整理', state: 'revoked', revokedAt: iso(10, 5, 18, 20), opens: { count: 0, max: null, lastOpenedAt: null }, rules: { opens: 'unlimited', expiresAt: iso(10, 12, 18, 0) }, record: { kind: 'revoke', ...tx('d4') } }),
 ];
 
-let listing = { shares: [], network: 'BOT Chain testnet (968)', serviceUrl: 'https://service.example' };
+let listing = { shares: [], network: 'BOT Chain 测试网', serviceUrl: 'https://service.example' };
 let listingError = null;
 
 function registerHandlers() {
@@ -257,7 +257,9 @@ async function run() {
   const revoke = await clickCopy(win, '.share-table tr[data-state="unread"] [data-prompt-label="撤回"]');
   assert(revoke === `/obelisk-share 撤回我发给 ${NOT_ACTIVATED} 的分享 #S-9B9B「迁移到新版鉴权中间件」`, `撤回 copies the revoke prompt with the share number (${revoke})`);
   const foot = await js(win, `document.querySelector('.share-foot').textContent`);
-  assert(foot.includes('BOT Chain testnet (968)') && foot.includes('本地时间'), 'the footnote names the chain and the time zone');
+  assert(foot.includes('来自 BOT Chain 测试网上的记录') && foot.includes('本地时间'), 'the footnote names the chain in Chinese and the time zone');
+  const overflow = await js(win, `(() => { const wrap = document.querySelector('.share-table-wrap'); return wrap.scrollWidth - wrap.clientWidth; })()`);
+  assert(overflow <= 1, `the sent-shares table fits without a horizontal scrollbar, up to subpixel rounding (${overflow}px over)`);
   await screenshot(win, 'share-tab-sent.png');
 
   // The online service cannot be reached: the local records stay, marked unknown.
@@ -284,7 +286,7 @@ async function run() {
   await waitFor(win.webContents, `document.querySelector('[data-banner="error"]')`, 'listing error banner');
   assert(true, 'a listing that fails is reported, not shown as empty');
   listingError = null;
-  listing = { ...listing, network: 'BOT Chain testnet (968)', shares: sentShares };
+  listing = { ...listing, network: 'BOT Chain 测试网', shares: sentShares };
   await reloadShares(win);
 
   // Session detail → 分享: pick a range, a recipient, and the rules.

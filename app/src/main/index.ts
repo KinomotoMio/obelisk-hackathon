@@ -20,7 +20,7 @@ import { listSkills, readSkill } from '../../../packages/core/src/skills.ts';
 import { ShareDrafts } from '../../../packages/core/src/share-drafts.ts';
 import { listSentShares } from '../../../packages/core/src/share-status.ts';
 import { describeSceneTag, SCENE_DIMENSIONS } from '../../../packages/core/src/scenes.ts';
-import { networkLabel, ObeliskServiceClient, resolveServiceUrl } from '../../../packages/core/src/obelisk-service.ts';
+import { networkNameZh, ObeliskServiceClient, resolveServiceUrl } from '../../../packages/core/src/obelisk-service.ts';
 import { readChainSkill } from './skill-market.ts';
 import { CaptureUsageError, parseCaptureArgs, runCapture, type CaptureRequest } from './capture.ts';
 import { displayDir, listRuns, readRun, readScreenshot, resolvePlaygroundDir, skillSources } from './playground-runs.ts';
@@ -1088,7 +1088,7 @@ function shareService(): ObeliskServiceClient {
 ipcMain.handle('shares:list', async () => {
   const client = shareService();
   const { shares, chain } = await listSentShares(new ShareDrafts(SHARES_DIR), client);
-  return { shares, network: chain ? networkLabel(chain.chainId) : null, serviceUrl: client.baseUrl };
+  return { shares, network: chain ? networkNameZh(chain.chainId) : null, serviceUrl: client.baseUrl };
 });
 
 // Whether a recipient can be shared with yet: only an activated wallet has the

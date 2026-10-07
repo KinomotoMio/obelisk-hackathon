@@ -32,7 +32,11 @@ const rows = computed(() => shareState.shares.map(share => ({
   revocable: canRevoke(share),
   hasSession: Boolean(share.session && getSessionSummary(share.session.id)),
 })));
-const footnote = computed(() => `「已读」「已撤回」等状态来自 ${shareState.network || 'BOT Chain'} 上的记录，任何人都可以在区块浏览器核对。时间均为本地时间。`);
+const footnote = computed(() => {
+  const network = shareState.network || 'BOT Chain';
+  // 「BOT Chain 上」 but 「BOT Chain 测试网上」: a space only after a Latin name.
+  return `「已读」「已撤回」等状态来自 ${network}${/[\u3400-\u9fff]$/.test(network) ? '' : ' '}上的记录，任何人都可以在区块浏览器核对。时间均为本地时间。`;
+});
 const problem = computed(() => serviceProblem(shareState.shares));
 const refreshedLabel = computed(() => fmtShareTime(shareState.refreshedAt, now.value).slice(-5));
 
@@ -107,8 +111,8 @@ onBeforeUnmount(() => {
             <tbody>
               <tr v-for="row in rows" :key="row.share.shareId" :data-share="row.share.number" :data-state="row.share.state">
                 <td class="cell-content">
-                  <button v-if="row.hasSession" class="share-title link" :title="'打开这个 session'" @click="openSession(row.share)">{{ row.share.title || '(untitled)' }}</button>
-                  <span v-else class="share-title">{{ row.share.title || '(untitled)' }}</span>
+                  <button v-if="row.hasSession" class="share-title link" :title="'打开这个 session'" @click="openSession(row.share)">{{ row.share.title || '未命名的 session' }}</button>
+                  <span v-else class="share-title">{{ row.share.title || '未命名的 session' }}</span>
                   <div class="share-sub">
                     <span class="mono">#{{ row.share.number }}</span>
                     <template v-if="row.share.messages"><span class="dot"></span><span>{{ rangeLabel(row.share.messages) }}</span></template>
@@ -195,13 +199,13 @@ onBeforeUnmount(() => {
 .share-table th {
   text-align: left; font-weight: 500; font-size: var(--text-xs);
   letter-spacing: 0.04em; color: var(--muted);
-  padding: 10px 14px; border-bottom: 1px solid var(--hairline-strong); white-space: nowrap;
+  padding: 10px 12px; border-bottom: 1px solid var(--hairline-strong); white-space: nowrap;
 }
-.share-table td { padding: 12px 14px; border-bottom: 1px solid var(--hairline); vertical-align: middle; }
+.share-table td { padding: 12px 12px; border-bottom: 1px solid var(--hairline); vertical-align: middle; }
 .share-table tbody tr:last-child td { border-bottom: 0; }
 .share-table tbody tr:hover td { background: rgba(255,255,255,0.015); }
 
-.cell-content { min-width: 260px; max-width: 360px; }
+.cell-content { min-width: 180px; max-width: 340px; }
 .share-title {
   display: block; max-width: 100%; text-align: left;
   color: var(--fg); font-weight: 500;

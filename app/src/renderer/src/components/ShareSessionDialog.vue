@@ -93,7 +93,7 @@ onBeforeUnmount(() => {
       <div class="share-modal-head">
         <div class="head-text">
           <div id="share-dialog-title" class="head-title">分享 session 片段</div>
-          <div class="head-sub">{{ session.title || '(untitled)' }}</div>
+          <div class="head-sub">{{ session.title || '未命名的 session' }}</div>
         </div>
         <span class="pill acc">只给 TA 看</span>
         <button class="modal-close" title="关闭" @click="emit('close')">
