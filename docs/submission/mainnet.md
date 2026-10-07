@@ -25,12 +25,13 @@
 | ShareRegistry | 分享规则、打开回执、撤回 | `待填` | `待填` | ☐ |
 | SkillRegistry | Skill 资产、版本、族谱 | `待填` | `待填` | ☐ |
 | UsageStats | 按版本、按钱包去重的使用统计 | `待填` | `待填` | ☐ |
+| SkillMarket | 定价、授权取用与多层收入分配 | `待填` | `待填` | ☐ |
 
 浏览器链接格式：`https://scan.botchain.ai/address/<地址>`、`https://scan.botchain.ai/tx/<交易哈希>`。
 
 ### 测试网（当前在用，2026-10-06 部署）
 
-四个合约都已用 `npm run verify:testnet` 在 scan.bohr.life 上验证源代码（solc 0.8.28、cancun、optimizer），打开地址后看 Code 一栏。
+五个合约均已验证源码；SkillMarket 在 2026-10-08 新增部署。编译参数及本轮冻结版本见 [发布清单](release-freeze.json)。
 
 | 合约 | 地址 | 部署交易 |
 | --- | --- | --- |
@@ -40,6 +41,8 @@
 | UsageStats | [`0x84b17B83C976E2b0C447A4df09c52D80e4f40B98`](https://scan.bohr.life/address/0x84b17B83C976E2b0C447A4df09c52D80e4f40B98) | [`0x484c7d6b…72542`](https://scan.bohr.life/tx/0x484c7d6b07cea1cc76c8d8ca15995b0f7fc7e4c16a8bde2ffd9202122ac72542) |
 
 ## 应用地址
+
+2026-10-08 用户调整：现有数据用于 Demo，工具读取计量缺口后置，不再阻止主网发布。业务冻结 `bbe06198b5722bf8452382d4ef16f565c94375e8`；主网仍未部署，预算尚待确认。测试网 SkillMarket 为 [`0x69a63ceCB9753CAe115Ae9a272586568e871d360`](https://scan.bohr.life/address/0x69a63ceCB9753CAe115Ae9a272586568e871d360)，[部署交易](https://scan.bohr.life/tx/0x6c855aa6f315d4af742e0099ade23a4e8c1e90b56802e81a372e55ea04b51750)。
 
 | | 地址 | 说明 |
 | --- | --- | --- |

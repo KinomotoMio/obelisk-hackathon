@@ -1,0 +1,49 @@
+{
+  "schema": "obelisk.release-freeze/1",
+  "businessCommit": "bbe06198b5722bf8452382d4ef16f565c94375e8",
+  "createdAt": "2026-10-07T20:15:28.249Z",
+  "network": 677,
+  "status": "frozen-awaiting-budget-and-funding",
+  "contracts": [
+    "KeyRegistry",
+    "ShareRegistry",
+    "SkillRegistry",
+    "UsageStats",
+    "SkillMarket"
+  ],
+  "compiler": {
+    "version": "0.8.28",
+    "evmVersion": "cancun",
+    "optimizer": {
+      "enabled": true,
+      "runs": 200
+    },
+    "viaIR": true,
+    "profile": "production"
+  },
+  "mainnetBudget": {
+    "approved": false,
+    "proposedBOT": "0.25",
+    "estimatedDeploymentBOT": "0.12109314"
+  },
+  "knownLimitations": [
+    "Tool-read Skill usage is not included in the native-injection counter; do not invent counts.",
+    "Paid sessions and complete Skill packages are deferred."
+  ],
+  "sha256": {
+    "chain/hardhat.config.ts": "80ed694d1067c6df19f74eeed1a4b9e8f419a4c9422fa21b4cae33f606d6417c",
+    "chain/package-lock.json": "3b4f599191a38700b0ec2c0552d23ce4e055a6639d237e030cfb4436d640c3f3",
+    "chain/deployments/968.json": "ffa95c1c54afcde5c5de87172d9389f7663f773b0e7a0a92db5a51792b6b9bc9",
+    "service/wrangler.mainnet.json": "86de6a8303168dda44979de26570eed06d4c4820a42fa59a2a014d9e77e4903c",
+    "chain/contracts/KeyRegistry.sol": "ac23da96450063f804ac63d38d9359fb9c02ed3429553998d434225572153f20",
+    "chain/abi/KeyRegistry.json": "ef873432ed2fc9c59347a148fb3718543b37ac0661950429fd0c0e305e90a2ae",
+    "chain/contracts/ShareRegistry.sol": "56c6f49c194164e05238aaefa553a25ec58a1162d16a37f2475174eb757bc279",
+    "chain/abi/ShareRegistry.json": "2221923754d3ac80af3c0902046648451029d072b52e467acbba2f7c71cc4505",
+    "chain/contracts/SkillRegistry.sol": "b0e57e30751b1c2b3ffa2e5aa5c36499a8bc36feb496c2695b3eb7eb8bc81d35",
+    "chain/abi/SkillRegistry.json": "2dcbae8fe9074200a7008d5aa48b6805a89e2d237e160244a8e03cc730efc895",
+    "chain/contracts/UsageStats.sol": "06d188ca1593a7cec920be4ad78ce54486ecca5e163879c63ea6daf47d485673",
+    "chain/abi/UsageStats.json": "4fdf95a24096a5d34260bf07ac0a1cf96d2f3e9e74bd654b16dd38a2e8bed506",
+    "chain/contracts/SkillMarket.sol": "0ac69fe75b2a0b776f31f1ca34014d3d08a18de3d16cb05b9a3c6dc2c8616ad9",
+    "chain/abi/SkillMarket.json": "415757f3b718c8b240b97a1f17ab82acb8205423d7e19f9d392b1c861fbeb24a"
+  }
+}
