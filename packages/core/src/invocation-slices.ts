@@ -13,6 +13,7 @@
 // prompt to the user's own AI coding assistant.
 
 import type { SkillInvocation } from './skill-invocations.ts';
+import { commandEvidence, type CommandEvidence } from './tool-execution-evidence.ts';
 import type { SqliteDb } from './sqlite-types.ts';
 
 export const SLICE_MAX_MESSAGES = 120;
@@ -23,7 +24,9 @@ export interface SliceToolCall {
 }
 
 export interface SliceToolResult {
+  /** Outer tool status, distinct from command exit codes. */
   isError: boolean;
+  commands?: CommandEvidence[];
   text: string;
 }
 
@@ -73,10 +76,11 @@ export function readInvocationSlice(db: SqliteDb, invocation: SkillInvocation): 
     FROM messages m
     WHERE m.session_id = ? AND COALESCE(m.agent_id, '') = ? AND COALESCE(m.visibility, 'visible') = 'visible'
       AND COALESCE(m.content_type, '') <> 'thinking'
+      AND m.uuid NOT IN (SELECT value FROM json_each(?))
       AND ${order}
     ORDER BY m.timestamp, m.rowid
     LIMIT ?
-  `).all(invocation.sessionId, agent, load.timestamp, load.timestamp, load.rowid, SLICE_MAX_MESSAGES + 1) as unknown as (Row & { is_load: number })[];
+  `).all(invocation.sessionId, agent, JSON.stringify(invocation.alsoRecordedAs ?? []), load.timestamp, load.timestamp, load.rowid, SLICE_MAX_MESSAGES + 1) as unknown as (Row & { is_load: number })[];
 
   const request = (db.prepare(`
     SELECT m.text FROM messages m
@@ -90,11 +94,11 @@ export function readInvocationSlice(db: SqliteDb, invocation: SkillInvocation): 
   const nextLoad = rows.findIndex((row) => row.is_load === 1);
   const kept = (nextLoad >= 0 ? rows.slice(0, nextLoad) : rows).slice(0, SLICE_MAX_MESSAGES);
   const calls = db.prepare('SELECT name, file_path FROM tool_calls WHERE message_uuid = ?');
-  const results = db.prepare('SELECT is_error, content FROM tool_results WHERE message_uuid = ?');
+  const results = db.prepare('SELECT tr.is_error, tr.content, tc.name FROM tool_results tr LEFT JOIN tool_calls tc ON tc.id = tr.tool_use_id WHERE tr.message_uuid = ?');
   const events = kept.map((row): SliceEvent => {
     const role = row.type === 'assistant' || row.role === 'assistant' ? 'assistant' : 'user';
-    const toolResults = (results.all(row.uuid) as { is_error: number | null; content: string | null }[])
-      .map((result) => ({ isError: result.is_error === 1, text: result.content ?? '' }));
+    const toolResults = (results.all(row.uuid) as { is_error: number | null; content: string | null; name: string | null }[])
+      .map((result) => ({ isError: result.is_error === 1, text: result.content ?? '', commands: commandEvidence(row.source, result.name, result.content ?? '') }));
     return {
       uuid: row.uuid,
       role,

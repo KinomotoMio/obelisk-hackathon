@@ -15,6 +15,7 @@ import {
   skillFingerprint,
 } from '../packages/core/src/skills.ts';
 import { createBuiltinProviderRegistry } from '../packages/core/src/providers/builtins.ts';
+import { readInvocationSlice } from '../packages/core/src/invocation-slices.ts';
 import { recordSkillFetch } from '../packages/core/src/skill-fetches.ts';
 import {
   recognizeSkillInvocations,
@@ -154,7 +155,7 @@ test('a truncated load whose source record is gone stays visible as unresolved',
   }
 });
 
-test('one load recorded under two index rows counts once', () => {
+test('one load recorded under two index rows counts once and preserves its slice', () => {
   const home = makeTempDir('obelisk-skill-usage-dup-');
   writeHistory(home);
   cli(home, ['--build']);
@@ -163,6 +164,7 @@ test('one load recorded under two index rows counts once', () => {
   const db = new DatabaseSync(join(home, '.obelisk', 'obelisk.sqlite'));
   try {
     const row = db.prepare("SELECT * FROM messages WHERE source = 'codex' AND text LIKE '<skill>%'").get();
+    const original = readInvocationSlice(db, { messageUuid: row.uuid, sessionId: row.session_id });
     const stale = row.uuid.replace(/:(\d+)$/, (_, n) => `:${String(Number(n) + 900).padStart(n.length, '0')}`);
     const columns = Object.keys(row);
     db.prepare(`INSERT INTO messages (${columns.join(',')}) VALUES (${columns.map(() => '?').join(',')})`)
@@ -172,6 +174,13 @@ test('one load recorded under two index rows counts once', () => {
     assert.equal(codex.length, 1);
     assert.deepEqual(codex[0].alsoRecordedAs, [stale]);
     assert.equal(codex[0].fingerprint, probeFp);
+    const slice = readInvocationSlice(db, codex[0]);
+    assert.deepEqual(slice, original, 'legacy alias does not truncate the invocation');
+    // Deliberate database boundary mutation, not a new natural invocation.
+    const later = '2099-01-01T00:00:00.000Z';
+    db.prepare(`INSERT INTO messages (${columns.join(',')}) VALUES (${columns.map(() => '?').join(',')})`)
+      .run(...columns.map(column => column === 'uuid' ? `${stale}-later` : column === 'timestamp' ? later : row[column]));
+    assert.equal(readInvocationSlice(db, codex[0]).endedByNextLoad, true, 'a distinct later load still ends the slice');
   } finally {
     db.close();
   }
