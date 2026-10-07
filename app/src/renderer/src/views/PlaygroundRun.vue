@@ -224,7 +224,7 @@ const serviceHost = computed(() => {
         <div class="detail-banner-body"><strong>空跑</strong><div>所有角色都用模拟助手：没有调用模型，也没有上链。这次运行只验证流水线，它的数据不是真实数据。</div></div>
       </div>
       <div v-if="record && status.key === 'quiet'" class="detail-banner partial" data-banner="quiet">
-        <div class="detail-banner-body"><strong>已经 {{ status.label }}</strong><div>出处记录还写着"运行中"，但执行器可能已经退出。</div></div>
+        <div class="detail-banner-body"><strong>已经 {{ status.label }}</strong><div>出处记录还写着「运行中」，但执行器可能已经退出。</div></div>
       </div>
       <div v-if="failure" class="detail-banner broken" data-banner="failed">
         <div class="detail-banner-body">
@@ -360,9 +360,10 @@ const serviceHost = computed(() => {
                 <th>运行</th>
                 <td>
                   <span class="mono">{{ run.id }}</span> · {{ fmtListTime(record.run.startedAt) }} 开始{{ record.run.endedAt ? ` · ${fmtListTime(record.run.endedAt)} 结束` : ' · 仍在运行' }}
-                  · 剧本「{{ record.run.scenario.title }}」<span class="mono muted" :title="record.run.scenario.sha256">{{ record.run.scenario.file }} · sha256 {{ record.run.scenario.sha256.slice(0, 8) }}</span>
+                  · 剧本「{{ record.run.scenario.title }}」
                   <div class="prov-sub">
-                    {{ record.run.network.chainId ? chainLabel(record.run.network.chainId) : '没有连接链' }}<template v-if="serviceHost"> · 在线服务 <span class="mono">{{ serviceHost }}</span></template>
+                    <span class="mono" :title="record.run.scenario.sha256">{{ record.run.scenario.file }} · sha256 {{ record.run.scenario.sha256.slice(0, 8) }}</span>
+                    · {{ record.run.network.chainId ? chainLabel(record.run.network.chainId) : '没有连接链' }}<template v-if="serviceHost"> · 在线服务 <span class="mono">{{ serviceHost }}</span></template>
                   </div>
                 </td>
               </tr>
@@ -622,6 +623,12 @@ const serviceHost = computed(() => {
   transition: background 0.1s; box-sizing: content-box;
 }
 .counter:hover { background: var(--surface-strong); }
+/* Hairlines between the stacked counters, as in the run-page mockup; the
+   narrow layout puts them in one row instead. */
+.pg-live > [data-panel="totals"] .counter + .counter { box-shadow: 0 -1px 0 var(--hairline); margin-top: 6px; }
+@container (max-width: 980px) {
+  .pg-live > [data-panel="totals"] .counter + .counter { box-shadow: none; margin-top: 0; }
+}
 .counter .note { margin-top: 0; }
 .big { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; color: var(--fg); font-variant-numeric: tabular-nums; line-height: 1.2; }
 .counter:hover .big { color: var(--accent-2); }
