@@ -19,7 +19,9 @@ import {
   OUTCOMES,
   outcomeBucketIdsByKey,
   outcomeBucketKey,
+  sceneOutcomeKeysFor,
   SIGNALS,
+  type Outcome,
   type OutcomeBucketId,
   type Signal,
 } from '../../packages/core/src/usage-buckets.ts';
@@ -63,8 +65,12 @@ export function usageTrendRecorder(config: ServiceChainConfig, store: UsageTrend
 
 export const DEFAULT_TREND_WEEKS = 8;
 const MAX_TREND_WEEKS = 52;
-/** Distribution keys read per version; UsageStats does not bound the list. */
-const MAX_DISTRIBUTION_KEYS = 64;
+/**
+ * Distribution keys read per version; UsageStats does not bound the list.
+ * Outcomes hold up to 4 results per scene besides the 8 outcome and signal
+ * keys, so the bound leaves room for every vocabulary scene.
+ */
+const MAX_DISTRIBUTION_KEYS = 256;
 /** Reporter addresses read to count distinct wallets across versions. */
 const MAX_REPORTERS_FOR_UNION = 1000;
 
@@ -78,7 +84,21 @@ export interface SceneCount {
   tag: string | null;
   label: string | null;
   dimension: string | null;
+  /** Invocations judged to be in this scene. */
   invocations: number;
+  /**
+   * This scene's results, from its scene-outcome buckets (usage-buckets.ts).
+   * judged = smooth + rework + failed; smoothRate = smooth / judged, or null
+   * when nothing was judged. Reports sent before per-scene results existed
+   * count in `invocations` only. Left out when the tag is unknown, since its
+   * pairs cannot be named.
+   */
+  smooth?: number;
+  rework?: number;
+  failed?: number;
+  unknown?: number;
+  judged?: number;
+  smoothRate?: number | null;
 }
 
 export interface OutcomeCount {
@@ -140,24 +160,40 @@ function addInto(target: Map<Hex, number>, source: Map<Hex, number>): void {
   for (const [key, value] of source) target.set(key, (target.get(key) ?? 0) + value);
 }
 
-function describeScenes(counts: Map<Hex, number>, extraTags: readonly string[]): SceneCount[] {
+/** Scenes with their own results, and the scene-outcome keys they account for. */
+function describeScenes(counts: Map<Hex, number>, outcomeCounts: Map<Hex, number>, extraTags: readonly string[]): { scenes: SceneCount[]; pairKeys: Set<Hex> } {
   const tags = sceneTagsByKey(extraTags);
-  return [...counts].map(([key, invocations]) => {
+  const named = [...counts.keys()].map((key) => tags.get(key)).filter((tag): tag is string => tag !== undefined);
+  const pairs = sceneOutcomeKeysFor(named);
+  const pairKeys = new Set([...outcomeCounts.keys()].filter((key) => pairs.has(key)));
+  const scenes = [...counts].map(([key, invocations]): SceneCount => {
     const tag = tags.get(key) ?? null;
     const described = tag ? describeSceneTag(tag) : null;
-    return { key, tag, label: described?.label ?? null, dimension: described?.dimension ?? null, invocations };
+    const base = { key, tag, label: described?.label ?? null, dimension: described?.dimension ?? null, invocations };
+    if (!tag) return base;
+    const results = Object.fromEntries(OUTCOMES.map((outcome) => [outcome, 0])) as Record<Outcome, number>;
+    for (const [pairKey, pair] of pairs) if (pair.tag === tag) results[pair.outcome] += outcomeCounts.get(pairKey) ?? 0;
+    const judged = results.smooth + results.rework + results.failed;
+    return { ...base, ...results, judged, smoothRate: judged === 0 ? null : results.smooth / judged };
   }).sort((a, b) => b.invocations - a.invocations || (a.key < b.key ? -1 : 1));
+  return { scenes, pairKeys };
 }
 
-function describeOutcomes(counts: Map<Hex, number>): { outcomes: OutcomeCount[]; results: ResultSummary } {
+function describeOutcomes(counts: Map<Hex, number>, pairKeys: ReadonlySet<Hex>): { outcomes: OutcomeCount[]; results: ResultSummary } {
   const ids = outcomeBucketIdsByKey();
-  const outcomes = [...counts].map(([key, invocations]) => ({ key, id: ids.get(key) ?? null, invocations }))
+  // Scene-outcome pairs are shown under their scene; a key nobody can name stays here with id null.
+  const outcomes = [...counts].filter(([key]) => !pairKeys.has(key)).map(([key, invocations]) => ({ key, id: ids.get(key) ?? null, invocations }))
     .sort((a, b) => b.invocations - a.invocations || (a.key < b.key ? -1 : 1));
   const of = (id: OutcomeBucketId) => counts.get(outcomeBucketKey(id)) ?? 0;
   const [smooth, rework, failed, unknown] = OUTCOMES.map((id) => of(`outcome/${id}`)) as [number, number, number, number];
   const judged = smooth + rework + failed;
   const signals = Object.fromEntries(SIGNALS.map((id) => [id, of(`signal/${id}`)])) as Record<Signal, number>;
   return { outcomes, results: { smooth, rework, failed, unknown, judged, smoothRate: judged === 0 ? null : smooth / judged, signals } };
+}
+
+function describeDistributions(scenes: Map<Hex, number>, outcomes: Map<Hex, number>, extraTags: readonly string[]) {
+  const described = describeScenes(scenes, outcomes, extraTags);
+  return { scenes: described.scenes, ...describeOutcomes(outcomes, described.pairKeys) };
 }
 
 const DAY_MS = 86_400_000;
@@ -233,8 +269,7 @@ export async function readVersionUsage(deps: UsageRouteDeps, fingerprintParam: s
     skillId: ref.skillId.toString(),
     versionIndex: ref.versionIndex,
     ...stats,
-    scenes: describeScenes(scenes, skill?.birthScenes ?? []),
-    ...describeOutcomes(outcomes),
+    ...describeDistributions(scenes, outcomes, skill?.birthScenes ?? []),
     trend: trendOf(entries, weeks, now),
     ...(wallet && walletReport
       ? { wallet: { address: wallet, cumulative: Number(walletReport[0]), reportedAt: walletReport[1] === 0n ? null : iso(walletReport[1]) } }
@@ -306,8 +341,7 @@ export async function readSkillUsage(deps: UsageRouteDeps, skillIdParam: string,
     uniqueWallets,
     uniqueWalletsExact,
     lastReportAt: lastReports.at(-1) ?? null,
-    scenes: describeScenes(scenes, skill.birthScenes),
-    ...describeOutcomes(outcomes),
+    ...describeDistributions(scenes, outcomes, skill.birthScenes),
     trend: trendOf(allEntries, weeks, now),
     versions: versions.map((version) => ({
       index: version.index,

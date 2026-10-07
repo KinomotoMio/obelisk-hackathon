@@ -245,7 +245,13 @@ the trend is read from the contract's views.
   "uniqueWalletsExact": true,        // false: more than 1000 reporters, so this is the largest version's count (a lower bound)
   "lastReportAt": "2026-10-07T…Z",   // or null
   "scenes": [                        // 实测场景, largest first
-    { "key": "0x…", "tag": "v1:role/engineer", "label": "工程师", "dimension": "role", "invocations": 918 }
+    {
+      "key": "0x…", "tag": "v1:role/engineer", "label": "工程师", "dimension": "role",
+      "invocations": 918,            // invocations judged to be in this scene
+      "smooth": 600, "rework": 90, "failed": 30, "unknown": 198,   // this scene's results
+      "judged": 720,                 // smooth + rework + failed
+      "smoothRate": 0.83             // this scene's 顺利率 = smooth / judged; null when judged is 0
+    }
   ],
   "outcomes": [{ "key": "0x…", "id": "outcome/smooth", "invocations": 742 }],
   "results": {                       // outcomes in the shape the page shows
@@ -278,8 +284,19 @@ How to read the fields:
   [`packages/core/src/scenes.ts`](../packages/core/src/scenes.ts)). The service
   names every vocabulary tag and the Skill's own birth scenes; other user tags
   come back with `tag`, `label`, and `dimension` set to `null`.
+- **Per-scene results.** Each judged invocation also adds 1 to the outcome
+  bucket `scene-outcome:<scene tag>|<outcome>` for each of its scenes (for
+  example `scene-outcome:v1:task/debug|rework`; key rule in
+  [`packages/core/src/usage-buckets.ts`](../packages/core/src/usage-buckets.ts)).
+  The service reads those buckets back under their scene as `smooth`,
+  `rework`, `failed`, `unknown`, `judged`, and `smoothRate`, which are exact
+  for every scene. An unnamed scene carries only `invocations`, and its pair
+  keys stay in `outcomes` with `id: null`. Reports sent before per-scene results
+  existed count in a scene's `invocations` only, so `judged + unknown` can be
+  less than `invocations`.
 - **Outcomes.** One distribution holds the judged results (`outcome/smooth`,
-  `outcome/rework`, `outcome/failed`, `outcome/unknown`) and the fact signals
+  `outcome/rework`, `outcome/failed`, `outcome/unknown`), the per-scene pairs
+  above (not listed in `outcomes`), and the fact signals
   (`signal/tool-error`, `signal/user-correction`, `signal/repeated-edit`,
   `signal/repeated-invocation`); keys are `keccak256` of those ids
   ([`packages/core/src/usage-buckets.ts`](../packages/core/src/usage-buckets.ts)).
@@ -293,7 +310,8 @@ How to read the fields:
   added to the week it was confirmed in (weeks start Monday 00:00 UTC). It
   follows when usage was reported, not when each invocation happened, and
   leaves out reports sent to the contract directly. `weeks` is 1–52.
-- Up to 64 scene and 64 outcome keys are read per version.
+- Up to 256 scene and 256 outcome keys are read per version: enough for 4
+  results of every vocabulary scene plus the 8 outcome and signal keys.
 
 ## Configuration
 
