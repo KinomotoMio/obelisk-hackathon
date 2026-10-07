@@ -549,6 +549,17 @@ async function captureAndExit(request: CaptureRequest) {
   app.exit(result.code);
 }
 
+/**
+ * A packaged App takes its icon from build/icon.icns; run from source, macOS
+ * would show Electron's own icon in the Dock, so show Obelisk's instead
+ * (build/icon.png, made by `npm run icons`).
+ */
+function showDevDockIcon() {
+  if (process.platform !== 'darwin' || app.isPackaged || !app.dock) return;
+  const icon = path.join(app.getAppPath(), 'build', 'icon.png');
+  if (fs.existsSync(icon)) app.dock.setIcon(icon);
+}
+
 app.whenReady().then(() => {
   if (captureUsageError) {
     process.stderr.write(`capture: ${captureUsageError}\n`);
@@ -559,6 +570,7 @@ app.whenReady().then(() => {
     void captureAndExit(captureRequest);
     return;
   }
+  showDevDockIcon();
   startBackgroundResources({ runStartupBuild: true });
   createWindow();
 
