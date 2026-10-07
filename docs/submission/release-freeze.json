@@ -57,7 +57,8 @@
     "kv": "efa3362429f74633a96e353c09b7a242",
     "r2": "obelisk-service-mainnet-blobs",
     "sourceVerified": true,
-    "latestWorkerVersion": "716ea3a3-3a53-4c42-aba4-80f54c9b04fa",
-    "usageFollowupCommit": "66e69d3"
+    "latestWorkerVersion": "e23018ef-0346-4032-939e-5f9d4370463e",
+    "usageFollowupCommit": "66e69d3",
+    "navigationFollowupCommit": "4060c4a"
   }
 }
