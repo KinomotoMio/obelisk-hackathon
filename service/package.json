@@ -8,6 +8,9 @@
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
+    "build:mainnet": "wrangler deploy --config wrangler.mainnet.json --dry-run",
+    "preflight:mainnet": "node --experimental-strip-types --disable-warning=ExperimentalWarning scripts/mainnet-preflight.mjs",
+    "deploy:mainnet": "npm run preflight:mainnet && wrangler deploy --config wrangler.mainnet.json",
     "test": "node --experimental-strip-types --disable-warning=ExperimentalWarning --test test/*.test.mjs",
     "typecheck": "tsc --noEmit"
   },

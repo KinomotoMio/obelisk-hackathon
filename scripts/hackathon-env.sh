@@ -35,13 +35,18 @@ EOF
 chmod +x "$H/bin/obelisk"
 
 cat > "$H/env.sh" <<'EOF'
-# source ~/.obelisk-hackathon/env.sh [b]
+# source ~/.obelisk-hackathon/env.sh [a|b] [testnet|mainnet]
 # Only this shell (and what it starts, e.g. claude or the App) uses the
 # hackathon build and the role's own data directory. Open a new terminal to
 # leave.
+case "${2:-testnet}" in
+  testnet) _obelisk_base="$HOME/.obelisk-hackathon"; export OBELISK_SERVICE_URL="https://obelisk-service.kinomotomiovo.workers.dev" ;;
+  mainnet) _obelisk_base="$HOME/.obelisk-hackathon/mainnet"; export OBELISK_SERVICE_URL="https://obelisk-service-mainnet.kinomotomiovo.workers.dev" ;;
+  *) echo "Expected network testnet or mainnet" >&2; return 1 ;;
+esac
 case "${1:-a}" in
-  b|B) export OBELISK_HOME="$HOME/.obelisk-hackathon/home-b"; _obelisk_role="hackathon:b" ;;
-  *)   export OBELISK_HOME="$HOME/.obelisk-hackathon/home";   _obelisk_role="hackathon" ;;
+  b|B) export OBELISK_HOME="$_obelisk_base/home-b"; _obelisk_role="hackathon:${2:-testnet}:b" ;;
+  *)   export OBELISK_HOME="$_obelisk_base/home";   _obelisk_role="hackathon:${2:-testnet}:a" ;;
 esac
 case ":$PATH:" in
   *":$HOME/.obelisk-hackathon/bin:"*) ;;
@@ -53,7 +58,7 @@ if [ -n "$ZSH_VERSION" ]; then
 else
   PS1="[$_obelisk_role] ${PS1#\[hackathon*\] }"
 fi
-unset _obelisk_role
+unset _obelisk_role _obelisk_base
 EOF
 
 # Project-level skills, so neither ~/.claude nor ~/.codex is touched: Claude
