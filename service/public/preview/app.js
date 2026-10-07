@@ -186,7 +186,9 @@ function renderStep() {
 function syncUrl() {
   const params = new URLSearchParams(location.search);
   if (state.step > 0) params.set('step', String(state.step + 1));
+  else params.delete('step');
   if (state.role) params.set('role', state.role);
+  else params.delete('role');
   const query = params.toString();
   history.replaceState(null, '', `${location.pathname}${query ? `?${query}` : ''}`);
 }
