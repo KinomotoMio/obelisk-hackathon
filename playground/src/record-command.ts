@@ -66,6 +66,8 @@ export function extractArtifacts(argv: string[], output: unknown): ArtifactRef[]
   const str = (key: string) => (typeof output[key] === 'string' && output[key] !== '' ? (output[key] as string) : null);
   const [group, action] = argv;
   const one = (kind: string, ref: string | null): ArtifactRef[] => (ref ? [{ kind, ref }] : []);
+  // Previews can expose useful content, but are not a mint/install/share.
+  if (output['preview'] === true) return one(`${group}-${action}-preview`, str('name') ?? str('skill') ?? str('skillId') ?? str('address'));
   if (group === 'skill' && action === 'save') return one('skill-draft', str('name'));
   if (group === 'skill' && action === 'mint') return one('skill-mint', str('skillId') ?? str('skill'));
   if (group === 'skill' && action === 'fetch') return one('skill-fetch', str('name') ?? str('skillId'));

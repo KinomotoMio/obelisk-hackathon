@@ -8,6 +8,13 @@ import { join } from 'node:path';
 
 import { repoRoot } from './cli-test-helpers.mjs';
 import { validateEvent, validateProvenance } from '../playground/src/provenance.ts';
+import { extractArtifacts } from '../playground/src/record-command.ts';
+
+test('previewing a Skill is not recorded as installing or minting it', () => {
+  assert.deepEqual(extractArtifacts(['skill', 'fetch', '9'], { preview: true, name: 'example' }), [{ kind: 'skill-fetch-preview', ref: 'example' }]);
+  assert.deepEqual(extractArtifacts(['skill', 'mint', 'example'], { preview: true, skill: 'example' }), [{ kind: 'skill-mint-preview', ref: 'example' }]);
+  assert.deepEqual(extractArtifacts(['skill', 'fetch', '9', '--confirm'], { status: 'installed', name: 'example' }), [{ kind: 'skill-fetch', ref: 'example' }]);
+});
 
 const examples = join(repoRoot, 'playground', 'examples');
 const example = () => JSON.parse(readFileSync(join(examples, 'provenance.example.json'), 'utf8'));
