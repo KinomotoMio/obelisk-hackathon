@@ -24,6 +24,7 @@ export default defineConfig({
           'indexer-worker-client': resolve('src/main/indexer-worker-client.ts'),
           'recap-capture-query': resolve('src/main/recap-capture-query.ts'),
           'skill-market': resolve('src/main/skill-market.ts'),
+          'playground-runs': resolve('src/main/playground-runs.ts'),
         },
       },
     },
