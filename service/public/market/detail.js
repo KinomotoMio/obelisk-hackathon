@@ -181,8 +181,9 @@ function buyerAccess(offer) {
   return h('details', null, h('summary', null, '查看我的取用状态'), h('div', { class: 'toolbar' }, input, button), status);
 }
 
-function commerce(offer, locked, promptName) {
-  if (!offer) return panel('取用方式', null, h('p', { class: 'fg2' }, locked ? '作者尚未开放购买，请稍后再来看看。' : '正文已公开。取用前，你的助手会展示内容并核对版本。'));
+function commerce(offer, content, promptName, unavailable) {
+  if (unavailable) return panel('取用方式', null, h('p', { class: 'fg2' }, '暂时无法读取上架信息，请稍后刷新。'));
+  if (!offer) return panel('取用方式', null, h('p', { class: 'fg2' }, content?.locked === true ? '作者尚未开放购买，请稍后再来看看。' : typeof content?.body === 'string' ? '正文已公开。取用前，你的助手会展示内容并核对版本。' : '作者尚未提供在线正文，你可以先查看链上的版本与使用记录。'));
   const mode = { free: '免费取用', 'per-use': '按次取用', buyout: '此版本买断' }[offer.mode];
   const license = { personal: '个人使用', commercial: '商用许可' }[offer.license];
   if (!mode || !license || !api.isSkillId(offer.offerId) || !/^\d+(\.\d+)?$/.test(offer.price)) return failure({ message: '暂时无法读取上架信息。' });
@@ -219,7 +220,7 @@ export async function renderDetail(root, id) {
   skill.name = skill.content?.name ?? null;
   const usage = usageResult.status === 'fulfilled' ? usageResult.value : null;
   const tree = lineageResult.status === 'fulfilled' ? lineageResult.value : null;
-  const offerResult = skill.version ? await api.offer(skill.version.fingerprint).catch(() => ({ offer: null })) : { offer: null };
+  const offerResult = skill.version ? await api.offer(skill.version.fingerprint).catch(() => ({ offer: null, unavailable: true })) : { offer: null };
   const parent = skill.parentSkillId ? api.list(tree?.nodes).find((node) => node?.skillId === skill.parentSkillId) : null;
   document.title = `${title(skill)} · Obelisk Skill 市场`;
 
@@ -243,7 +244,7 @@ export async function renderDetail(root, id) {
         chainInfo ? h('span', { class: 'pill chain' }, `可在${networkName(chainInfo.chainId)}上核对`) : null),
       skill.content?.description ? h('p', { class: 'lead' }, skill.content.description) : null),
 
-    commerce(offerResult.offer, raw.content?.locked === true, promptName),
+    commerce(offerResult.offer, raw.content, promptName, offerResult.unavailable),
 
     usage
       ? h('div', { class: 'kpis' },
