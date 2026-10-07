@@ -7,7 +7,8 @@
   "roles": [
     { "id": "job-seeker-01", "label": "模拟角色：求职者", "skills": ["obelisk", "obelisk-skill-assets", "obelisk-distill"] },
     { "id": "designer-01", "label": "模拟角色：设计师", "skills": ["obelisk", "obelisk-skill-assets", "obelisk-distill"] },
-    { "id": "maintainer-01", "label": "模拟角色：项目维护者", "skills": ["obelisk", "obelisk-skill-assets", "obelisk-distill"] }
+    { "id": "maintainer-01", "label": "模拟角色：项目维护者", "skills": ["obelisk", "obelisk-skill-assets", "obelisk-distill"] },
+    { "id": "builder-01", "label": "模拟角色：项目构建者", "skills": ["obelisk", "obelisk-skill-assets", "obelisk-distill"] }
   ],
   "steps": [
     {
@@ -21,6 +22,10 @@
     {
       "id": "incident", "role": "maintainer-01", "title": "整理偶发 502 的排查方向", "scenes": ["v1:task/debug"],
       "prompt": "我的小网站最近偶尔返回 502，重启后能恢复一阵。我现在只有这些现象：晚上人多时容易出现，静态页面通常还能开，日志里偶尔有 upstream timed out。有没有成熟的排查思路？帮我整理一下先看什么、哪些信息还缺，别上来就建议扩容。我想把排查笔记存下来。"
+    },
+    {
+      "id": "building-plan", "role": "builder-01", "title": "整理与 AI 协作的项目计划", "scenes": ["v1:task/planning"],
+      "prompt": "我最近和 AI 一起做读书笔记小项目，有点越做越乱。搜索和标签已经能用了，现在想加导入和导出，但之前讨论的边界总丢。我每天只能抽半小时看进展。帮我整理一下接下来怎么配合、怎么把任务推进到我能验收的程度，有现成的协作经验也可以参考。先把计划存下来，别开始写功能。"
     }
   ]
 }
