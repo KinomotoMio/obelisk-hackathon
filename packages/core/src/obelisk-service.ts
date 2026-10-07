@@ -27,6 +27,17 @@ export function networkLabel(chainId: number): string {
   return `${NETWORK_NAMES[chainId] ?? 'unknown chain'} (${chainId})`;
 }
 
+const NETWORK_NAMES_ZH: Record<number, string> = {
+  677: 'BOT Chain 主网',
+  968: 'BOT Chain 测试网',
+  [LOCAL_DEV_CHAIN_ID]: '本地开发链',
+};
+
+/** The network's name for Chinese user-facing text, such as a page a user hands on. */
+export function networkNameZh(chainId: number): string {
+  return NETWORK_NAMES_ZH[chainId] ?? `未知网络（${chainId}）`;
+}
+
 export function resolveServiceUrl(env: NodeJS.ProcessEnv = process.env): string {
   const raw = env['OBELISK_SERVICE_URL']?.trim() || DEFAULT_SERVICE_URL;
   if (!raw) {
