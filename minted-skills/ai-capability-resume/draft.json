@@ -1,0 +1,8 @@
+{
+  "name": "ai-capability-resume",
+  "description": "生成一页可以核对的「AI 能力履历」：从你自己的 Claude Code、Codex 等 session 历史归纳能力维度和解决过的代表性问题，附上你铸造的 Skill 在链上的真实调用量、钱包数和衍生，数字都由 Obelisk 统计，招聘方可以核对。用于求职、FDE 名片、\"帮我生成 AI 能力履历\"、\"用我的历史做一份履历\"、\"把我最近半年的工作整理成能力证明\"。",
+  "bodyFile": "SKILL.md",
+  "birthScenes": ["v1:artifact/resume", "v1:context/job-search", "v1:role/engineer"],
+  "parent": null,
+  "provenance": []
+}
