@@ -3,7 +3,7 @@
   "businessCommit": "bbe06198b5722bf8452382d4ef16f565c94375e8",
   "createdAt": "2026-10-07T20:15:28.249Z",
   "network": 677,
-  "status": "frozen-awaiting-budget-and-funding",
+  "status": "mainnet-contracts-deployed-service-published-business-smoke-pending",
   "contracts": [
     "KeyRegistry",
     "ShareRegistry",
@@ -22,9 +22,10 @@
     "profile": "production"
   },
   "mainnetBudget": {
-    "approved": false,
-    "proposedBOT": "0.25",
-    "estimatedDeploymentBOT": "0.12109314"
+    "walletBalanceBeforeBOT": "0.5",
+    "executionCapBOT": "0.25",
+    "actualDeploymentBOT": "0.12109314",
+    "context": "User configured funded deployment wallet and replied that it holds 0.5 BOT; operator announced 0.25 BOT maximum, preserving half."
   },
   "knownLimitations": [
     "Tool-read Skill usage is not included in the native-injection counter; do not invent counts.",
@@ -45,5 +46,13 @@
     "chain/abi/UsageStats.json": "4fdf95a24096a5d34260bf07ac0a1cf96d2f3e9e74bd654b16dd38a2e8bed506",
     "chain/contracts/SkillMarket.sol": "0ac69fe75b2a0b776f31f1ca34014d3d08a18de3d16cb05b9a3c6dc2c8616ad9",
     "chain/abi/SkillMarket.json": "415757f3b718c8b240b97a1f17ab82acb8205423d7e19f9d392b1c861fbeb24a"
+  },
+  "mainnet": {
+    "deployer": "0x9107284f2301E9084d8c43b9D6379dfAA6d72EcB",
+    "worker": "https://obelisk-service-mainnet.kinomotomiovo.workers.dev",
+    "initialWorkerVersion": "41f2a7fc-946a-4b85-a235-833d30318740",
+    "kv": "efa3362429f74633a96e353c09b7a242",
+    "r2": "obelisk-service-mainnet-blobs",
+    "sourceVerified": true
   }
 }

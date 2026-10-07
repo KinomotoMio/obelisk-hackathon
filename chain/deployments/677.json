@@ -1,0 +1,43 @@
+{
+  "chainId": 677,
+  "network": "botMainnet",
+  "complete": true,
+  "updatedAt": "2026-10-07T20:25:00.223Z",
+  "contracts": {
+    "KeyRegistry": {
+      "address": "0xB4Ce21215B5391BE78eE57B06bc62565A15612Fc",
+      "txHash": "0x28e99b2d0f486518d472cf0e5f8058f9802712c5500d3632720d2814a9fa9c21",
+      "blockNumber": 25893692,
+      "deployer": "0x9107284f2301E9084d8c43b9D6379dfAA6d72EcB"
+    },
+    "ShareRegistry": {
+      "address": "0x09d4E24eF0b1A40bBEC8077a5604cD9b9bBa28A6",
+      "txHash": "0xa439d58f88cba74c919bb33ddeb73b3d922e2c84a2453d402a8540ca298b70de",
+      "blockNumber": 25893694,
+      "deployer": "0x9107284f2301E9084d8c43b9D6379dfAA6d72EcB"
+    },
+    "SkillRegistry": {
+      "address": "0x5B883c195AfE86f7D380a1f7d5a305f1807B5702",
+      "txHash": "0xe73c5b60206cef3b7e61c894842c2681ea524fc5598bdb81110029eef66069e6",
+      "blockNumber": 25893701,
+      "deployer": "0x9107284f2301E9084d8c43b9D6379dfAA6d72EcB"
+    },
+    "UsageStats": {
+      "address": "0xa36A4775840b4C5730fA6c3d87D6F877c48ce2aB",
+      "txHash": "0xa492c047b427ea5fbd9dc59a5a606429e4124c8fcd7b7a9f7ba7ff53beb356da",
+      "blockNumber": 25893707,
+      "deployer": "0x9107284f2301E9084d8c43b9D6379dfAA6d72EcB"
+    },
+    "SkillMarket": {
+      "address": "0x58C501431532E0e69703587194E3376A804F4A23",
+      "txHash": "0x7bea027cdbd5d296cdb189ea751a06c5625b7365aa5fa265c9472be753bff892",
+      "blockNumber": 25893714,
+      "deployer": "0x9107284f2301E9084d8c43b9D6379dfAA6d72EcB"
+    }
+  },
+  "pending": {},
+  "marketConfig": {
+    "platform": "0x9107284f2301E9084d8c43b9D6379dfAA6d72EcB",
+    "feeBps": 500
+  }
+}

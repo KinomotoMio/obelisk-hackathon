@@ -1,17 +1,48 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "obelisk-service-mainnet",
-  "main": "src/index.ts",
-  "compatibility_date": "2026-10-01",
-  "observability": { "enabled": true },
-  "workers_dev": true,
-  "preview_urls": false,
-  "vars": { "CHAIN_ID": "677" },
-  "durable_objects": {
-    "bindings": [{ "name": "RELAY_QUEUE", "class_name": "RelayQueue" }]
-  },
-  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["RelayQueue"] }],
-  "kv_namespaces": [{ "binding": "INDEX" }],
-  "r2_buckets": [{ "binding": "BLOBS", "bucket_name": "obelisk-service-mainnet-blobs" }],
-  "assets": { "directory": "./public", "binding": "ASSETS", "html_handling": "none", "not_found_handling": "none" }
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "obelisk-service-mainnet",
+	"main": "src/index.ts",
+	"compatibility_date": "2026-10-01",
+	"observability": {
+		"enabled": true
+	},
+	"workers_dev": true,
+	"preview_urls": false,
+	"vars": {
+		"CHAIN_ID": "677"
+	},
+	"durable_objects": {
+		"bindings": [
+			{
+				"name": "RELAY_QUEUE",
+				"class_name": "RelayQueue"
+			}
+		]
+	},
+	"migrations": [
+		{
+			"tag": "v1",
+			"new_sqlite_classes": [
+				"RelayQueue"
+			]
+		}
+	],
+	"kv_namespaces": [
+		{
+			"binding": "INDEX",
+			"id": "efa3362429f74633a96e353c09b7a242"
+		}
+	],
+	"r2_buckets": [
+		{
+			"binding": "BLOBS",
+			"bucket_name": "obelisk-service-mainnet-blobs"
+		}
+	],
+	"assets": {
+		"directory": "./public",
+		"binding": "ASSETS",
+		"html_handling": "none",
+		"not_found_handling": "none"
+	}
 }

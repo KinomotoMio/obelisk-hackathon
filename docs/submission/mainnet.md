@@ -2,7 +2,7 @@
 
 > 草稿，对应 [KinomotoMio/obelisk-hackathon#37](https://github.com/KinomotoMio/obelisk-hackathon/issues/37) 和 [#5](https://github.com/KinomotoMio/obelisk-hackathon/issues/5)。参与主网部署协作的项目需要补充可核验的 **BOT Chain Mainnet 区块浏览器链接、交易记录，以及合约或应用地址**（选手手册 §5.2）。只部署到测试网不算有效部署（§5.1.2）。
 >
-> **现状：主网还没有部署**。按 2026-10-08 确认的顺序，先在测试网完成本轮功能和合约验收，固定代码版本，再部署主网并跑少量真实业务验证。路演和大量 Playground 数据保留在测试网，两网使用独立的 Worker。下面主网部分的 `待填` 在部署后填写。
+> **现状：五份主网合约已部署并验证源码，独立 Worker 已发布；少量业务交易验证进行中**。按 2026-10-08 确认的顺序，先在测试网完成本轮功能和合约验收，固定代码版本，再部署主网并跑少量真实业务验证。路演和大量 Playground 数据保留在测试网，两网使用独立的 Worker。下面主网部分的 `待填` 在部署后填写。
 
 ## 网络
 
@@ -17,15 +17,15 @@
 
 ## 合约地址
 
-### 主网（待部署）
+### 主网（五份合约已部署并验证源码）
 
 | 合约 | 作用 | 地址 | 部署交易 | 源码已验证 |
 | --- | --- | --- | --- | --- |
-| KeyRegistry | 钱包的加密公钥登记 | `待填` | `待填` | ☐ |
-| ShareRegistry | 分享规则、打开回执、撤回 | `待填` | `待填` | ☐ |
-| SkillRegistry | Skill 资产、版本、族谱 | `待填` | `待填` | ☐ |
-| UsageStats | 按版本、按钱包去重的使用统计 | `待填` | `待填` | ☐ |
-| SkillMarket | 定价、授权取用与多层收入分配 | `待填` | `待填` | ☐ |
+| KeyRegistry | 钱包的加密公钥登记 | [0xB4Ce21215B5391BE78eE57B06bc62565A15612Fc](https://scan.botchain.ai/address/0xB4Ce21215B5391BE78eE57B06bc62565A15612Fc) | [交易](https://scan.botchain.ai/tx/0x28e99b2d0f486518d472cf0e5f8058f9802712c5500d3632720d2814a9fa9c21) | ✓ |
+| ShareRegistry | 分享规则、打开回执、撤回 | [0x09d4E24eF0b1A40bBEC8077a5604cD9b9bBa28A6](https://scan.botchain.ai/address/0x09d4E24eF0b1A40bBEC8077a5604cD9b9bBa28A6) | [交易](https://scan.botchain.ai/tx/0xa439d58f88cba74c919bb33ddeb73b3d922e2c84a2453d402a8540ca298b70de) | ✓ |
+| SkillRegistry | Skill 资产、版本、族谱 | [0x5B883c195AfE86f7D380a1f7d5a305f1807B5702](https://scan.botchain.ai/address/0x5B883c195AfE86f7D380a1f7d5a305f1807B5702) | [交易](https://scan.botchain.ai/tx/0xe73c5b60206cef3b7e61c894842c2681ea524fc5598bdb81110029eef66069e6) | ✓ |
+| UsageStats | 按版本、按钱包去重的使用统计 | [0xa36A4775840b4C5730fA6c3d87D6F877c48ce2aB](https://scan.botchain.ai/address/0xa36A4775840b4C5730fA6c3d87D6F877c48ce2aB) | [交易](https://scan.botchain.ai/tx/0xa492c047b427ea5fbd9dc59a5a606429e4124c8fcd7b7a9f7ba7ff53beb356da) | ✓ |
+| SkillMarket | 定价、授权取用与多层收入分配 | [0x58C501431532E0e69703587194E3376A804F4A23](https://scan.botchain.ai/address/0x58C501431532E0e69703587194E3376A804F4A23) | [交易](https://scan.botchain.ai/tx/0x7bea027cdbd5d296cdb189ea751a06c5625b7365aa5fa265c9472be753bff892) | ✓ |
 
 浏览器链接格式：`https://scan.botchain.ai/address/<地址>`、`https://scan.botchain.ai/tx/<交易哈希>`。
 
@@ -42,7 +42,7 @@
 
 ## 应用地址
 
-2026-10-08 用户调整：现有数据用于 Demo，工具读取计量缺口后置，不再阻止主网发布。业务冻结 `bbe06198b5722bf8452382d4ef16f565c94375e8`；主网仍未部署，预算尚待确认。测试网 SkillMarket 为 [`0x69a63ceCB9753CAe115Ae9a272586568e871d360`](https://scan.bohr.life/address/0x69a63ceCB9753CAe115Ae9a272586568e871d360)，[部署交易](https://scan.bohr.life/tx/0x6c855aa6f315d4af742e0099ade23a4e8c1e90b56802e81a372e55ea04b51750)。
+2026-10-08 用户调整：现有数据用于 Demo，工具读取计量缺口后置，不再阻止主网发布。业务冻结 `bbe06198b5722bf8452382d4ef16f565c94375e8`；主网五份合约已部署，实际手续费 0.12109314 BOT；独立 Worker 已发布。测试网 SkillMarket 为 [`0x69a63ceCB9753CAe115Ae9a272586568e871d360`](https://scan.bohr.life/address/0x69a63ceCB9753CAe115Ae9a272586568e871d360)，[部署交易](https://scan.bohr.life/tx/0x6c855aa6f315d4af742e0099ade23a4e8c1e90b56802e81a372e55ea04b51750)。
 
 | | 地址 | 说明 |
 | --- | --- | --- |

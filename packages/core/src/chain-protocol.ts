@@ -169,6 +169,16 @@ export interface PinnedDeployment {
 }
 
 export const pinnedDeployments: Readonly<Record<number, PinnedDeployment>> = {
+  "677": {
+    "chainId": 677,
+    "contracts": {
+      "KeyRegistry": "0xB4Ce21215B5391BE78eE57B06bc62565A15612Fc",
+      "ShareRegistry": "0x09d4E24eF0b1A40bBEC8077a5604cD9b9bBa28A6",
+      "SkillRegistry": "0x5B883c195AfE86f7D380a1f7d5a305f1807B5702",
+      "UsageStats": "0xa36A4775840b4C5730fA6c3d87D6F877c48ce2aB"
+    },
+    "market": "0x58C501431532E0e69703587194E3376A804F4A23"
+  },
   "968": {
     "chainId": 968,
     "contracts": {
