@@ -143,3 +143,19 @@ test('time spans read naturally', () => {
   assert.equal(formatSpan(20 * day), '3 周');
   assert.equal(formatSpan(90 * day), '3 个月');
 });
+
+test('a family tree lists each parent before its children', async () => {
+  const { lineageRows } = await import('../app/src/renderer/src/skill-library.mjs');
+  const node = (skillId, parentSkillId, depth) => ({ skillId, parentSkillId, depth });
+  const rows = lineageRows([node('1', null, 0), node('3', '1', 1), node('7', '1', 1), node('12', '3', 2)]);
+  assert.deepEqual(rows.map(row => [row.skillId, row.depth]), [['1', 0], ['3', 1], ['12', 2], ['7', 1]]);
+});
+
+test('the weekly trend scales to its tallest week, and an empty week sits on the baseline', async () => {
+  const { trendPoints, percent } = await import('../app/src/renderer/src/skill-library.mjs');
+  const points = trendPoints([{ start: 'a', invocations: 0 }, { start: 'b', invocations: 5 }, { start: 'c', invocations: 10 }], { width: 120, height: 60, pad: 10 });
+  assert.deepEqual(points.map(point => [point.x, point.y]), [[10, 50], [60, 30], [110, 10]]);
+  assert.deepEqual(trendPoints([{ start: 'a', invocations: 0 }], { width: 120, height: 60, pad: 10 }).map(point => point.y), [50]);
+  assert.equal(percent(1, 8), '13%');
+  assert.equal(percent(1, 0), null);
+});

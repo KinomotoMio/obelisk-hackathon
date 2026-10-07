@@ -2,7 +2,7 @@
 <!-- SPDX-License-Identifier: AGPL-3.0-only -->
 
 <script setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { state } from '../store.js';
 import { fmtListTime } from '../utils.js';
@@ -23,6 +23,14 @@ const sections = computed(() => [
 
 function openSkill(skill) {
   router.push({ name: 'SkillDetail', params: { name: skill.name } });
+}
+
+// Minimal market browsing: open anyone's minted Skill by its id.
+const chainSkillId = ref('');
+const chainSkillIdValid = computed(() => /^[1-9][0-9]{0,30}$/.test(chainSkillId.value.trim().replace(/^#/, '')));
+function openChainSkill() {
+  if (!chainSkillIdValid.value) return;
+  router.push({ name: 'MintedSkill', params: { skillId: chainSkillId.value.trim().replace(/^#/, '') } });
 }
 
 function fingerprintOf(skill) {
@@ -86,7 +94,7 @@ function fingerprintOf(skill) {
         </section>
       </template>
 
-      <div v-else-if="state.skillsLoaded && !state.skillsError" class="skill-empty">
+      <div v-if="!sections.length && state.skillsLoaded && !state.skillsError" class="skill-empty">
         <div class="skill-empty-eyebrow"><span class="diamond"></span><span>还没有 Skill</span></div>
         <div class="skill-empty-title">好的 Skill 是从已经发生的工作里沉淀出来的。</div>
         <div class="skill-empty-body">
@@ -97,6 +105,18 @@ function fingerprintOf(skill) {
           <PromptCopyButton label="复制沉淀 Skill 的 prompt" :prompt="DISTILL_EXAMPLE_PROMPT" variant="primary" />
         </div>
       </div>
+
+      <section v-if="state.skillsLoaded" class="skill-section chain-open" data-section="chain">
+        <div class="detail-section-divider"><span>链上的 Skill</span></div>
+        <form class="chain-open-form" @submit.prevent="openChainSkill">
+          <span class="chain-open-hint">按 Skill 编号查看任何人铸造的 Skill：真实调用、实测场景和族谱。</span>
+          <label class="chain-open-field">
+            <span class="hash">#</span>
+            <input v-model="chainSkillId" inputmode="numeric" placeholder="Skill 编号" aria-label="Skill 编号" />
+          </label>
+          <button class="chain-open-btn" type="submit" :disabled="!chainSkillIdValid">打开</button>
+        </form>
+      </section>
     </div>
   </div>
 </template>
@@ -144,6 +164,30 @@ function fingerprintOf(skill) {
 .skill-card-row:hover .skill-card-right { color: var(--fg-2); }
 .skill-card-time { font-family: var(--font-mono); font-size: 10.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .skill-card-right svg { width: 14px; height: 14px; }
+
+/* Open a minted Skill by id */
+.chain-open-form { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.chain-open-hint { flex: 1; min-width: 220px; font-size: var(--text-sm); color: var(--muted); }
+.chain-open-field {
+  display: inline-flex; align-items: center; gap: 4px;
+  height: 28px; padding: 0 10px; width: 140px;
+  background: rgba(0,0,0,0.3); border: 1px solid var(--hairline-strong); border-radius: 5px;
+  transition: all 0.12s;
+}
+.chain-open-field:focus-within { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(167,139,250,0.12); }
+.chain-open-field .hash { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+.chain-open-field input {
+  flex: 1; min-width: 0; border: 0; outline: 0; background: transparent;
+  font-family: var(--font-mono); font-size: 12px; color: var(--fg);
+}
+.chain-open-field input::placeholder { color: var(--muted-2); font-family: var(--font-sans); }
+.chain-open-btn {
+  height: 28px; padding: 0 12px; border-radius: 5px;
+  border: 1px solid var(--hairline-strong); background: var(--surface);
+  color: var(--fg-2); font-size: var(--text-sm); transition: all 0.1s;
+}
+.chain-open-btn:not(:disabled):hover { background: var(--surface-strong); color: var(--fg); }
+.chain-open-btn:disabled { opacity: 0.5; }
 
 /* Empty state: the same voice as the Recap empty state */
 .skill-empty {

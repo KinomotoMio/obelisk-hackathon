@@ -209,6 +209,10 @@ onUnmounted(() => {
             <h3 class="skill-panel-title">
               <span>已铸造的版本</span>
               <span class="count">{{ versions.length }}</span>
+              <router-link
+                class="minted-link"
+                :to="{ name: 'MintedSkill', params: { skillId: versions[0].mint.skillId } }"
+              >真实调用与族谱 →</router-link>
             </h3>
             <div v-for="version in versions" :key="version.fingerprint" class="version" :data-version="version.label">
               <div class="version-head">
@@ -406,6 +410,8 @@ onUnmounted(() => {
 }
 .version-meta .dot { width: 2px; height: 2px; background: var(--muted-2); border-radius: 50%; }
 .chain-link { color: var(--chain); text-decoration: none; }
+.minted-link { margin-left: auto; font-size: var(--text-sm); font-weight: 400; color: var(--accent-2); text-decoration: none; }
+.minted-link:hover { text-decoration: underline; text-underline-offset: 2px; }
 .chain-link:hover { text-decoration: underline; text-underline-offset: 2px; }
 .version-warning { font-size: var(--text-sm); color: var(--warn); }
 

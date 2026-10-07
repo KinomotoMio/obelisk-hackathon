@@ -18,6 +18,7 @@ const RecapExport = () => import('./views/RecapExport.vue');
 const Settings = () => import('./views/Settings.vue');
 const SkillList = () => import('./views/SkillList.vue');
 const SkillDetail = () => import('./views/SkillDetail.vue');
+const SkillChainDetail = () => import('./views/SkillChainDetail.vue');
 
 const routes = [
   {
@@ -73,6 +74,12 @@ const routes = [
     path: '/skills',
     name: 'SkillList',
     component: SkillList
+  },
+  {
+    path: '/skills/minted/:skillId',
+    name: 'MintedSkill',
+    component: SkillChainDetail,
+    props: true
   },
   {
     path: '/skills/:name',

@@ -137,3 +137,55 @@ export function provenanceCard(provenance, sessions, sourceName = id => id) {
     corrections: evidence.flatMap(entry => entry.corrections.map(text => ({ text, number: entry.number }))),
   };
 }
+
+// --- Minted Skill detail (#19) ----------------------------------------------
+
+/** `86%`, or null when there is nothing to divide by. */
+export function percent(part, whole) {
+  return whole > 0 ? `${Math.round((part / whole) * 100)}%` : null;
+}
+
+/** The local library's mint of a chain Skill, when this user minted it here. */
+export function localMintOf(summaries, chainId, skillId) {
+  return summaries.find(summary => {
+    const mint = summary.latestVersion?.mint;
+    return mint && mint.skillId === skillId && mint.chainId === chainId;
+  }) ?? null;
+}
+
+/**
+ * A family tree as rows, parents before children in mint order, each with its
+ * depth below the root. Nodes whose parent is missing (a truncated tree) are
+ * kept at the depth the service gave them.
+ */
+export function lineageRows(nodes) {
+  const children = new Map();
+  const ids = new Set(nodes.map(node => node.skillId));
+  for (const node of nodes) {
+    const parent = node.parentSkillId && ids.has(node.parentSkillId) ? node.parentSkillId : null;
+    if (!children.has(parent)) children.set(parent, []);
+    children.get(parent).push(node);
+  }
+  const rows = [];
+  const visit = (node, depth) => {
+    rows.push({ ...node, depth });
+    for (const child of children.get(node.skillId) ?? []) visit(child, depth + 1);
+  };
+  for (const root of children.get(null) ?? []) visit(root, root.depth);
+  return rows;
+}
+
+/**
+ * Points of a weekly trend line in a `width` x `height` box with `pad` inside
+ * it, oldest week on the left. A flat zero line sits on the bottom.
+ */
+export function trendPoints(weeks, { width = 800, height = 110, pad = 12 } = {}) {
+  if (!weeks.length) return [];
+  const max = Math.max(1, ...weeks.map(week => week.invocations));
+  const step = weeks.length > 1 ? (width - pad * 2) / (weeks.length - 1) : 0;
+  return weeks.map((week, index) => ({
+    x: Math.round(pad + step * index),
+    y: Math.round(height - pad - ((height - pad * 2) * week.invocations) / max),
+    ...week,
+  }));
+}

@@ -222,6 +222,8 @@ const sceneLabels = {
   'v1:task/release': ['task', '任务类型', '构建与发布'],
   'v1:artifact/script': ['artifact', '产出物', '脚本与检查清单'],
   'v1:domain/devops': ['domain', '技术领域', '运维与基础设施'],
+  'v1:domain/mobile': ['domain', '技术领域', '移动端'],
+  'v1:domain/frontend': ['domain', '技术领域', '前端与交互'],
 };
 
 function describeScene(tag) {
@@ -235,12 +237,79 @@ function describeScene(tag) {
     : { tag, kind: 'unknown', dimension: null, dimensionLabel: null, label: tag };
 }
 
+// Minted Skills as the main process hands them over (app/src/main/skill-market.ts).
+const AUTHOR = '0xA1c94E0b7D3f2b6E1a0C9d58F3e4b7A2c1d93be2';
+const OTHER = '0xD4e81b6C0a3F5e2d9B7c4A1f0E3d2C5b6A7f8e90';
+function weeks(counts) {
+  return counts.map((invocations, index) => ({ start: new Date(Date.UTC(2026, 7, 17 + index * 7)).toISOString().slice(0, 10), invocations }));
+}
+function chainScene(tag) {
+  const scene = describeScene(tag);
+  return { tag, kind: scene.kind, label: scene.label, dimensionLabel: scene.dimensionLabel };
+}
+const lineageNodes = [
+  { skillId: '3', parentSkillId: null, depth: 0, author: AUTHOR, name: 'release-checklist', versionCount: 2, createdAt: '2026-10-02T10:00:00.000Z' },
+  { skillId: '12', parentSkillId: '3', depth: 1, author: OTHER, name: 'mobile-release-checklist', versionCount: 1, createdAt: '2026-10-05T10:00:00.000Z' },
+  { skillId: '15', parentSkillId: '3', depth: 1, author: OTHER, name: null, versionCount: 1, createdAt: '2026-10-06T10:00:00.000Z' },
+  { skillId: '21', parentSkillId: '12', depth: 2, author: AUTHOR, name: 'app-store-review-checklist', versionCount: 1, createdAt: '2026-10-06T12:00:00.000Z' },
+];
+const chainSkills = {
+  3: {
+    chainId: 968, skillId: '3', author: AUTHOR, parentSkillId: null, createdAt: '2026-10-02T10:00:00.000Z',
+    birthScenes: ['v1:task/release', 'v1:artifact/script', 'v1:domain/devops'].map(chainScene),
+    versionCount: 2,
+    version: { index: 1, fingerprint: views['release-checklist'].versions[1].fingerprint, publishedAt: '2026-10-05T10:00:00.000Z' },
+    name: 'release-checklist', description: views['release-checklist'].description,
+    serviceUrl: 'http://127.0.0.1:18787', explorerUrl: 'https://scan.bohr.life',
+    usage: {
+      totalInvocations: 46, uniqueWallets: 5, uniqueWalletsExact: true, lastReportAt: '2026-10-07T02:00:00.000Z',
+      scenes: [], outcomesReported: false,
+      results: { smooth: 0, rework: 0, failed: 0, unknown: 0, judged: 0, smoothRate: null, toolErrors: 0, userCorrections: 0 },
+      trend: { available: true, weeks: weeks([0, 0, 0, 0, 0, 3, 15, 28]) },
+      versions: [
+        { index: 0, fingerprint: views['release-checklist'].versions[0].fingerprint, publishedAt: '2026-10-02T10:00:00.000Z', totalInvocations: 9, uniqueWallets: 2 },
+        { index: 1, fingerprint: views['release-checklist'].versions[1].fingerprint, publishedAt: '2026-10-05T10:00:00.000Z', totalInvocations: 37, uniqueWallets: 5 },
+      ],
+    },
+    usageError: null,
+    lineage: { rootSkillId: '3', path: ['3'], truncated: false, nodes: lineageNodes },
+    lineageError: null,
+  },
+  12: {
+    chainId: 968, skillId: '12', author: OTHER, parentSkillId: '3', createdAt: '2026-10-05T10:00:00.000Z',
+    birthScenes: ['v1:task/release', 'v1:domain/mobile', 'user:artifact/应用商店审核清单'].map(chainScene),
+    versionCount: 1,
+    version: { index: 0, fingerprint: 'e7'.repeat(32), publishedAt: '2026-10-05T10:00:00.000Z' },
+    name: 'mobile-release-checklist', description: '适用于所有发布场景：Web、移动端、桌面端和小程序，一份清单全部覆盖。',
+    serviceUrl: 'http://127.0.0.1:18787', explorerUrl: 'https://scan.bohr.life',
+    usage: {
+      totalInvocations: 1284, uniqueWallets: 312, uniqueWalletsExact: true, lastReportAt: '2026-10-07T02:00:00.000Z',
+      scenes: [
+        { ...chainScene('v1:domain/mobile'), invocations: 918 },
+        { ...chainScene('v1:task/release'), invocations: 201 },
+        { ...chainScene('v1:domain/frontend'), invocations: 97 },
+        { tag: null, kind: 'unknown', label: null, dimensionLabel: null, invocations: 68 },
+      ],
+      outcomesReported: true,
+      results: { smooth: 888, rework: 102, failed: 42, unknown: 252, judged: 1032, smoothRate: 888 / 1032, toolErrors: 77, userCorrections: 180 },
+      trend: { available: true, weeks: weeks([41, 60, 84, 120, 156, 190, 231, 268]) },
+      versions: [{ index: 0, fingerprint: 'e7'.repeat(32), publishedAt: '2026-10-05T10:00:00.000Z', totalInvocations: 1284, uniqueWallets: 312 }],
+    },
+    usageError: null,
+    lineage: { rootSkillId: '3', path: ['3', '12'], truncated: false, nodes: lineageNodes },
+    lineageError: null,
+  },
+};
+
 let library = [];
 
 function registerHandlers() {
   ipcMain.handle('skills:list', () => library.map(name => summary(views[name])));
   ipcMain.handle('skills:get', (_event, name) => (library.includes(name) ? views[name] : null));
   ipcMain.handle('skills:describe-scenes', (_event, tags) => tags.map(describeScene));
+  ipcMain.handle('skills:chain-detail', (_event, skillId) => (chainSkills[skillId]
+    ? { ok: true, skill: chainSkills[skillId] }
+    : { ok: false, error: { code: 'unknown_skill', message: `No minted Skill ${skillId}` } }));
   ipcMain.handle('db:getSessions', () => Object.keys(sessions).map(sessionSummary));
   ipcMain.handle('db:getSessionsByIds', (_event, ids) => ids.filter(id => sessions[id]).map(sessionSummary));
   ipcMain.handle('db:getSessionMessages', (_event, id) => (sessions[id] ? sessionMessages(id) : []));
@@ -340,7 +409,7 @@ async function run() {
   library = Object.keys(views);
   win.webContents.send('obelisk:skills-updated', '/skills/job-application-materials/skill.json');
   await waitFor(win.webContents, `document.querySelectorAll('.skill-card-row').length === 3`, 'Skill list after an update');
-  const sections = await js(win, `[...document.querySelectorAll('.skill-section')].map(section => ({
+  const sections = await js(win, `[...document.querySelectorAll('.skill-section:not(.chain-open)')].map(section => ({
     key: section.dataset.section,
     names: [...section.querySelectorAll('.skill-card-row')].map(row => row.dataset.skill),
   }))`);
@@ -450,7 +519,67 @@ async function run() {
   assert(minted.bodyLabel === '正文 · v2', `the body is labelled with the version it is (${minted.bodyLabel})`);
   await screenshot(win, 'skill-tab-minted.png');
 
+  // #19: the Skill detail page of a minted Skill, reached from my own Skill.
+  await js(win, `document.querySelector('.minted-link').click()`);
+  await waitFor(win.webContents, `document.querySelector('.minted-detail[data-skill-id="3"]')`, 'minted Skill #3');
+  const mine = await js(win, `({
+    text: document.querySelector('.minted-detail').innerText,
+    invocations: document.querySelector('[data-kpi="invocations"] .big').textContent.trim(),
+    smooth: document.querySelector('[data-kpi="smooth"]').innerText,
+    lineage: [...document.querySelectorAll('.lineage-node')].map(el => el.dataset.lineage),
+    current: document.querySelector('.lineage-node.current')?.dataset.lineage,
+    author: document.querySelector('.minted-header .chain-link')?.href,
+  })`);
+  assert(mine.text.includes('我的 Skill') && mine.text.includes('由 1 个 session 沉淀'), 'my own minted Skill links back to its draft and provenance');
+  assert(mine.invocations === '46' && mine.text.includes('来自 5 个钱包'), `real invocations and wallets are shown (${mine.invocations})`);
+  assert(mine.smooth.includes('—') && mine.smooth.includes('场景与顺利率统计尚未开启'), 'without outcome reports the smooth rate says it is not on, not 0%');
+  assert(mine.text.includes('实测场景统计尚未开启'), 'without scene reports the measured scenes say so');
+  assert(!/\b0%/.test(mine.text), 'no made-up zero percentages');
+  assert(JSON.stringify(mine.lineage) === JSON.stringify(['3', '12', '21', '15']) && mine.current === '3', `the family tree lists parents before children (${mine.lineage})`);
+  assert(mine.author === `https://scan.bohr.life/address/${AUTHOR}`, 'the author links to the explorer');
+  assert(mine.text.includes('v2') && mine.text.includes('v1'), 'every version is listed');
+  const fetchText = await clickCopy(win, '.minted-actions', '取用');
+  assert(fetchText === '/obelisk-skill-assets 取用 Skill #3「release-checklist」v2，帮我：', `"取用" names the Skill by id (${fetchText})`);
+  const deriveText = await clickCopy(win, '.minted-actions', '在此基础上修改');
+  assert(
+    deriveText === '/obelisk-distill 在 Skill #3「release-checklist」v2 的基础上改出一个新版本，铸造时记录父 Skill。我想改成：',
+    `"在此基础上修改" names the parent by id (${deriveText})`,
+  );
+  await js(win, `document.querySelector('.prompt-toast-close')?.click()`);
+  await screenshot(win, 'skill-detail-mine.png');
+
+  // Someone else's Skill, through the family tree, with scene and outcome reports.
+  await js(win, `document.querySelector('[data-lineage="12"]').click()`);
+  await waitFor(win.webContents, `document.querySelector('.minted-detail[data-skill-id="12"]')`, 'minted Skill #12');
+  const market = await js(win, `({
+    text: document.querySelector('.minted-detail').innerText,
+    smooth: document.querySelector('[data-kpi="smooth"] .big').textContent.trim(),
+    scenes: [...document.querySelectorAll('[data-panel="scenes"] .scene-name')].map(el => el.textContent.trim()),
+    trend: document.querySelectorAll('.trend-dot').length,
+  })`);
+  assert(!market.text.includes('我的 Skill'), "someone else's Skill is not marked as mine");
+  assert(market.smooth === '86%' && market.text.includes('基于 1032 次可判断的调用，另有 252 次无法判断'), `the smooth rate shows its sample (${market.smooth})`);
+  assert(JSON.stringify(market.scenes) === JSON.stringify(['移动端', '构建与发布', '前端与交互', '未命名的新标签']), `measured scenes are labelled (${market.scenes})`);
+  assert(market.text.includes('适用于所有发布场景') && market.text.includes('实测 71% 的调用来自「移动端」'), "the author's description sits next to what was measured");
+  assert(market.trend === 8, 'the weekly trend has one point per week');
+  assert(market.text.includes('新建') && market.text.includes('应用商店审核清单'), 'a user-created birth scene is marked new');
+  await screenshot(win, 'skill-detail-market.png');
+
+  // Open by Skill id from the list; an id that is not on chain says so.
+  await js(win, `window.location.hash = '#/skills'`);
+  await waitFor(win.webContents, `document.querySelector('.chain-open-field input')`, 'open by Skill id');
+  await js(win, `(() => {
+    const input = document.querySelector('.chain-open-field input');
+    input.value = '#404';
+    input.dispatchEvent(new Event('input'));
+  })()`);
+  await waitFor(win.webContents, `!document.querySelector('.chain-open-btn').disabled`, 'Skill id accepted');
+  await js(win, `document.querySelector('.chain-open-btn').click()`);
+  await waitFor(win.webContents, `document.querySelector('.skill-wrap .empty')?.textContent.includes('链上没有 Skill #404')`, 'unknown Skill id');
+  assert(true, 'a Skill id that is not on chain is reported plainly');
+
   // A Skill removed from the library.
+  await openSkill(win, 'release-checklist');
   library = library.filter(name => name !== 'release-checklist');
   win.webContents.send('obelisk:skills-updated', '/skills/release-checklist/skill.json');
   await waitFor(win.webContents, `document.querySelector('.skill-wrap .empty')?.textContent.includes('release-checklist')`, 'removed Skill');

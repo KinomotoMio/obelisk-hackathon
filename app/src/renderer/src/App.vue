@@ -50,7 +50,7 @@ const currentRouteType = computed(() => {
   if (name === 'Activity') return 'activity';
   if (name === 'Recap' || name === 'RecapDetail') return 'recap';
   if (name === 'Settings') return 'settings';
-  if (name === 'SkillList' || name === 'SkillDetail') return 'skills';
+  if (name === 'SkillList' || name === 'SkillDetail' || name === 'MintedSkill') return 'skills';
   return 'memory';
 });
 
@@ -103,6 +103,8 @@ const windowTitle = computed(() => {
     scopeText = 'Skill';
   } else if (route.name === 'SkillDetail') {
     scopeText = `Skill · ${route.params.name}`;
+  } else if (route.name === 'MintedSkill') {
+    scopeText = `Skill · #${route.params.skillId}`;
   } else if (route.name?.startsWith('Session')) {
     if (route.name === 'SessionDetail' || route.name === 'SubagentDetail') {
       const s = routeSession.value;
@@ -551,10 +553,10 @@ provide('recapGenerateOpen', recapGenerateOpen);
               <span v-if="route.name === 'Recap'" class="crumb terminal">Recap</span>
               <span v-if="route.name === 'Settings'" class="crumb terminal">Settings</span>
               <span v-if="route.name === 'SkillList'" class="crumb terminal">Skill</span>
-              <router-link v-if="route.name === 'SkillDetail'" class="crumb" to="/skills">Skill</router-link>
-              <template v-if="route.name === 'SkillDetail'">
+              <router-link v-if="route.name === 'SkillDetail' || route.name === 'MintedSkill'" class="crumb" to="/skills">Skill</router-link>
+              <template v-if="route.name === 'SkillDetail' || route.name === 'MintedSkill'">
                 <span class="crumb-sep">/</span>
-                <span class="crumb terminal">{{ route.params.name }}</span>
+                <span class="crumb terminal">{{ route.name === 'MintedSkill' ? `#${route.params.skillId}` : route.params.name }}</span>
               </template>
               <router-link v-if="route.name === 'RecapDetail'" class="crumb" to="/recap">Recap</router-link>
               <template v-if="route.name === 'RecapDetail'">
