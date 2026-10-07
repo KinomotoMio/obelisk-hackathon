@@ -25,6 +25,7 @@
     "test:electron:reader-state": "electron-vite build && electron --no-sandbox tests/electron-session-reader-state.mjs",
     "test:electron:file-refs": "electron-vite build && electron --no-sandbox tests/electron-file-references.mjs",
     "test:electron:skills": "electron-vite build && electron --no-sandbox tests/electron-skill-tab.mjs",
+    "test:electron:share": "electron-vite build && electron --no-sandbox tests/electron-share-tab.mjs",
     "test:electron:all": "electron-vite build && node tests/run-electron-suites.mjs"
   },
   "build": {

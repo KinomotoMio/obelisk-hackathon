@@ -16,6 +16,7 @@ const suites = [
   'electron-session-reader-state.mjs',
   'electron-file-references.mjs',
   'electron-skill-tab.mjs',
+  'electron-share-tab.mjs',
 ]
 
 const failed = []
