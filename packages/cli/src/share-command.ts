@@ -23,13 +23,12 @@ import {
   resolveServiceUrl,
   ServiceError,
   type ChainInfo,
-  type ShareInfo,
 } from '../../core/src/obelisk-service.ts';
 import { resolveObeliskPaths } from '../../core/src/paths.ts';
 import type { ScanHints } from '../../core/src/privacy-scan.ts';
 import { encryptShareContent, newShareId, sealContentKey } from '../../core/src/share-crypto.ts';
 import { ShareDrafts, UNLIMITED_OPENS, type SentShare, type ShareDraft, type ShareOutbox } from '../../core/src/share-drafts.ts';
-import { shareStateView } from '../../core/src/share-status.ts';
+import { isShareNumber, listSentShares, readShareInfo, sentShareView, sentSharesByNumber, shareNumber } from '../../core/src/share-status.ts';
 import {
   buildShareSnapshot,
   outlineMessages,
@@ -47,8 +46,8 @@ export const SHARE_USAGE = [
   '  obelisk share draft <session-id> --to <0x address> [--messages <from>-<to>|all] [--opens <n>|unlimited] [--expires <n>m|h|d]',
   '  obelisk share send <draft-id> [--redact all|none|<n>,<n>…] [--confirm]',
   '  obelisk share list [--to <0x address>]',
-  '  obelisk share status <draft-id|share-id>',
-  '  obelisk share revoke <draft-id|share-id> [--confirm]',
+  '  obelisk share status <draft-id|share-id|S-number>',
+  '  obelisk share revoke <draft-id|share-id|S-number> [--confirm]',
 ].join('\n');
 
 /** How long a CreateShare signature stays valid for the relay. */
@@ -473,19 +472,6 @@ function submitted(record: ShareDraft, outbox: ShareOutbox, explorer: string | n
 
 const SHARE_ID = /^0x[0-9a-fA-F]{64}$/;
 
-/** What a sent share looks like in `list`, `status`, and `revoke`. */
-function sentShareView(sent: SentShare | null, info: ShareInfo | null) {
-  return {
-    ...(sent ? { draft: sent.draftId } : {}),
-    shareId: sent?.shareId ?? info!.shareId,
-    title: sent?.title ?? null,
-    ...(sent ? { session: { id: sent.source.sessionId, provider: sent.source.provider }, messages: { from: sent.range.from, to: sent.range.to } } : {}),
-    recipient: sent?.recipient ?? getAddress(info!.recipient),
-    ...(info ? shareStateView(info) : {}),
-    ...(sent ? { sentAt: sent.sentAt, link: sent.link } : {}),
-  };
-}
-
 /** A sent share by draft id (as `send` printed it) or share id. */
 async function resolveSent(ref: string | undefined, deps: ShareCommandDeps): Promise<{ shareId: Hex; sent: SentShare | null }> {
   if (ref === undefined) throw new Error(SHARE_USAGE);
@@ -495,19 +481,16 @@ async function resolveSent(ref: string | undefined, deps: ShareCommandDeps): Pro
     const sent = (await store.listSent()).find((record) => record.shareId.toLowerCase() === shareId) ?? null;
     return { shareId, sent };
   }
+  if (isShareNumber(ref)) {
+    const matches = sentSharesByNumber(await store.listSent(), ref);
+    if (matches.length === 0) throw new Error(`No share numbered ${ref.trim().replace(/^#/, '').toUpperCase()} was sent from this computer; run \`obelisk share list\` to see the shares sent from here`);
+    if (matches.length > 1) throw new Error(`More than one share sent from this computer is numbered ${shareNumber(matches[0]!.shareId)}: ${matches.map((sent) => `draft ${sent.draftId} (to ${sent.recipient})`).join(', ')}; use the draft id instead`);
+    return { shareId: matches[0]!.shareId, sent: matches[0]! };
+  }
   const record = await store.load(ref);
   const sent = await store.sent(record.draftId);
   if (!sent) throw new Error(`Share draft ${record.draftId} has not been sent, so there is no share to look up; send it with \`obelisk share send ${record.draftId}\``);
   return { shareId: sent.shareId, sent };
-}
-
-async function readShareInfo(client: ObeliskServiceClient, chain: ChainInfo, shareId: Hex, sent: SentShare | null): Promise<ShareInfo> {
-  if (sent && sent.chainId !== chain.chainId) {
-    throw new Error(`Share ${shareId} was sent on ${networkLabel(sent.chainId)}, but the Obelisk online service at ${client.baseUrl} serves ${networkLabel(chain.chainId)}`);
-  }
-  const info = await client.share(shareId);
-  if (!info) throw new Error(`${networkLabel(chain.chainId)} has no share ${shareId}`);
-  return info;
 }
 
 async function list(args: string[], deps: ShareCommandDeps) {
@@ -515,26 +498,7 @@ async function list(args: string[], deps: ShareCommandDeps) {
   if (positional.length !== 0) throw new Error(SHARE_USAGE);
   const to = flags.get('--to');
   if (to !== undefined && (typeof to !== 'string' || !isAddress(to, { strict: false }))) throw new Error(`--to must be a wallet address (0x followed by 40 hex characters), got ${String(to)}`);
-  const records = (await drafts(deps).listSent()).filter((sent) => to === undefined || getAddress(sent.recipient) === getAddress(to as string));
-
-  const client = service(deps);
-  let chain: ChainInfo | null = null;
-  let serviceError: string | null = null;
-  if (records.length > 0) {
-    try {
-      chain = await client.chain();
-    } catch (error) {
-      serviceError = error instanceof Error ? error.message : String(error);
-    }
-  }
-  const shares = await Promise.all(records.map(async (sent) => {
-    if (!chain) return { ...sentShareView(sent, null), state: 'unknown', error: serviceError };
-    try {
-      return sentShareView(sent, await readShareInfo(client, chain, sent.shareId, sent));
-    } catch (error) {
-      return { ...sentShareView(sent, null), state: 'unknown', error: error instanceof Error ? error.message : String(error) };
-    }
-  }));
+  const { shares, chain } = await listSentShares(drafts(deps), service(deps), { to: to === undefined ? undefined : getAddress(to as string) });
   return {
     shares,
     ...(chain ? { network: networkLabel(chain.chainId) } : {}),

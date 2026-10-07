@@ -33,9 +33,12 @@ ask for one.
 | `obelisk share send <draft-id> --redact all\|none\|<n>,<n>` | **Preview only.** Records the redaction choice and shows recipient, rules, and redactions. | No |
 | `obelisk share send <draft-id> --confirm` | Sends exactly what the last preview showed: redacts, encrypts for the recipient, uploads, and writes the share on chain. Returns the link. | Yes |
 | `obelisk share list [--to <0x address>]` | Shares sent from this computer, newest first, each with its state and the chain record behind it. | No |
-| `obelisk share status <draft-id\|share-id>` | One share's state plus every open receipt with its time and explorer link. | No |
-| `obelisk share revoke <draft-id\|share-id>` | **Preview only.** Shows the share and what revoking means. | No |
-| `obelisk share revoke <draft-id\|share-id> --confirm` | Revokes the share on chain; from then on nobody can open it. Cannot be undone. | Yes |
+| `obelisk share status <draft-id\|share-id\|S-number>` | One share's state plus every open receipt with its time and explorer link. | No |
+| `obelisk share revoke <draft-id\|share-id\|S-number>` | **Preview only.** Shows the share and what revoking means. | No |
+| `obelisk share revoke <draft-id\|share-id\|S-number> --confirm` | Revokes the share on chain; from then on nobody can open it. Cannot be undone. | Yes |
+
+A share's `number` (`S-3F2A`) is the short name the reader page watermark and
+the App show; prompts copied from the App name shares by it (`#S-3F2A`).
 
 Each command prints one JSON object; `next` says what to do next. Errors use the
 `{ "error": ... }` envelope and exit with code 1. Message numbers are the
@@ -61,9 +64,9 @@ from the App means the same messages here.
    `obelisk share outline <session-id>` and propose a range; confirm it with the
    user if it is not obvious.
 3. **Draft.** Run `obelisk share draft <session-id> --to <address> --messages
-   <from>-<to> --opens <n> --expires <duration>` with the user's rules ("只能打开
-   1 次" is `--opens 1`, "24 小时内有效" is `--expires 24h`, "不限次数" is
-   `--opens unlimited`).
+   <from>-<to> --opens <n> --expires <duration>` with the user's rules ("限 1 次"
+   or "只能打开 1 次" is `--opens 1`, "24 小时内有效" is `--expires 24h`, "7 天内有效"
+   is `--expires 7d`, "不限次数" is `--opens unlimited`).
 4. **Privacy check.** Show the findings as a short numbered list: the label and
    `where` of each, nothing else. Ask whether to redact all of them ("全部打码")
    or which ones. Recommend redacting all.
@@ -101,9 +104,12 @@ open of one share, run `obelisk share status <draft-id>` and list `receipts`.
 
 ## "Revoke the share I sent to 0x…" (撤回我发给 0x… 的分享「…」)
 
-1. **Find the share.** Run `obelisk share list --to <address>`. Match the
-   user's description against `title`, `sentAt`, and `messages`. If several
-   match, or none does, show the candidates and ask; never guess which one to
+1. **Find the share.** If the request names a share number (`#S-3F2A`, as
+   the App's revoke prompt does), use it: `obelisk share revoke S-3F2A`
+   finds it, and refuses when two shares sent from here have that number.
+   Otherwise run `obelisk share list --to <address>` and match the user's
+   description against `title`, `sentAt`, and `messages`. If several match,
+   or none does, show the candidates and ask; never guess which one to
    revoke.
 2. **Preview.** Run `obelisk share revoke <draft>` and show the user the
    share's title, recipient, and current state, and that revoking cannot be

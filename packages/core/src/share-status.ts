@@ -5,9 +5,10 @@
 // states the Share tab shows, derived from the on-chain record the online
 // service serves, plus the chain record that backs it.
 
-import type { Hex } from 'viem';
+import { getAddress, type Address, type Hex } from 'viem';
 
-import type { ShareInfo } from './obelisk-service.ts';
+import { networkLabel, type ChainInfo, type ObeliskServiceClient, type ShareInfo } from './obelisk-service.ts';
+import { UNLIMITED_OPENS, type SentShare, type ShareDrafts } from './share-drafts.ts';
 
 /** 未读 / 已读 / 已过期 / 已撤回. */
 export type ShareState = 'unread' | 'read' | 'expired' | 'revoked';
@@ -49,4 +50,89 @@ export function shareStateView(info: ShareInfo): ShareStateView {
     revokedAt: info.revokedAt,
     record,
   };
+}
+
+/**
+ * The short number people use for a share, as the reader page watermark shows
+ * it: `S-` and the first four hex digits of the share id (`#S-3F2A`).
+ */
+export function shareNumber(shareId: string): string {
+  return `S-${shareId.slice(2, 6).toUpperCase()}`;
+}
+
+const SHARE_NUMBER = /^#?S-([0-9a-f]{4})$/i;
+
+/** Whether `ref` is a share number such as `S-3F2A` or `#S-3F2A`. */
+export function isShareNumber(ref: string): boolean {
+  return SHARE_NUMBER.test(ref.trim());
+}
+
+/**
+ * The sent shares whose share id starts with that number. Four hex digits are
+ * short enough to collide, so callers must refuse when more than one matches.
+ */
+export function sentSharesByNumber(sent: SentShare[], ref: string): SentShare[] {
+  const match = SHARE_NUMBER.exec(ref.trim());
+  if (!match) return [];
+  const prefix = `0x${match[1]!.toLowerCase()}`;
+  return sent.filter((record) => record.shareId.toLowerCase().startsWith(prefix));
+}
+
+/** A sent share as `obelisk share list/status/revoke` and the App's Share tab show it. */
+export function sentShareView(sent: SentShare | null, info: ShareInfo | null) {
+  const shareId = sent?.shareId ?? info!.shareId;
+  return {
+    ...(sent ? { draft: sent.draftId } : {}),
+    shareId,
+    number: shareNumber(shareId),
+    title: sent?.title ?? null,
+    ...(sent ? { session: { id: sent.source.sessionId, provider: sent.source.provider }, messages: { from: sent.range.from, to: sent.range.to } } : {}),
+    recipient: sent?.recipient ?? getAddress(info!.recipient),
+    ...(sent ? { rules: { opens: sent.maxOpens === UNLIMITED_OPENS ? 'unlimited' as const : sent.maxOpens, expiresAt: sent.expiresAt } } : {}),
+    ...(info ? shareStateView(info) : {}),
+    ...(sent ? { sentAt: sent.sentAt, link: sent.link } : {}),
+  };
+}
+
+/** The chain record of one share, refusing a share sent on another network. */
+export async function readShareInfo(client: ObeliskServiceClient, chain: ChainInfo, shareId: Hex, sent: SentShare | null): Promise<ShareInfo> {
+  if (sent && sent.chainId !== chain.chainId) {
+    throw new Error(`Share ${shareId} was sent on ${networkLabel(sent.chainId)}, but the Obelisk online service at ${client.baseUrl} serves ${networkLabel(chain.chainId)}`);
+  }
+  const info = await client.share(shareId);
+  if (!info) throw new Error(`${networkLabel(chain.chainId)} has no share ${shareId}`);
+  return info;
+}
+
+type SentShareFields = Omit<ReturnType<typeof sentShareView>, 'state'>;
+
+export type SentShareListing =
+  | (SentShareFields & { state: ShareState })
+  | (SentShareFields & { state: 'unknown'; error: string | null });
+
+/**
+ * Every share sent from this computer, newest first, each with its state from
+ * the chain. A share whose state cannot be read (service unreachable, another
+ * network) is listed as `unknown` with the reason, never dropped.
+ */
+export async function listSentShares(store: ShareDrafts, client: ObeliskServiceClient, options: { to?: Address } = {}): Promise<{ shares: SentShareListing[]; chain: ChainInfo | null }> {
+  const records = (await store.listSent()).filter((sent) => options.to === undefined || getAddress(sent.recipient) === getAddress(options.to));
+  let chain: ChainInfo | null = null;
+  let serviceError: string | null = null;
+  if (records.length > 0) {
+    try {
+      chain = await client.chain();
+    } catch (error) {
+      serviceError = error instanceof Error ? error.message : String(error);
+    }
+  }
+  const shares = await Promise.all(records.map(async (sent): Promise<SentShareListing> => {
+    if (!chain) return { ...sentShareView(sent, null), state: 'unknown', error: serviceError };
+    try {
+      return sentShareView(sent, await readShareInfo(client, chain, sent.shareId, sent)) as SentShareListing;
+    } catch (error) {
+      return { ...sentShareView(sent, null), state: 'unknown', error: error instanceof Error ? error.message : String(error) };
+    }
+  }));
+  return { shares, chain };
 }

@@ -98,6 +98,16 @@ test('分享状态：未读 / 已读及时间 / 已过期，附链上记录', { 
   assert.equal(status.json.state, 'read');
   assert.deepEqual(status.json.receipts, [{ open: 1, openedAt: '2026-10-07T13:03:00.000Z', explorerUrl: r.record.explorerUrl }]);
   assert.equal((await run('share', 'status', read.shareId)).json.draft, read.draft, 'a share id finds the same record');
+
+  // The share number the reader page watermark and the App show (#S-3F2A) finds it too.
+  const number = `S-${read.shareId.slice(2, 6).toUpperCase()}`;
+  assert.equal(r.number, number);
+  assert.deepEqual(r.rules, { opens: 1, expiresAt: r.expiresAt });
+  assert.equal((await run('share', 'status', `#${number}`)).json.draft, read.draft, 'a share number finds the same record');
+  assert.equal((await run('share', 'status', number.toLowerCase())).json.draft, read.draft);
+  const missing = await run('share', 'status', number === 'S-0000' ? 'S-FFFF' : 'S-0000');
+  assert.equal(missing.status, 1);
+  assert.match(missing.json.error, /No share numbered S-[0-9A-F]{4} was sent from this computer; run `obelisk share list`/);
 });
 
 test('撤回：先预览、确认后上链；已撤回的不再重复；别人的钱包不能撤回', { skip }, async (t) => {
