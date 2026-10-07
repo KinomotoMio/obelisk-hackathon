@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#0a0b14">
+  <title>项目预览 · Obelisk</title>
+  <meta name="description" content="Obelisk 的演示闭环：私密分享、已读回执、沉淀并铸造 Skill、真实调用、衍生与佐证，每个角色看到什么，链上记下什么。">
+  <link rel="icon" href="/site/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/site/site.css">
+  <link rel="stylesheet" href="/preview/preview.css">
+  <script type="module" src="/preview/app.js"></script>
+</head>
+<body>
+  <header class="site-top">
+    <a class="site-brand" href="/market">
+      <svg class="site-logo" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 15 7v14.5H9V7z" fill="currentColor" opacity=".9"/><path d="M6.5 21.5h11" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <span>Obelisk</span>
+    </a>
+    <nav class="site-nav" aria-label="页面">
+      <a href="/market">Skill 市场</a>
+      <a href="/preview" aria-current="page">项目预览</a>
+    </nav>
+    <span class="site-net" data-site-network hidden></span>
+  </header>
+
+  <main class="site-main pv" id="main">
+    <section class="pv-intro">
+      <h1>项目预览：多角色全流程</h1>
+      <p class="pv-lead">同时看到多个角色各自看到的画面，以及链上发生的每一笔记录。按"演示闭环"剧本逐步播放，用 ◀ ▶ 或左侧步骤切换，点角色只看他的画面。</p>
+      <div class="pv-source" id="pv-source" hidden>
+        <span class="pv-badge" id="pv-source-label"></span>
+        <span id="pv-source-note"></span>
+      </div>
+    </section>
+
+    <section class="pv-stage" id="pv-stage" aria-label="演示闭环" hidden>
+      <div class="pv-bar">
+        <span class="pv-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="pv-script">剧本：<b id="pv-title">演示闭环</b></span>
+        <span class="pv-badge" id="pv-bar-label"></span>
+        <span class="pv-spacer"></span>
+        <div class="pv-pager" role="group" aria-label="切换步骤">
+          <button type="button" class="pv-nav" id="pv-prev" aria-label="上一步">◀</button>
+          <span class="pv-count mono" id="pv-count" aria-live="polite"></span>
+          <button type="button" class="pv-nav" id="pv-next" aria-label="下一步">▶</button>
+        </div>
+      </div>
+
+      <div class="pv-body">
+        <aside class="pv-card pv-steps-card" aria-label="剧本步骤">
+          <h2 class="pv-h">剧本步骤</h2>
+          <ol class="pv-steps" id="pv-steps"></ol>
+        </aside>
+
+        <div class="pv-center">
+          <div class="pv-rolebar" id="pv-rolebar" role="group" aria-label="切换角色"></div>
+          <header class="pv-step-head">
+            <span class="pv-step-n" id="pv-step-n"></span>
+            <div>
+              <h2 class="pv-step-title" id="pv-step-title"></h2>
+              <p class="pv-step-point" id="pv-step-point"></p>
+              <p class="pv-step-prov" id="pv-step-prov" hidden></p>
+            </div>
+          </header>
+          <div class="pv-screens" id="pv-screens"></div>
+
+          <section class="pv-card pv-timeline" aria-labelledby="pv-tl-h">
+            <div class="pv-tl-head">
+              <h2 class="pv-h" id="pv-tl-h">链上时间线</h2>
+              <span class="pv-tl-legend" id="pv-tl-legend"></span>
+            </div>
+            <table class="pv-tl">
+              <thead><tr><th scope="col">时间</th><th scope="col">角色</th><th scope="col">动作</th><th scope="col">记录</th></tr></thead>
+              <tbody id="pv-tl-rows"></tbody>
+            </table>
+            <p class="pv-tl-empty" id="pv-tl-empty" hidden>这一步没有新的链上记录。</p>
+          </section>
+        </div>
+
+        <aside class="pv-card pv-roles-card" aria-label="角色">
+          <h2 class="pv-h">角色 · 点击切换</h2>
+          <div class="pv-roles" id="pv-roles"></div>
+          <h2 class="pv-h pv-h-gap">运行方式</h2>
+          <div class="pv-modes">
+            <span class="pv-pill acc">剧本</span>
+            <span class="pv-pill dim">真实 AI 运行</span>
+            <span class="pv-pill dim">手动操作</span>
+          </div>
+          <p class="pv-note" id="pv-roles-note"></p>
+        </aside>
+      </div>
+    </section>
+
+    <section class="pv-card pv-status" id="pv-status">
+      <p id="pv-status-text">正在读取剧本…</p>
+      <noscript><p>这个页面需要启用 JavaScript。</p></noscript>
+    </section>
+
+    <section class="pv-how" aria-label="这些数据怎么来">
+      <div class="pv-how-item">
+        <h2>链上可核对</h2>
+        <p>分享规则、打开回执、Skill 铸造和调用统计都写在 BOT Chain 上，任何人都可以在区块浏览器里核对。</p>
+      </div>
+      <div class="pv-how-item">
+        <h2>内容不上链</h2>
+        <p>session 内容在作者的电脑上加密，只有指定接收者能在浏览器里解开。链上只有规则、指纹和计数。</p>
+      </div>
+      <div class="pv-how-item">
+        <h2>真实运行替换示意</h2>
+        <p>Playground 让模拟用户在一台电脑上走完同一个剧本，产生真实的 AI 运行和链上交易，并留下出处记录。跑完后，本页换成那次运行的截图和数据。</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-foot">
+    <p>Obelisk：把和 AI 协作的过程变成可以私密分享、可以沉淀为 Skill、可以被验证的记录。</p>
+    <p class="muted">键盘 ← → 切换步骤。本页只读取这个服务公开的数据。</p>
+  </footer>
+</body>
+</html>
