@@ -26,7 +26,9 @@
     "executionCapBOT": "0.25",
     "actualDeploymentBOT": "0.12109314",
     "context": "User configured funded deployment wallet and replied that it holds 0.5 BOT; operator announced 0.25 BOT maximum, preserving half.",
-    "actualTotalBOT": "0.13229802"
+    "actualTotalBOT": "0.22546568",
+    "balanceBOT": "0.27453432",
+    "usageEvidence": "docs/testing/playground-usage-results.json"
   },
   "knownLimitations": [
     "Tool-read Skill usage is not included in the native-injection counter; do not invent counts.",
@@ -54,6 +56,8 @@
     "initialWorkerVersion": "41f2a7fc-946a-4b85-a235-833d30318740",
     "kv": "efa3362429f74633a96e353c09b7a242",
     "r2": "obelisk-service-mainnet-blobs",
-    "sourceVerified": true
+    "sourceVerified": true,
+    "latestWorkerVersion": "716ea3a3-3a53-4c42-aba4-80f54c9b04fa",
+    "usageFollowupCommit": "66e69d3"
   }
 }
