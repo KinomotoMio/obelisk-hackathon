@@ -17,6 +17,7 @@
     "build:cli": "npm run build --workspace @obelisk-apps/cli",
     "sync:chain": "node scripts/sync-chain-protocol.mjs",
     "build:skill": "node packaging/build-skill.mjs",
+    "playground": "node --disable-warning=ExperimentalWarning playground/src/cli.ts",
     "eval:context-window": "node scripts/context-window-ab-eval.mjs",
     "publish:skill": "npm run build:skill && packaging/publish-skill.sh"
   },
