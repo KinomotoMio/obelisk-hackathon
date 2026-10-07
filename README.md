@@ -211,6 +211,38 @@ npm run dev
 falls back to compiling it locally, install the platform's C/C++ build tools and
 run `npm ci` again.
 
+### Capture a page headlessly
+
+The built App can render one page of a data directory to a PNG and exit,
+without a window on screen, an indexer, or a watcher. The Playground runner
+uses it for a run's key screenshots.
+
+```bash
+cd app && npx electron-vite build          # once per checkout
+OBELISK_HOME=<role data dir> npm run capture -- \
+  --route '#/share' --out <file>.png \
+  [--wait-for '<css selector>'] [--scroll-to '<css selector>'] \
+  [--width 1440] [--height 900] [--scale 2] [--timeout 20000]
+```
+
+- `--route` is any App route (`#/share`, `#/skills/minted/12`,
+  `#/playground/runs/<run id>`). The page reads that `OBELISK_HOME` as it is;
+  index it first (`obelisk --build`) if it should show new sessions.
+- The capture waits until the page has rendered its data: the App stayed on
+  the route, every call the page made to the main process has returned, and
+  the page has not changed for 500 ms. `--wait-for` adds a selector that must
+  be present, for pages whose content you want to be sure of (for example
+  `'.share-table tr[data-state="read"]'` for a read receipt). `--scroll-to`
+  scrolls an element to the top before capturing.
+- The PNG is `width × scale` by `height × scale` pixels. The App has one
+  theme (dark); `--theme dark` is accepted.
+- Exit code 0 prints the written path on stdout. 1 means the page did not
+  render in time (an unknown route, a `--wait-for` selector that never
+  appeared) or the file could not be written, with the reason on stderr;
+  nothing is written. 2 means bad arguments.
+- Electron needs a display session on macOS and Windows; on Linux without one,
+  run it under `xvfb-run`.
+
 ## What gets indexed
 
 | Layer | Source | What's captured |
