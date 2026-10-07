@@ -19,7 +19,7 @@
 
 import { getAddress, isAddress, recoverTypedDataAddress, sha256, stringToBytes, type Address, type Hex, type PublicClient } from 'viem';
 
-import { obeliskDomain, skillContentTypes } from '../../chain/eip712.ts';
+import { obeliskDomain, skillContentTypes, privateSkillContentTypes } from '../../chain/eip712.ts';
 import { RequestError } from './actions.ts';
 import { explorerAddressUrl, type ServiceChainConfig } from './chains.ts';
 import { CONTRACT_ABIS } from './relayer.ts';
@@ -45,6 +45,7 @@ export interface SkillRouteDeps {
 }
 
 export interface StoredSkillContent {
+  visibility?: 'public' | 'licensed';
   fingerprint: Hex;
   chainId: number;
   skillId: string;
@@ -154,7 +155,8 @@ export async function readMintedSkill(deps: SkillRouteDeps, ref: string, version
     birthScenes: skill.birthScenes,
     versionCount: skill.versionCount,
     version: { index, fingerprint: version.fingerprint, publishedAt: iso(version.publishedAt) },
-    content: stored ? { name: stored.name, description: stored.description, body: stored.body } : null,
+    content: stored ? { name: stored.name, description: stored.description,
+      ...(stored.visibility === 'licensed' ? { locked: true } : { body: stored.body }) } : null,
     explorer: { author: explorerAddressUrl(deps.config, skill.author) },
   };
 }
@@ -171,6 +173,9 @@ export async function storeSkillContent(deps: SkillRouteDeps, fingerprintParam: 
   if (!fingerprint || fingerprint === ZERO) throw new RequestError(400, 'invalid_fingerprint', `Not a 64-hex fingerprint: ${fingerprintParam}`);
   if (typeof payload !== 'object' || payload === null) throw new RequestError(400, 'invalid_request', 'Request body must be a JSON object');
   const raw = payload as Record<string, unknown>;
+  const visibility = raw.visibility ?? 'public';
+  if (visibility !== 'public' && visibility !== 'licensed') throw new RequestError(400, 'invalid_visibility', 'visibility must be public or licensed');
+  if (visibility === 'licensed' && !deps.config.market) throw new RequestError(503, 'market_not_deployed', 'Deploy settlement before publishing licensed content');
   const authorField = requireString(raw, 'author');
   if (!isAddress(authorField, { strict: false })) throw new RequestError(400, 'invalid_address', `Not an address: ${authorField}`);
   const author = getAddress(authorField);
@@ -193,13 +198,12 @@ export async function storeSkillContent(deps: SkillRouteDeps, fingerprintParam: 
   if (computed !== fingerprint) {
     throw new RequestError(422, 'fingerprint_mismatch', `The body hashes to ${computed}, not ${fingerprint}`);
   }
-  const signer = await recoverTypedDataAddress({
-    domain: obeliskDomain('SkillRegistry', deps.config.chain.id, deps.config.contracts.SkillRegistry),
-    types: skillContentTypes,
-    primaryType: 'SkillContent',
-    message: { author, fingerprint, name, description },
-    signature: signature as Hex,
-  });
+  const domain = obeliskDomain('SkillRegistry', deps.config.chain.id, deps.config.contracts.SkillRegistry);
+  const signer = visibility === 'licensed'
+    ? await recoverTypedDataAddress({ domain, types: privateSkillContentTypes, primaryType: 'PrivateSkillContent',
+      message: { author, fingerprint, name, description, visibility }, signature: signature as Hex })
+    : await recoverTypedDataAddress({ domain, types: skillContentTypes, primaryType: 'SkillContent',
+      message: { author, fingerprint, name, description }, signature: signature as Hex });
   if (signer !== author) throw new RequestError(401, 'invalid_signature', `The signature was not made by ${author}`);
 
   const ref = await readVersionRef(deps, fingerprint);
@@ -213,6 +217,7 @@ export async function storeSkillContent(deps: SkillRouteDeps, fingerprintParam: 
   if (!deps.skillContent) throw new RequestError(503, 'storage_unavailable', 'This service has no Skill body storage configured');
 
   const record: StoredSkillContent = {
+    visibility,
     fingerprint,
     chainId: deps.config.chain.id,
     skillId: ref.skillId.toString(),
@@ -227,7 +232,7 @@ export async function storeSkillContent(deps: SkillRouteDeps, fingerprintParam: 
   const created = await deps.skillContent.putIfAbsent(contentKey(record.chainId, fingerprint), JSON.stringify(record));
   if (!created) {
     const existing = await readStored(deps, fingerprint);
-    if (!existing || existing.name !== name || existing.description !== description) {
+    if (!existing || existing.name !== name || existing.description !== description || (existing.visibility ?? 'public') !== visibility) {
       throw new RequestError(409, 'content_exists', `Content for ${fingerprint} is already stored as ${existing?.name ?? 'another name'}; it is written once per version`);
     }
   }

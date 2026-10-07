@@ -129,6 +129,18 @@ export const skillContentTypes = {
   ],
 } as const;
 
+/** A separate type prevents stripping access control from a signed upload. */
+export const privateSkillContentTypes = {
+  PrivateSkillContent: [...skillContentTypes.SkillContent, { name: "visibility", type: "string" }],
+} as const;
+
+export const skillAccessTypes = {
+  SkillAccess: [
+    { name: "buyer", type: "address" }, { name: "fingerprint", type: "bytes32" },
+    { name: "useTransaction", type: "bytes32" }, { name: "deadline", type: "uint256" },
+  ],
+} as const;
+
 /**
  * Usage reports are cumulative running totals per (wallet, fingerprint).
  * Bucket keys are opaque bytes32 and must be strictly ascending.

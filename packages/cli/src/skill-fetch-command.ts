@@ -88,6 +88,9 @@ async function fetchSkill(ref: string, options: FetchOptions, deps: SkillChainDe
     throw new Error(`${label} is minted, but its body is not stored on the Obelisk online service; its author can store it by running \`obelisk skill mint <name> --confirm ${fingerprint}\` again`);
   }
   const { body, description } = info.content;
+  if (info.content.locked || typeof body !== 'string') {
+    throw new Error(`${label} requires a purchase or author access before installation; its public description is not the Skill body`);
+  }
   if (normalizeSkillBody(body) !== body || skillFingerprint(body) !== fingerprint) {
     throw new Error(`The body served for ${label} does not hash to its on-chain fingerprint ${fingerprint}; refusing to install it`);
   }
@@ -201,4 +204,3 @@ export async function runSkillFetchCommand(args: string[], deps: SkillChainDeps 
   }
   return fetchSkill(ref, options, deps);
 }
-

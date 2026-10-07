@@ -111,7 +111,7 @@ export interface MintedSkillInfo {
   birthScenes: string[];
   versionCount: number;
   version: { index: number; fingerprint: Hex; publishedAt: string };
-  content: { name: string; description: string; body: string } | null;
+  content: { name: string; description: string; body?: string; locked?: boolean } | null;
   explorer: { author: string | null };
 }
 
