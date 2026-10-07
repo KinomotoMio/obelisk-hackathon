@@ -127,15 +127,17 @@ function isReaderPath(parts: string[]): boolean {
 
 /**
  * Public pages for people outside the App (judges, investors, buyers): the
- * Skill market (#35) and the investor preview (#33). Each owns one path
- * segment; every extension-less path under it returns the page's index.html,
- * which routes on the client. Their scripts, styles, and the shared shell in
+ * Skill market (#35), the investor preview (#33), and Playground run records
+ * (#32; `npm run playground -- publish` puts a run's files in public/runs/<id>/).
+ * Each owns one path segment; every extension-less path under it returns the
+ * page's index.html, which routes on the client. Their scripts, styles, and the shared shell in
  * public/site/ are files, so the assets binding serves them before the Worker
  * runs. They read only this service's public GET API (same origin).
  */
 export const SITE_PAGES: Readonly<Record<string, string>> = {
   market: '/market/index.html',
   preview: '/preview/index.html',
+  runs: '/runs/index.html',
 };
 
 /** The reader's policy (same origin only, never framed), revalidated on each visit. */

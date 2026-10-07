@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#0a0b14">
+  <title>Playground 运行记录 · Obelisk</title>
+  <meta name="description" content="一次 Playground 运行的完整记录：模拟用户、真实 AI 运行、每一步的事件和截图，以及可以在区块浏览器里逐笔核对的链上交易。">
+  <link rel="icon" href="/site/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/site/site.css">
+  <link rel="stylesheet" href="/runs/runs.css">
+  <script type="module" src="/runs/app.js"></script>
+</head>
+<body>
+  <header class="site-top">
+    <a class="ob-brand" href="/market" aria-label="Obelisk">
+      <img class="ob-mark" src="/site/logo.svg" alt="" width="19" height="23">
+      <span class="ob-word" aria-hidden="true"><span class="ob-word-a">Obe</span><img class="ob-word-l" src="/site/wordmark-l.svg" alt="" width="7" height="21"><span class="ob-word-b">isk</span></span>
+    </a>
+    <nav class="site-nav" aria-label="页面">
+      <a href="/market">Skill 市场</a>
+      <a href="/preview">项目预览</a>
+      <a href="/runs" aria-current="page">运行记录</a>
+    </nav>
+    <span class="site-net" data-site-network hidden></span>
+  </header>
+
+  <main class="site-main rn" id="main">
+    <!-- One run: filled by app.js from <id>/provenance.json and <id>/events.jsonl -->
+    <div class="rn-run" id="rn-run" hidden>
+      <section class="rn-intro">
+        <p class="rn-eyebrow">
+          <span>Playground 运行记录</span>
+          <span class="rn-source" id="rn-source"></span>
+        </p>
+        <h1 id="rn-title"></h1>
+        <p class="rn-lead">模拟用户在一台电脑上，用真实的 AI 编程助手和 Obelisk 走完这个剧本。下面每一步的事件、截图和链上交易都来自这次运行；每笔交易都向链上核对过，也可以在区块浏览器里自己查。</p>
+        <p class="rn-meta" id="rn-meta"></p>
+      </section>
+
+      <div class="rn-banners" id="rn-banners"></div>
+
+      <section class="rn-proof" id="rn-proof" aria-live="polite" hidden></section>
+
+      <section class="rn-stage" aria-label="运行过程">
+        <div class="rn-bar">
+          <span class="rn-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+          <span class="rn-bar-title">运行 <b class="mono" id="rn-bar-id"></b></span>
+          <span class="rn-pill chain" id="rn-network"></span>
+          <span class="rn-pill" id="rn-status"></span>
+          <span class="rn-spacer"></span>
+          <span class="rn-bar-note" id="rn-bar-note"></span>
+        </div>
+        <div class="rn-live">
+          <section class="rn-card rn-steps-card" aria-labelledby="rn-steps-h">
+            <h2 class="rn-h" id="rn-steps-h"><span>剧本进度</span><span class="rn-count mono" id="rn-progress"></span></h2>
+            <ol class="rn-steps" id="rn-steps"></ol>
+          </section>
+
+          <section class="rn-card rn-events-card" aria-labelledby="rn-events-h">
+            <h2 class="rn-h" id="rn-events-h"><span>事件 · 最新在上</span><span class="rn-count" id="rn-events-count"></span></h2>
+            <div class="rn-events-scroll">
+              <table class="rn-events">
+                <thead><tr><th scope="col">时间</th><th scope="col">角色</th><th scope="col">发生了什么</th><th scope="col" class="product">产物</th></tr></thead>
+                <tbody id="rn-events"></tbody>
+              </table>
+              <p class="rn-empty" id="rn-events-empty" hidden></p>
+            </div>
+            <p class="rn-note" id="rn-events-note" hidden></p>
+          </section>
+
+          <section class="rn-card rn-totals" aria-labelledby="rn-totals-h">
+            <h2 class="rn-h" id="rn-totals-h">本次运行</h2>
+            <div class="rn-counters" id="rn-counters"></div>
+          </section>
+        </div>
+      </section>
+
+      <section class="rn-section" id="rn-shots-section" aria-labelledby="rn-shots-h">
+        <div class="rn-section-h"><h2 id="rn-shots-h">关键截图</h2><span class="rn-count" id="rn-shots-count"></span></div>
+        <div class="rn-shots" id="rn-shots"></div>
+      </section>
+
+      <section class="rn-section" id="rn-prov-section" aria-labelledby="rn-prov-h">
+        <div class="rn-section-h"><h2 id="rn-prov-h">出处记录</h2><span class="rn-count">每次运行自动生成</span></div>
+        <table class="rn-prov"><tbody id="rn-prov"></tbody></table>
+        <p class="rn-note" id="rn-prov-note"></p>
+      </section>
+
+      <p class="rn-refresh" id="rn-refresh"></p>
+    </div>
+
+    <!-- The list of runs: /runs -->
+    <div class="rn-list" id="rn-list" hidden>
+      <section class="rn-intro">
+        <p class="rn-eyebrow"><span>Playground</span></p>
+        <h1>运行记录</h1>
+        <p class="rn-lead">Playground 让模拟用户在一台电脑上走完 Obelisk 的真实流程。每次运行留下出处记录：谁、用什么 AI、做了什么、链上留下了哪些交易。这里列出已经发布的运行。</p>
+      </section>
+      <div class="rn-runs" id="rn-runs"></div>
+    </div>
+
+    <section class="rn-card rn-status" id="rn-status-box">
+      <p id="rn-status-text">正在读取运行记录…</p>
+      <noscript><p>这个页面需要启用 JavaScript。</p></noscript>
+    </section>
+  </main>
+
+  <footer class="site-foot">
+    <a class="ob-brand ob-brand-lg site-foot-brand" href="/market" aria-label="Obelisk">
+      <img class="ob-mark" src="/site/logo.svg" alt="" width="19" height="23">
+      <span class="ob-word" aria-hidden="true"><span class="ob-word-a">Obe</span><img class="ob-word-l" src="/site/wordmark-l.svg" alt="" width="7" height="21"><span class="ob-word-b">isk</span></span>
+    </a>
+    <p>Obelisk：把和 AI 协作的过程变成可以私密分享、可以沉淀为 Skill、可以被验证的记录。</p>
+    <p class="muted">出处记录只保存 id、钱包地址和交易哈希，不保存对话内容和命令输出。本页只读取这次运行发布的文件和这个服务公开的数据。</p>
+  </footer>
+
+  <dialog class="rn-lightbox" id="rn-lightbox" aria-label="截图">
+    <figure>
+      <img id="rn-lightbox-img" alt="">
+      <figcaption id="rn-lightbox-cap"></figcaption>
+    </figure>
+    <button type="button" class="rn-lightbox-close" id="rn-lightbox-close" aria-label="关闭">×</button>
+  </dialog>
+</body>
+</html>
