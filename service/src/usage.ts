@@ -236,7 +236,7 @@ function trendOf(entries: UsageTrendEntry[] | null, weeks: number, now: Date) {
   };
 }
 
-async function readVersionStats(deps: UsageRouteDeps, fingerprint: Hex) {
+export async function readVersionStats(deps: UsageRouteDeps, fingerprint: Hex) {
   const [totalInvocations, uniqueWallets, lastReportAt] = await usageCall(deps, 'versionStats', [fingerprint]) as readonly [bigint, number, bigint];
   return {
     totalInvocations: Number(totalInvocations),
@@ -285,6 +285,25 @@ async function reporters(deps: UsageRouteDeps, fingerprint: Hex): Promise<string
 }
 
 /** GET /v1/skills/:skillId/usage: every version of a Skill together. */
+/**
+ * Distinct wallets across a Skill's versions. A wallet that reported two
+ * versions is one wallet: union the reporter lists while they are small
+ * enough to read; otherwise the largest version's count is a lower bound.
+ */
+export async function distinctWallets(
+  deps: UsageRouteDeps,
+  versions: readonly { fingerprint: Hex; stats: { uniqueWallets: number } }[],
+): Promise<{ uniqueWallets: number; uniqueWalletsExact: boolean }> {
+  if (versions.length === 0) return { uniqueWallets: 0, uniqueWalletsExact: true };
+  if (versions.length === 1) return { uniqueWallets: versions[0]!.stats.uniqueWallets, uniqueWalletsExact: true };
+  const reporterTotal = versions.reduce((sum, version) => sum + version.stats.uniqueWallets, 0);
+  if (reporterTotal <= MAX_REPORTERS_FOR_UNION) {
+    const lists = await Promise.all(versions.map((version) => reporters(deps, version.fingerprint)));
+    return { uniqueWallets: new Set(lists.flat()).size, uniqueWalletsExact: true };
+  }
+  return { uniqueWallets: Math.max(...versions.map((version) => version.stats.uniqueWallets)), uniqueWalletsExact: false };
+}
+
 export async function readSkillUsage(deps: UsageRouteDeps, skillIdParam: string, query: URLSearchParams, now = new Date()) {
   const match = SKILL_ID_RE.exec(skillIdParam);
   if (!match) throw new RequestError(400, 'invalid_skill_ref', `Not a Skill id: ${skillIdParam}`);
@@ -310,21 +329,7 @@ export async function readSkillUsage(deps: UsageRouteDeps, skillIdParam: string,
     addInto(scenes, version.scenes);
     addInto(outcomes, version.outcomes);
   }
-  // A wallet that reported two versions is one wallet: union the reporter lists
-  // while they are small enough to read; otherwise the largest version's count
-  // is a lower bound.
-  const reporterTotal = versions.reduce((sum, version) => sum + version.stats.uniqueWallets, 0);
-  let uniqueWallets: number;
-  let uniqueWalletsExact = true;
-  if (versions.length === 1) {
-    uniqueWallets = versions[0]!.stats.uniqueWallets;
-  } else if (reporterTotal <= MAX_REPORTERS_FOR_UNION) {
-    const lists = await Promise.all(versions.map((version) => reporters(deps, version.fingerprint)));
-    uniqueWallets = new Set(lists.flat()).size;
-  } else {
-    uniqueWallets = Math.max(...versions.map((version) => version.stats.uniqueWallets));
-    uniqueWalletsExact = false;
-  }
+  const { uniqueWallets, uniqueWalletsExact } = await distinctWallets(deps, versions);
   const lastReports = versions.map((version) => version.stats.lastReportAt).filter((value): value is string => value !== null).sort();
   const allEntries = versions.every((version) => version.entries === null) ? null : versions.flatMap((version) => version.entries ?? []);
   return {
