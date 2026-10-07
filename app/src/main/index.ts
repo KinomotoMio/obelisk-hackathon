@@ -17,8 +17,10 @@ import { acquireWriterLease, writerLockPathFor } from '../../../packages/core/sr
 import { migrateCoreSchemaColumns } from '../../../packages/core/src/schema-migrations.ts';
 import { resolveObeliskPaths } from '../../../packages/core/src/paths.ts';
 import { listSkills, readSkill } from '../../../packages/core/src/skills.ts';
+import { ShareDrafts } from '../../../packages/core/src/share-drafts.ts';
+import { listSentShares } from '../../../packages/core/src/share-status.ts';
 import { describeSceneTag, SCENE_DIMENSIONS } from '../../../packages/core/src/scenes.ts';
-import { ObeliskServiceClient, resolveServiceUrl } from '../../../packages/core/src/obelisk-service.ts';
+import { networkLabel, ObeliskServiceClient, resolveServiceUrl } from '../../../packages/core/src/obelisk-service.ts';
 import { readChainSkill } from './skill-market.ts';
 import { storedSessionCursor } from '../../../packages/core/src/provider-indexing.ts';
 import { createBuiltinProviderRegistry } from '../../../packages/core/src/providers/builtins.ts';
@@ -55,6 +57,7 @@ const OBELISK_DIR = OBELISK_PATHS.dataDir;
 const RECAP_DIR = OBELISK_PATHS.recapDir;
 const SETTINGS_PATH = OBELISK_PATHS.settingsPath;
 const SKILLS_DIR = OBELISK_PATHS.skillsDir;
+const SHARES_DIR = OBELISK_PATHS.sharesDir;
 
 // A custom OBELISK_HOME is an isolated store (a Playground role, or a dev build
 // running beside the installed App), so its Electron profile lives there too
@@ -494,6 +497,13 @@ function onObeliskChange(filePath) {
   if (filePath.startsWith(SKILLS_DIR + path.sep)) {
     for (const win of BrowserWindow.getAllWindows()) {
       win.webContents.send('obelisk:skills-updated', filePath);
+    }
+  }
+  // Only the sent-share records: drafts hold unredacted snapshots the
+  // renderer never reads, and their churn is not a change to the Share tab.
+  if (filePath.startsWith(SHARES_DIR + path.sep) && path.basename(filePath) === 'sent.json') {
+    for (const win of BrowserWindow.getAllWindows()) {
+      win.webContents.send('obelisk:shares-updated');
     }
   }
 }
@@ -977,6 +987,43 @@ ipcMain.handle('skills:chain-detail', async (_, skillId) => {
     return { ok: false, error: { code: 'service_url', message: (error as Error).message } };
   }
   return readChainSkill(skillServiceClient, skillId);
+});
+
+// --- Private shares (#12) ---
+// Read-only, like the Skill library: shares are drafted, sent, and revoked by
+// the CLI (the Share tab's buttons copy prompts for it). The tab lists the
+// sent-share records the CLI keeps (sent.json only) with each share's state
+// from the online service, the same listing `obelisk share list` prints.
+
+function shareService(): ObeliskServiceClient {
+  return new ObeliskServiceClient(resolveServiceUrl());
+}
+
+ipcMain.handle('shares:list', async () => {
+  const client = shareService();
+  const { shares, chain } = await listSentShares(new ShareDrafts(SHARES_DIR), client);
+  return { shares, network: chain ? networkLabel(chain.chainId) : null, serviceUrl: client.baseUrl };
+});
+
+// Whether a recipient can be shared with yet: only an activated wallet has the
+// public key a share is encrypted to.
+const WALLET_ADDRESS = /^0x[0-9a-fA-F]{40}$/;
+ipcMain.handle('shares:recipient', async (_, address) => {
+  if (typeof address !== 'string' || !WALLET_ADDRESS.test(address)) return { status: 'invalid' };
+  let client: ObeliskServiceClient;
+  try {
+    client = shareService();
+  } catch (error) {
+    return { status: 'unreachable', error: error instanceof Error ? error.message : String(error) };
+  }
+  try {
+    const key = await client.key(address as `0x${string}`);
+    return key.registered && key.pubKey
+      ? { status: 'activated' }
+      : { status: 'not_activated', activateUrl: `${client.baseUrl}/activate` };
+  } catch (error) {
+    return { status: 'unreachable', error: error instanceof Error ? error.message : String(error) };
+  }
 });
 
 // --- Recap files ---

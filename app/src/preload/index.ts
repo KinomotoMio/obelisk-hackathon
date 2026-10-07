@@ -61,6 +61,13 @@ contextBridge.exposeInMainWorld('obelisk', {
     ipcRenderer.on('obelisk:skills-updated', listener);
     return () => ipcRenderer.removeListener('obelisk:skills-updated', listener);
   },
+  sharesList: () => ipcRenderer.invoke('shares:list'),
+  sharesRecipient: (address: string) => ipcRenderer.invoke('shares:recipient', address),
+  onSharesUpdated: (callback: () => void) => {
+    const listener = () => callback();
+    ipcRenderer.on('obelisk:shares-updated', listener);
+    return () => ipcRenderer.removeListener('obelisk:shares-updated', listener);
+  },
   getSettings: () => ipcRenderer.invoke('settings:get'),
   browseFolder: () => ipcRenderer.invoke('settings:browseFolder'),
   setSetting: (key: string, value: unknown) => ipcRenderer.invoke('settings:set', key, value),
