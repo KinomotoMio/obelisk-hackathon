@@ -1,0 +1,316 @@
+{
+  "schema": "obelisk.playground.provenance/1",
+  "run": {
+    "id": "run-20261007T192824Z-92b5",
+    "scenario": {
+      "name": "natural-market-01",
+      "title": "模拟角色的日常求职、作品集与排障请求；真实 AI 执行，测试网",
+      "file": "playground/scenarios/natural-market-01.json",
+      "sha256": "45b9907fe05ec4c7ee2b62f6cc62f602cf18bb94783d9af572703c91ed1163bb"
+    },
+    "network": {
+      "serviceUrl": "https://obelisk-service.kinomotomiovo.workers.dev",
+      "chainId": 968
+    },
+    "startedAt": "2026-10-07T19:28:24Z",
+    "endedAt": "2026-10-07T19:38:24Z",
+    "status": "succeeded",
+    "dryRun": false,
+    "obelisk": {
+      "gitCommit": "bc9a887"
+    }
+  },
+  "roles": [
+    {
+      "id": "job-seeker-01",
+      "label": "模拟角色：求职者",
+      "wallet": {
+        "address": "0x8DE8692E82a32a07D876BaF6f8289b61F0b779C1"
+      },
+      "harness": {
+        "kind": "codex",
+        "version": "codex-cli 0.160.0",
+        "model": "gpt-6.1-sol"
+      }
+    },
+    {
+      "id": "designer-01",
+      "label": "模拟角色：设计师",
+      "wallet": {
+        "address": "0x6640773539e914Da9f1D04056DBCD3c301fE2f2F"
+      },
+      "harness": {
+        "kind": "codex",
+        "version": "codex-cli 0.160.0",
+        "model": "gpt-6.1-sol"
+      }
+    },
+    {
+      "id": "maintainer-01",
+      "label": "模拟角色：项目维护者",
+      "wallet": {
+        "address": "0xc2b2A036cDd817e118279D8A12d2c2d5C0610Df3"
+      },
+      "harness": {
+        "kind": "codex",
+        "version": "codex-cli 0.160.0",
+        "model": "gpt-6.1-sol"
+      }
+    },
+    {
+      "id": "builder-01",
+      "label": "模拟角色：项目构建者",
+      "wallet": {
+        "address": "0x055bFeae1781F53B189493F4F3605A247e676383"
+      },
+      "harness": {
+        "kind": "codex",
+        "version": "codex-cli 0.160.0",
+        "model": "gpt-6.1-sol"
+      }
+    }
+  ],
+  "steps": [
+    {
+      "id": "job-materials",
+      "index": 0,
+      "title": "准备后台开发实习申请",
+      "role": "job-seeker-01",
+      "action": "prompt",
+      "scenes": [
+        "v1:task/writing"
+      ],
+      "status": "succeeded",
+      "startedAt": "2026-10-07T19:28:24Z",
+      "endedAt": "2026-10-07T19:29:51Z",
+      "harness": {
+        "kind": "codex",
+        "version": "codex-cli 0.160.0",
+        "model": "gpt-6.1-sol",
+        "maxTurns": null
+      },
+      "prompt": "我想投后台开发实习，有没有别人总结过的好方法可以参考？我做过一个校园活动报名网站，负责报名接口、名额限制和邮件通知；还没正式上线，也没有性能测试数字。帮我把这些经历整理成一段简历项目介绍，再写一封简短的申请邮件。别给我编成绩，有缺的信息留出来就好。把结果存下来，方便我接着改。",
+      "sessions": [
+        {
+          "source": "codex",
+          "id": "01a117d6-a1a3-7f32-9543-92ff97e974c3",
+          "obeliskId": "codex:01a117d6-a1a3-7f32-9543-92ff97e974c3"
+        }
+      ],
+      "commands": [
+        {
+          "argv": [
+            "market",
+            "search",
+            "简历 实习 后端 项目 求职"
+          ],
+          "exitCode": 0,
+          "startedAt": "2026-10-07T19:28:49Z",
+          "endedAt": "2026-10-07T19:28:53Z",
+          "transactions": []
+        },
+        {
+          "argv": [
+            "skill",
+            "fetch",
+            "9",
+            "--harness",
+            "codex",
+            "--project",
+            "<playground>/roles/job-seeker-01/workspace"
+          ],
+          "exitCode": 0,
+          "startedAt": "2026-10-07T19:28:56Z",
+          "endedAt": "2026-10-07T19:29:00Z",
+          "transactions": []
+        }
+      ],
+      "transactions": [],
+      "artifacts": [
+        {
+          "kind": "skill-fetch-preview",
+          "ref": "backend-job-application-materials"
+        }
+      ],
+      "screenshots": [],
+      "error": null
+    },
+    {
+      "id": "portfolio",
+      "index": 1,
+      "title": "整理一个设计项目",
+      "role": "designer-01",
+      "action": "prompt",
+      "scenes": [
+        "v1:task/writing"
+      ],
+      "status": "succeeded",
+      "startedAt": "2026-10-07T19:29:51Z",
+      "endedAt": "2026-10-07T19:31:42Z",
+      "harness": {
+        "kind": "codex",
+        "version": "codex-cli 0.160.0",
+        "model": "gpt-6.1-sol",
+        "maxTurns": null
+      },
+      "prompt": "我准备找交互设计实习，想把一个校园失物招领的小项目整理成作品集。现在只有页面草图，访谈过三位同学，还没有上线，问题主要是照片不好认、联系方式乱放。有没有合适的经验能参考？帮我搭一个作品集章节，把哪些地方还缺证据写清楚，不要把设想当成已经做成的效果。",
+      "sessions": [
+        {
+          "source": "codex",
+          "id": "01a117d7-f6f6-75d3-936d-d8e08b6429ec",
+          "obeliskId": "codex:01a117d7-f6f6-75d3-936d-d8e08b6429ec"
+        }
+      ],
+      "commands": [
+        {
+          "argv": [
+            "market",
+            "search",
+            "作品集 交互设计 证据"
+          ],
+          "exitCode": 0,
+          "startedAt": "2026-10-07T19:30:12Z",
+          "endedAt": "2026-10-07T19:30:17Z",
+          "transactions": []
+        },
+        {
+          "argv": [
+            "skill",
+            "fetch",
+            "6",
+            "--harness",
+            "codex"
+          ],
+          "exitCode": 0,
+          "startedAt": "2026-10-07T19:30:20Z",
+          "endedAt": "2026-10-07T19:30:24Z",
+          "transactions": []
+        }
+      ],
+      "transactions": [],
+      "artifacts": [
+        {
+          "kind": "skill-fetch-preview",
+          "ref": "designer-portfolio"
+        }
+      ],
+      "screenshots": [],
+      "error": null
+    },
+    {
+      "id": "incident",
+      "index": 2,
+      "title": "整理偶发 502 的排查方向",
+      "role": "maintainer-01",
+      "action": "prompt",
+      "scenes": [
+        "v1:task/debug"
+      ],
+      "status": "succeeded",
+      "startedAt": "2026-10-07T19:31:42Z",
+      "endedAt": "2026-10-07T19:34:52Z",
+      "harness": {
+        "kind": "codex",
+        "version": "codex-cli 0.160.0",
+        "model": "gpt-6.1-sol",
+        "maxTurns": null
+      },
+      "prompt": "我的小网站最近偶尔返回 502，重启后能恢复一阵。我现在只有这些现象：晚上人多时容易出现，静态页面通常还能开，日志里偶尔有 upstream timed out。有没有成熟的排查思路？帮我整理一下先看什么、哪些信息还缺，别上来就建议扩容。我想把排查笔记存下来。",
+      "sessions": [
+        {
+          "source": "codex",
+          "id": "01a117d9-a64c-76b3-a540-39f9a2f83244",
+          "obeliskId": "codex:01a117d9-a64c-76b3-a540-39f9a2f83244"
+        }
+      ],
+      "commands": [
+        {
+          "argv": [
+            "--query",
+            "<tmp>"
+          ],
+          "exitCode": 0,
+          "startedAt": "2026-10-07T19:32:25Z",
+          "endedAt": "2026-10-07T19:32:25Z",
+          "transactions": []
+        }
+      ],
+      "transactions": [],
+      "artifacts": [],
+      "screenshots": [],
+      "error": null
+    },
+    {
+      "id": "building-plan",
+      "index": 3,
+      "title": "整理与 AI 协作的项目计划",
+      "role": "builder-01",
+      "action": "prompt",
+      "scenes": [
+        "v1:task/planning"
+      ],
+      "status": "succeeded",
+      "startedAt": "2026-10-07T19:34:52Z",
+      "endedAt": "2026-10-07T19:38:24Z",
+      "harness": {
+        "kind": "codex",
+        "version": "codex-cli 0.160.0",
+        "model": "gpt-6.1-sol",
+        "maxTurns": null
+      },
+      "prompt": "我最近和 AI 一起做读书笔记小项目，有点越做越乱。搜索和标签已经能用了，现在想加导入和导出，但之前讨论的边界总丢。我每天只能抽半小时看进展。帮我整理一下接下来怎么配合、怎么把任务推进到我能验收的程度，有现成的协作经验也可以参考。先把计划存下来，别开始写功能。",
+      "sessions": [
+        {
+          "source": "codex",
+          "id": "01a117dc-8e46-7e53-a4ef-053038d128ad",
+          "obeliskId": "codex:01a117dc-8e46-7e53-a4ef-053038d128ad"
+        }
+      ],
+      "commands": [
+        {
+          "argv": [
+            "--query",
+            "<tmp>"
+          ],
+          "exitCode": 0,
+          "startedAt": "2026-10-07T19:35:35Z",
+          "endedAt": "2026-10-07T19:35:35Z",
+          "transactions": []
+        },
+        {
+          "argv": [
+            "market",
+            "search",
+            "AI collaboration scope acceptance"
+          ],
+          "exitCode": 1,
+          "startedAt": "2026-10-07T19:35:50Z",
+          "endedAt": "2026-10-07T19:35:50Z",
+          "transactions": []
+        },
+        {
+          "argv": [
+            "skill",
+            "list"
+          ],
+          "exitCode": 1,
+          "startedAt": "2026-10-07T19:35:50Z",
+          "endedAt": "2026-10-07T19:35:50Z",
+          "transactions": []
+        }
+      ],
+      "transactions": [],
+      "artifacts": [],
+      "screenshots": [],
+      "error": null
+    }
+  ],
+  "totals": {
+    "roles": 4,
+    "steps": 4,
+    "sessions": 4,
+    "commands": 8,
+    "transactions": 0,
+    "screenshots": 0
+  }
+}

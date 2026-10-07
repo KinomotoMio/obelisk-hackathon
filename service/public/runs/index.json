@@ -1,0 +1,24 @@
+{
+  "schema": "obelisk.playground.runs/1",
+  "runs": [
+    {
+      "id": "run-20261007T192824Z-92b5",
+      "title": "模拟角色的日常求职、作品集与排障请求；真实 AI 执行，测试网",
+      "startedAt": "2026-10-07T19:28:24Z",
+      "endedAt": "2026-10-07T19:38:24Z",
+      "status": "succeeded",
+      "chainId": 968,
+      "dryRun": false,
+      "fixture": false,
+      "totals": {
+        "roles": 4,
+        "steps": 4,
+        "sessions": 4,
+        "commands": 8,
+        "transactions": 0,
+        "screenshots": 0
+      },
+      "publishedAt": "2026-10-07T19:42:00Z"
+    }
+  ]
+}

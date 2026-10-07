@@ -1,0 +1,18 @@
+{
+  "schema": "obelisk.playground.scenario/1",
+  "name": "selected-method-followup-01",
+  "title": "模拟用户明确选择方法后的安装与改进；测试网，不计自主发现",
+  "network": { "serviceUrl": "https://obelisk-service.kinomotomiovo.workers.dev", "chainId": 968 },
+  "defaults": { "harness": "codex", "timeoutMinutes": 8 },
+  "roles": [
+    { "id": "builder-01", "label": "模拟角色：项目构建者", "skills": ["obelisk", "obelisk-skill-assets", "obelisk-distill"] },
+    { "id": "job-seeker-01", "label": "模拟角色：求职者", "skills": ["obelisk", "obelisk-skill-assets", "obelisk-distill"] }
+  ],
+  "steps": [
+    { "id": "builder-preview", "role": "builder-01", "title": "模拟用户预览并选择协作方法", "cli": ["skill", "fetch", "8198ffb1d25bc5900824dc730bdbb4985b2284b9d470165bee4f5704402ebfd4", "--harness", "codex"] },
+    { "id": "builder-install", "role": "builder-01", "title": "产品操作：安装用户选择的版本", "cli": ["skill", "fetch", "8198ffb1d25bc5900824dc730bdbb4985b2284b9d470165bee4f5704402ebfd4", "--harness", "codex", "--confirm"] },
+    { "id": "builder-derive", "role": "builder-01", "title": "将协作经验改成每天半小时的版本", "prompt": "我看了并选用了 AI Building 协作方法。想在它的基础上，结合你刚保存的读书笔记项目计划，整理一个适合每天只能抽半小时验收的人用的小方法。重点是哪些决定要我看、哪些你可以接着做，以及中途发现边界变了怎么办。保存成可复用的草稿就好，先别发布。不要把读书笔记的具体功能方案写成大家都必须遵守的规则。", "scenes": ["v1:task/planning"] },
+    { "id": "job-install", "role": "job-seeker-01", "title": "产品操作：安装先前预览过的求职方法", "cli": ["skill", "fetch", "82e621269965832b5fac1d5cae3d255a5b0b4184d5b027876b8a576dbffd30c2", "--harness", "codex", "--confirm"] },
+    { "id": "job-revise", "role": "job-seeker-01", "title": "补充事实后修改求职材料", "prompt": "刚才看的后端求职方法我已经选用了，材料想再改一轮。我补充一下：项目用 Node.js 和 SQLite，名额限制目前只测过普通报名，没有做并发验证。别写成解决了高并发。我想投小团队的后台开发实习，邮件再短一点，保留你觉得最能说明我做过事的内容，直接更新原文件。", "scenes": ["v1:task/writing"] }
+  ]
+}
