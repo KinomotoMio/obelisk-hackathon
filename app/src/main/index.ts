@@ -18,6 +18,8 @@ import { migrateCoreSchemaColumns } from '../../../packages/core/src/schema-migr
 import { resolveObeliskPaths } from '../../../packages/core/src/paths.ts';
 import { listSkills, readSkill } from '../../../packages/core/src/skills.ts';
 import { describeSceneTag, SCENE_DIMENSIONS } from '../../../packages/core/src/scenes.ts';
+import { ObeliskServiceClient, resolveServiceUrl } from '../../../packages/core/src/obelisk-service.ts';
+import { readChainSkill } from './skill-market.ts';
 import { storedSessionCursor } from '../../../packages/core/src/provider-indexing.ts';
 import { createBuiltinProviderRegistry } from '../../../packages/core/src/providers/builtins.ts';
 import {
@@ -962,6 +964,19 @@ ipcMain.handle('skills:describe-scenes', (_, tags) => {
       const dimension = SCENE_DIMENSIONS.find((entry) => entry.id === described.dimension);
       return { ...described, dimensionLabel: dimension?.label ?? null };
     });
+});
+
+// A minted Skill for the Skill detail page (#19), read from the online service
+// the CLI uses (OBELISK_SERVICE_URL or the default). The renderer never reaches
+// the network itself; skill-market.ts validates what comes back.
+let skillServiceClient: ObeliskServiceClient | null = null;
+ipcMain.handle('skills:chain-detail', async (_, skillId) => {
+  try {
+    skillServiceClient ??= new ObeliskServiceClient(resolveServiceUrl(process.env));
+  } catch (error) {
+    return { ok: false, error: { code: 'service_url', message: (error as Error).message } };
+  }
+  return readChainSkill(skillServiceClient, skillId);
 });
 
 // --- Recap files ---
