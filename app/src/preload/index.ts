@@ -85,6 +85,10 @@ contextBridge.exposeInMainWorld('obelisk', {
     ipcRenderer.on('obelisk:shares-updated', listener);
     return () => ipcRenderer.removeListener('obelisk:shares-updated', listener);
   },
+  walletGet: () => invoke('wallet:get'),
+  walletActivation: () => invoke('wallet:activation'),
+  // The secret goes to the main process once; nothing returns it.
+  walletImport: (secret: string) => invoke('wallet:import', secret),
   getSettings: () => invoke('settings:get'),
   browseFolder: () => invoke('settings:browseFolder'),
   setSetting: (key: string, value: unknown) => invoke('settings:set', key, value),

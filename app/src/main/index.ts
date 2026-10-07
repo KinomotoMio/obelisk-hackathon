@@ -22,6 +22,8 @@ import { listSentShares } from '../../../packages/core/src/share-status.ts';
 import { describeSceneTag, SCENE_DIMENSIONS } from '../../../packages/core/src/scenes.ts';
 import { networkNameZh, ObeliskServiceClient, resolveServiceUrl } from '../../../packages/core/src/obelisk-service.ts';
 import { readChainSkill } from './skill-market.ts';
+import { importWalletFromApp, readWalletActivation, readWalletOverview } from './wallet.ts';
+import { systemSecretStore } from '../../../packages/core/src/keychain.ts';
 import { CaptureUsageError, parseCaptureArgs, runCapture, type CaptureRequest } from './capture.ts';
 import { publishedRunPage, resolvePlaygroundDir, skillSources } from './playground-runs.ts';
 import { storedSessionCursor } from '../../../packages/core/src/provider-indexing.ts';
@@ -1111,6 +1113,29 @@ ipcMain.handle('shares:recipient', async (_, address) => {
       : { status: 'not_activated', activateUrl: `${client.baseUrl}/activate` };
   } catch (error) {
     return { status: 'unreachable', error: error instanceof Error ? error.message : String(error) };
+  }
+});
+
+// --- Wallet (#6) ---
+// Settings shows this data directory's wallet and whether it is activated;
+// 生成钱包 and 激活 copy prompts for the obelisk-wallet skill. 导入钱包 runs
+// here because a private key or recovery phrase must not pass through an AI
+// conversation; wallet.ts never hands the key back to the renderer.
+
+const walletContext = () => ({ paths: OBELISK_PATHS, secrets: systemSecretStore() });
+
+ipcMain.handle('wallet:get', () => readWalletOverview(walletContext, OBELISK_DIR));
+ipcMain.handle('wallet:activation', () => readWalletActivation(walletContext, shareService));
+
+// One import at a time: two racing imports would both find the keychain empty.
+let walletImport: Promise<unknown> | null = null;
+ipcMain.handle('wallet:import', async (_, secret) => {
+  if (walletImport) return { ok: false, error: { code: 'busy', message: 'An import is already running' } };
+  walletImport = importWalletFromApp(walletContext, secret);
+  try {
+    return await walletImport;
+  } finally {
+    walletImport = null;
   }
 });
 
