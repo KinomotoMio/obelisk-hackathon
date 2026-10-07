@@ -1,7 +1,7 @@
 {
   "schema": "obelisk.playground.scenario/1",
   "name": "smoke",
-  "title": "冒烟：两个 Codex 角色各说一句话、各跑一条 obelisk 命令",
+  "title": "冒烟：两个 Codex 角色各说一句话，各自建索引，截一张 A 的 Sessions 页",
   "network": {
     "serviceUrl": null,
     "chainId": 968
@@ -46,12 +46,11 @@
       }
     },
     {
-      "id": "a-skills",
+      "id": "a-build",
       "role": "A",
-      "title": "A 查看自己的 Skill 库",
+      "title": "A 建立自己的索引",
       "cli": [
-        "skill",
-        "list"
+        "--build"
       ]
     },
     {
@@ -67,6 +66,22 @@
           ]
         ]
       }
+    },
+    {
+      "id": "b-build",
+      "role": "B",
+      "title": "B 建立自己的索引",
+      "cli": [
+        "--build"
+      ]
+    },
+    {
+      "id": "a-sessions-shot",
+      "role": "A",
+      "title": "A 的 Sessions 页",
+      "route": "#/sessions",
+      "caption": "A 的索引里只有 A 自己的 session",
+      "timeoutMinutes": 2
     }
   ]
 }
