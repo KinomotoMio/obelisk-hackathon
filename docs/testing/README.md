@@ -35,7 +35,10 @@ source ~/.obelisk-hackathon/env.sh b   # 角色 B，提示符前出现 [hackatho
 
 在环境里：
 
-- **用 Claude Code 跑流程**：`cd ~/.obelisk-hackathon/workspace && claude`。这个目录已经装好了全部 Obelisk skill。
+- **用 Claude Code 跑流程**：`cd ~/.obelisk-hackathon/workspace && claude`。
+- **用 Codex 跑流程**：`cd ~/.obelisk-hackathon/workspace && codex`。
+
+这个目录已经为两者装好了全部 Obelisk skill：Claude Code 用 `.claude/skills/`，Codex 用 `.agents/skills/`，都只在这个目录里生效，不会改动 `~/.claude` 或 `~/.codex`。在 Claude Code 里可以用 `/obelisk-distill …` 这样的斜杠命令直接调用；在 Codex 里直接用自然语言说即可。
 - **打开 App**：`cd <仓库>/app && npm run dev`。App 用的是当前角色的数据。
 
 拉了新代码以后，重新运行一次 `sh scripts/hackathon-env.sh`。

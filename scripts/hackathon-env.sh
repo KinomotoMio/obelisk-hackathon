@@ -25,7 +25,7 @@ bash packaging/stage-skill-repo.sh dist/obelisk-skill-repo
 echo "== Installing App dependencies"
 (cd app && npm ci)
 
-mkdir -p "$H/bin" "$H/home" "$H/home-b" "$H/workspace/.claude/skills"
+mkdir -p "$H/bin" "$H/home" "$H/home-b" "$H/workspace/.claude/skills" "$H/workspace/.agents/skills"
 
 cat > "$H/bin/obelisk" <<EOF
 #!/bin/sh
@@ -56,18 +56,23 @@ fi
 unset _obelisk_role
 EOF
 
-echo "== Installing the Obelisk skills into $H/workspace"
+# Project-level skills, so neither ~/.claude nor ~/.codex is touched: Claude
+# Code reads <project>/.claude/skills, Codex reads <project>/.agents/skills
+# (the layout `npx skills add -a codex` uses for a project install).
+echo "== Installing the Obelisk skills into $H/workspace for Claude Code and Codex"
 for d in dist/obelisk-skill-repo/skills/*/; do
   name=$(basename "$d")
-  rm -rf "$H/workspace/.claude/skills/$name"
-  cp -R "$d" "$H/workspace/.claude/skills/$name"
+  for dir in "$H/workspace/.claude/skills" "$H/workspace/.agents/skills"; do
+    rm -rf "$dir/$name"
+    cp -R "$d" "$dir/$name"
+  done
 done
-ls "$H/workspace/.claude/skills"
+ls "$H/workspace/.agents/skills"
 
 cat <<EOF
 
 Done. Next:
   source ~/.obelisk-hackathon/env.sh   # role A; add "b" for role B
   obelisk --build                      # first time per role: index your history
-  cd ~/.obelisk-hackathon/workspace && claude
+  cd ~/.obelisk-hackathon/workspace && claude   # or: codex
 EOF
