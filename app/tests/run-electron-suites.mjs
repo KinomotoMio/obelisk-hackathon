@@ -17,6 +17,7 @@ const suites = [
   'electron-file-references.mjs',
   'electron-skill-tab.mjs',
   'electron-share-tab.mjs',
+  'electron-settings-wallet.mjs',
   'electron-playground.mjs',
   'electron-capture.mjs',
 ]
