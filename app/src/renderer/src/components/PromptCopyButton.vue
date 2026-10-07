@@ -2,23 +2,30 @@
 <!-- SPDX-License-Identifier: AGPL-3.0-only -->
 
 <script setup>
-import { ref, onUnmounted } from 'vue';
-import { copyPrompt } from '../prompt-copy.js';
+import { computed, ref, onUnmounted } from 'vue';
+import { copyPrompt, promptAssistant } from '../prompt-copy.js';
+import { assistantLabel } from '../assistant-prompts.mjs';
 
 // A button that copies a prompt for the AI coding assistant (复制成 prompt).
 // The copy icon marks it as such everywhere in the App.
 const props = defineProps({
   label: { type: String, required: true },
-  prompt: { type: String, required: true },
+  // A skill prompt (assistant-prompts.mjs), rendered for the chosen assistant, or plain text.
+  prompt: { type: [Object, String], default: '' },
   // 'btn' | 'primary' (detail actions), 'inline' (next to a list entry, muted), 'toolbar'
   variant: { type: String, default: 'btn' },
-  title: { type: String, default: '' },
+  // What the prompt does, for the tooltip: "复制{purpose}的 prompt，粘贴到 Codex 执行".
+  purpose: { type: String, default: '' },
+  disabled: { type: Boolean, default: false },
 });
+
+const tooltip = computed(() => `复制${props.purpose ? `${props.purpose}的 ` : '一段 '}prompt，粘贴到 ${assistantLabel(promptAssistant.id)} 执行`);
 
 const copied = ref(false);
 let resetTimer = null;
 
 async function onClick() {
+  if (props.disabled || !props.prompt) return;
   const ok = await copyPrompt(props.label, props.prompt);
   copied.value = ok;
   clearTimeout(resetTimer);
@@ -32,7 +39,8 @@ onUnmounted(() => clearTimeout(resetTimer));
   <button
     class="prompt-copy"
     :class="[`is-${variant}`, { copied }]"
-    :title="title || '复制一段 prompt，粘贴到 Claude Code 执行'"
+    :title="tooltip"
+    :disabled="disabled"
     :data-prompt-label="label"
     @click.stop="onClick"
   >

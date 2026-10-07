@@ -93,5 +93,6 @@ contextBridge.exposeInMainWorld('obelisk', {
   browseFolder: () => invoke('settings:browseFolder'),
   setSetting: (key: string, value: unknown) => invoke('settings:set', key, value),
   revealPath: (p: string) => invoke('settings:revealPath', p),
+  getPromptAssistant: () => invoke('settings:prompt-assistant'),
   rebuildIndex: () => invoke('settings:rebuildIndex'),
 });

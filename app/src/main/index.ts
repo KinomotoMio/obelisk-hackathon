@@ -1201,6 +1201,7 @@ ipcMain.handle('settings:get', () => {
     recapDir,
     autoRefresh: persisted.autoRefresh !== false,
     editorScheme: persisted.editorScheme || DEFAULT_EDITOR_SCHEME,
+    promptAssistant: promptAssistantOf(persisted),
     sources,
     memoryCount,
     sessionCount,
@@ -1210,7 +1211,16 @@ ipcMain.handle('settings:get', () => {
   };
 });
 
+// Which assistant copied prompts are written for (assistant-prompts.mjs):
+// Claude Code's slash commands, or a sentence for Codex.
+const PROMPT_ASSISTANTS = new Set(['claude-code', 'codex']);
+function promptAssistantOf(persisted: Record<string, unknown>) {
+  return PROMPT_ASSISTANTS.has(persisted['promptAssistant'] as string) ? persisted['promptAssistant'] : 'claude-code';
+}
+ipcMain.handle('settings:prompt-assistant', () => promptAssistantOf(loadPersistedSettings()));
+
 ipcMain.handle('settings:set', async (_, key, value) => {
+  if (key === 'promptAssistant' && !PROMPT_ASSISTANTS.has(value)) return false;
   const persisted = loadPersistedSettings();
   const providerRootChanged = setPersistedSetting(persisted, key, value);
   savePersistedSettings(persisted);

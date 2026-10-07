@@ -174,7 +174,7 @@ onBeforeUnmount(() => {
           variant="primary"
           :prompt="prompt"
           :disabled="!ready"
-          title="复制分享这段 session 的 prompt，粘贴到 Claude Code 执行"
+          purpose="分享这段 session"
         />
       </div>
     </div>

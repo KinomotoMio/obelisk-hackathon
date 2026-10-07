@@ -7,11 +7,17 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { revokePrompt, sharePrompt, SHARE_COMMAND, SHARE_EXAMPLE_PROMPT } from '../app/src/renderer/src/share-prompts.mjs';
+import * as sharePrompts from '../app/src/renderer/src/share-prompts.mjs';
+import { renderPrompt } from '../app/src/renderer/src/assistant-prompts.mjs';
 import {
   canRevoke, describeRange, fmtShareTime, serviceProblem, shareRecord, shareRules, shareStatus, shortAddress,
 } from '../app/src/renderer/src/share-view.mjs';
 import { isShareNumber, sentSharesByNumber, shareNumber } from '../packages/core/src/share-status.ts';
+
+// The prompts as copied for Claude Code (the default); the Codex form is
+// covered in app-assistant-prompts.test.mjs.
+const sharePrompt = (...args) => renderPrompt(sharePrompts.sharePrompt(...args), 'claude-code');
+const revokePrompt = (...args) => renderPrompt(sharePrompts.revokePrompt(...args), 'claude-code');
 
 const B = '0x7a3F00000000000000000000000000000000C21e';
 const SHARE_ID = `0x3f2a${'0'.repeat(60)}`;
@@ -53,7 +59,7 @@ test('分享 prompt 以 /obelisk-share 开头，写全接收者地址、范围�
   assert.match(sharePrompt({ session, from: 1, to: 2, recipient: B, opens: 3, expires: '1h' }), /，限 3 次，1 小时内有效$/);
   assert.throws(() => sharePrompt({ session, from: 1, to: 2, recipient: '0x7a3f…c21e', opens: 1, expires: '24h' }), /wallet address/);
   assert.throws(() => sharePrompt({ session, from: 5, to: 2, recipient: B, opens: 1, expires: '24h' }), /Not a message range/);
-  assert.ok(SHARE_EXAMPLE_PROMPT.startsWith(`${SHARE_COMMAND} `));
+  assert.ok(renderPrompt(sharePrompts.SHARE_EXAMPLE_PROMPT).startsWith('/obelisk-share '));
 });
 
 test('撤回 prompt 用分享编号指明是哪一条', () => {

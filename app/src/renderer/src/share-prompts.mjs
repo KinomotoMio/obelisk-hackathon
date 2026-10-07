@@ -5,14 +5,17 @@
 // docs/vision/02 S1–S3). The App never sends or revokes a share itself: its
 // buttons copy a prompt for the user's AI coding assistant, where the
 // obelisk-share skill runs the privacy check and asks for confirmation before
-// the CLI encrypts, uploads, or writes to the chain. In Claude Code a prompt
-// starts with the skill's slash command, so pasting it always runs that skill.
+// the CLI encrypts, uploads, or writes to the chain. Each prompt names the
+// obelisk-share skill; assistant-prompts.mjs renders it as a slash command for
+// Claude Code or a sentence for Codex.
 //
 // Prompts name the full recipient address (an abbreviated one could match
 // another wallet) and the share number the reader page watermark shows, which
 // `obelisk share revoke S-…` resolves.
 
-export const SHARE_COMMAND = '/obelisk-share';
+import { skillPrompt } from './assistant-prompts.mjs';
+
+export const SHARE_SKILL = 'obelisk-share';
 
 export const OPENS_CHOICES = Object.freeze([
   { value: 1, label: '1 次' },
@@ -26,7 +29,7 @@ export const EXPIRY_CHOICES = Object.freeze([
   { value: '7d', label: '7 天' },
 ]);
 
-export const SHARE_EXAMPLE_PROMPT = `${SHARE_COMMAND} 把这个 session 里……的部分分享给 0x…，限 1 次，24 小时内有效`;
+export const SHARE_EXAMPLE_PROMPT = skillPrompt(SHARE_SKILL, '把这个 session 里……的部分分享给 0x…，限 1 次，24 小时内有效');
 
 const WALLET_ADDRESS = /^0x[0-9a-fA-F]{40}$/;
 
@@ -55,18 +58,18 @@ function expiryText(expires) {
 
 /**
  * Share messages `from`–`to` (1-based, as the session detail numbers them)
- * with one wallet, e.g. `/obelisk-share 把 session「…」（…）第 12–17 条分享给
- * 0x…，限 1 次，24 小时内有效`.
+ * with one wallet, e.g. `把 session「…」（…）第 12–17 条分享给 0x…，限 1 次，
+ * 24 小时内有效` for obelisk-share.
  */
 export function sharePrompt({ session, from, to, recipient, opens, expires }) {
   if (!isWalletAddress(recipient)) throw new Error('A share needs a wallet address (0x followed by 40 hex characters)');
   if (!Number.isInteger(from) || !Number.isInteger(to) || from < 1 || to < from) throw new Error(`Not a message range: ${from}–${to}`);
-  return `${SHARE_COMMAND} 把 ${sessionReference(session)}${rangeText(from, to)}分享给 ${recipient.trim()}，`
-    + `${opensText(opens)}，${expiryText(expires)}`;
+  return skillPrompt(SHARE_SKILL, `把 ${sessionReference(session)}${rangeText(from, to)}分享给 ${recipient.trim()}，`
+    + `${opensText(opens)}，${expiryText(expires)}`);
 }
 
 /** Revoke one sent share, named by recipient and share number (and title when known). */
 export function revokePrompt(share) {
   const title = typeof share.title === 'string' && share.title.trim() ? `「${share.title.trim()}」` : '';
-  return `${SHARE_COMMAND} 撤回我发给 ${share.recipient} 的分享 #${share.number}${title}`;
+  return skillPrompt(SHARE_SKILL, `撤回我发给 ${share.recipient} 的分享 #${share.number}${title}`);
 }

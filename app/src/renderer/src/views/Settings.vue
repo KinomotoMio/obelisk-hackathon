@@ -3,6 +3,9 @@
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue';
+import { PROMPT_ASSISTANTS, renderPrompt } from '../assistant-prompts.mjs';
+import { promptAssistant, setPromptAssistant } from '../prompt-copy.js';
+import { continueEditingPrompt } from '../skill-prompts.mjs';
 
 defineOptions({ name: 'Settings' });
 
@@ -277,6 +280,35 @@ function fmtRelative(iso) {
         </div>
       </section>
 
+      <!-- Copied prompts -->
+      <section class="settings-section" data-section="prompt-assistant">
+        <div class="settings-section-head">
+          <h2>复制给</h2>
+          <p>App 里的按钮会复制一段 prompt，粘贴到你的 AI 编程助手执行。</p>
+        </div>
+        <div class="form-row">
+          <div>
+            <div class="form-label">AI 编程助手</div>
+            <div class="form-label-hint">Claude Code 用斜杠命令；Codex 没有斜杠入口，用一句点名 skill 的话。</div>
+          </div>
+          <div class="form-control">
+            <div class="assistant-seg" role="radiogroup" aria-label="复制给">
+              <button
+                v-for="assistant in PROMPT_ASSISTANTS"
+                :key="assistant.id"
+                type="button"
+                role="radio"
+                :aria-checked="String(promptAssistant.id === assistant.id)"
+                :class="{ on: promptAssistant.id === assistant.id }"
+                :data-assistant="assistant.id"
+                @click="setPromptAssistant(assistant.id)"
+              >{{ assistant.label }}</button>
+            </div>
+            <code class="assistant-example">{{ renderPrompt(continueEditingPrompt({ name: 'release-checklist' }), promptAssistant.id) }}…</code>
+          </div>
+        </div>
+      </section>
+
       <!-- Recap -->
       <section class="settings-section">
         <div class="settings-section-head">
@@ -411,6 +443,15 @@ function fmtRelative(iso) {
   padding: 1px 4px; background: rgba(0,0,0,0.3); border-radius: 3px; color: var(--muted);
 }
 .form-control { display: flex; flex-direction: column; gap: 8px; }
+.assistant-seg { display: inline-flex; align-self: flex-start; border: 1px solid var(--hairline-strong); border-radius: 6px; overflow: hidden; }
+.assistant-seg button { height: 28px; padding: 0 14px; font-size: 12.5px; color: var(--fg-2); transition: background 0.1s, color 0.1s; }
+.assistant-seg button + button { border-left: 1px solid var(--hairline-strong); }
+.assistant-seg button:hover { background: var(--surface-strong); color: var(--fg); }
+.assistant-seg button.on { background: var(--accent-soft); color: var(--accent-2); font-weight: 600; }
+.assistant-example {
+  font-family: var(--font-mono); font-size: 11.5px; color: var(--fg-2);
+  background: rgba(0,0,0,0.3); border: 1px solid var(--hairline); border-radius: 5px; padding: 6px 10px;
+}
 
 .path-input { display: flex; gap: 6px; }
 .path-field {

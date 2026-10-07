@@ -27,6 +27,7 @@ import { LIST_POLL_MS, loadPlaygroundRuns, playgroundState, runningCount } from 
 import { DISTILL_EXAMPLE_PROMPT } from './skill-prompts.mjs';
 import PromptCopyButton from './components/PromptCopyButton.vue';
 import PromptCopyToast from './components/PromptCopyToast.vue';
+import { loadPromptAssistant } from './prompt-copy.js';
 
 const router = useRouter();
 const route = useRoute();
@@ -234,6 +235,7 @@ onMounted(() => {
   window.addEventListener('keydown', handleGlobalKeydown);
   document.addEventListener('pointerdown', handleDocumentPointerDown);
   stopSourceUpdates = window.obelisk?.onIndexUpdated?.(() => loadSourceDots()) ?? null;
+  loadPromptAssistant();
   loadSkills();
   stopSkillUpdates = window.obelisk?.onSkillsUpdated?.(() => loadSkills()) ?? null;
   loadShares();

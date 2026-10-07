@@ -2,7 +2,10 @@
 <!-- SPDX-License-Identifier: AGPL-3.0-only -->
 
 <script setup>
-import { promptToast, dismissPromptToast } from '../prompt-copy.js';
+import { promptToast, dismissPromptToast, recopyFor } from '../prompt-copy.js';
+import { assistantLabel, isSkillPrompt, PROMPT_ASSISTANTS } from '../assistant-prompts.mjs';
+
+const other = () => PROMPT_ASSISTANTS.find(assistant => assistant.id !== promptToast.assistant);
 </script>
 
 <template>
@@ -19,7 +22,7 @@ import { promptToast, dismissPromptToast } from '../prompt-copy.js';
           <path d="M3 8l3 3 7-7"/>
         </svg>
         <span v-if="!promptToast.failed">
-          已复制「{{ promptToast.label }}」的 prompt<span class="hint"> · 粘贴到 Claude Code 执行</span>
+          已复制「{{ promptToast.label }}」的 prompt<span class="hint"> · 粘贴到 <strong data-assistant>{{ assistantLabel(promptToast.assistant) }}</strong> 执行</span>
         </span>
         <span v-else>没能写入剪贴板 · 请手动选中下面的 prompt 复制</span>
         <button class="prompt-toast-close" aria-label="关闭" @click="dismissPromptToast">
@@ -29,6 +32,10 @@ import { promptToast, dismissPromptToast } from '../prompt-copy.js';
         </button>
       </div>
       <pre class="prompt-toast-text">{{ promptToast.prompt }}</pre>
+      <div v-if="isSkillPrompt(promptToast.source)" class="prompt-toast-foot">
+        <span>用的是 {{ other().label }}？</span>
+        <button class="prompt-toast-switch" data-switch-assistant @click="recopyFor(other().id)">改成 {{ other().label }} 的写法并重新复制</button>
+      </div>
     </div>
   </Transition>
 </template>
@@ -49,6 +56,10 @@ import { promptToast, dismissPromptToast } from '../prompt-copy.js';
 .prompt-toast-head > span { flex: 1; min-width: 0; }
 .prompt-toast-head .ic { width: 13px; height: 13px; color: var(--accent-2); flex-shrink: 0; }
 .prompt-toast-head .hint { color: var(--muted); }
+.prompt-toast-head .hint strong { color: var(--fg-2); font-weight: 600; }
+.prompt-toast-foot { display: flex; align-items: center; gap: 6px; margin-top: 8px; color: var(--muted); }
+.prompt-toast-switch { font: inherit; color: var(--accent-2); }
+.prompt-toast-switch:hover { text-decoration: underline; text-underline-offset: 2px; }
 .prompt-toast.failed .prompt-toast-head { color: var(--warn); }
 .prompt-toast-close {
   width: 22px; height: 22px; display: grid; place-items: center;

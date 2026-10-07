@@ -9,6 +9,8 @@ import { fmtListTime } from '../utils.js';
 import { groupSkills, shortFingerprint } from '../skill-library.mjs';
 import { DISTILL_EXAMPLE_PROMPT } from '../skill-prompts.mjs';
 import PromptCopyButton from '../components/PromptCopyButton.vue';
+import { promptAssistant } from '../prompt-copy.js';
+import { assistantLabel } from '../assistant-prompts.mjs';
 import SkillSceneTags from '../components/SkillSceneTags.vue';
 import SkillStage from '../components/SkillStage.vue';
 
@@ -98,7 +100,7 @@ function fingerprintOf(skill) {
         <div class="skill-empty-eyebrow"><span class="diamond"></span><span>还没有 Skill</span></div>
         <div class="skill-empty-title">好的 Skill 是从已经发生的工作里沉淀出来的。</div>
         <div class="skill-empty-body">
-          在 Claude Code 里说一句话，例如 <code>把我最近准备求职材料的做法沉淀成一个 Skill</code>。
+          在 {{ assistantLabel(promptAssistant.id) }} 里说一句话，例如 <code>把我最近准备求职材料的做法沉淀成一个 Skill</code>。
           「沉淀 Skill」会从你的全部历史里找出直接证据，起草正文和出处卡；草稿会出现在这里，等你审阅。
         </div>
         <div class="skill-empty-actions">

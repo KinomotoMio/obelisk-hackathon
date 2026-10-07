@@ -4,13 +4,17 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import {
-  continueEditingPrompt,
-  derivePrompt,
-  dropEvidencePrompt,
-  fetchPrompt,
-  mintPrompt,
-} from '../app/src/renderer/src/skill-prompts.mjs';
+import * as skillPrompts from '../app/src/renderer/src/skill-prompts.mjs';
+import { renderPrompt } from '../app/src/renderer/src/assistant-prompts.mjs';
+
+// The prompts as copied for Claude Code (the default); the Codex form is
+// covered in app-assistant-prompts.test.mjs.
+const forClaude = build => (...args) => renderPrompt(build(...args), 'claude-code');
+const continueEditingPrompt = forClaude(skillPrompts.continueEditingPrompt);
+const derivePrompt = forClaude(skillPrompts.derivePrompt);
+const dropEvidencePrompt = forClaude(skillPrompts.dropEvidencePrompt);
+const fetchPrompt = forClaude(skillPrompts.fetchPrompt);
+const mintPrompt = forClaude(skillPrompts.mintPrompt);
 import {
   explorerTxUrl,
   formatSpan,

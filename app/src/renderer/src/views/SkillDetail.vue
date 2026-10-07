@@ -18,6 +18,8 @@ import {
 } from '../skill-library.mjs';
 import { continueEditingPrompt, dropEvidencePrompt, mintPrompt } from '../skill-prompts.mjs';
 import PromptCopyButton from '../components/PromptCopyButton.vue';
+import { promptAssistant } from '../prompt-copy.js';
+import { assistantLabel } from '../assistant-prompts.mjs';
 import SkillSceneTags from '../components/SkillSceneTags.vue';
 import SkillStage from '../components/SkillStage.vue';
 
@@ -175,7 +177,7 @@ onUnmounted(() => {
                     class="evidence-drop"
                     label="去掉"
                     variant="inline"
-                    title="复制 prompt：从证据中去掉这个 session 并重新起草"
+                    purpose="从证据中去掉这个 session 并重新起草"
                     :prompt="dropEvidencePrompt(skill, { sessionId: entry.sessionId, title: entry.title })"
                   />
                 </div>
@@ -294,7 +296,7 @@ onUnmounted(() => {
               :prompt="mintPrompt(skill)"
             />
           </div>
-          <p class="skill-note right">按钮会复制一段 prompt，粘贴到 Claude Code 执行<template v-if="reviewing">；铸造前会先给你看预览</template>。</p>
+          <p class="skill-note right">按钮会复制一段 prompt，粘贴到 {{ assistantLabel(promptAssistant.id) }} 执行<template v-if="reviewing">；铸造前会先给你看预览</template>。</p>
         </div>
       </div>
     </div>

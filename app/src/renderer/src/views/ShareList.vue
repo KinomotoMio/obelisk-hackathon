@@ -11,6 +11,8 @@ import {
   canRevoke, fmtShareTime, rangeLabel, serviceProblem, shareRecord, shareRules, shareStatus, shortAddress,
 } from '../share-view.mjs';
 import PromptCopyButton from '../components/PromptCopyButton.vue';
+import { promptAssistant } from '../prompt-copy.js';
+import { assistantLabel } from '../assistant-prompts.mjs';
 
 // Share tab · 已发送 (#12, docs/vision/02 S3): every share sent from this
 // computer with its state on chain. Sending and revoking happen in the AI
@@ -134,7 +136,7 @@ onBeforeUnmount(() => {
                     label="撤回"
                     variant="inline"
                     :prompt="revokePrompt(row.share)"
-                    title="复制撤回这条分享的 prompt，粘贴到 Claude Code 执行"
+                    purpose="撤回这条分享"
                   />
                 </td>
               </tr>
@@ -154,7 +156,7 @@ onBeforeUnmount(() => {
         <div class="share-empty-eyebrow"><span class="diamond"></span><span>还没有发出的分享</span></div>
         <div class="share-empty-title">把一段 session 只给 TA 看。</div>
         <div class="share-empty-body">
-          在 Session 详情页点「分享」，选好消息范围、接收者的钱包地址和打开规则，复制成 prompt 粘贴到 Claude Code。
+          在 Session 详情页点「分享」，选好消息范围、接收者的钱包地址和打开规则，复制成 prompt 粘贴到 {{ assistantLabel(promptAssistant.id) }}。
           也可以直接对它说，例如 <code>{{ SHARE_EXAMPLE_PROMPT }}</code>。
           内容在本机打码、加密后才离开，只有那个钱包能打开；发出的分享和对方是否已读会出现在这里。
         </div>
