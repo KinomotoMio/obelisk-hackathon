@@ -51,5 +51,30 @@ export default defineConfig({
       url: "https://rpc.botchain.ai",
       accounts: [configVariable("BOT_DEPLOYER_PRIVATE_KEY")],
     },
+    // Read-only connections for source verification (scripts/verify.ts):
+    // no account, so verifying never asks for the deployer key.
+    botTestnetPublic: { type: "http", chainType: "l1", chainId: 968, url: "https://rpc.bohr.life", accounts: [] },
+    botMainnetPublic: { type: "http", chainType: "l1", chainId: 677, url: "https://rpc.botchain.ai", accounts: [] },
+  },
+  // BOT Chain's explorers are Blockscout instances with a public API; Hardhat
+  // knows neither chain, so they are described here for `hardhat verify`.
+  chainDescriptors: {
+    968: {
+      name: "BOT Chain Testnet",
+      blockExplorers: {
+        blockscout: { name: "BOT Chain Testnet Explorer", url: "https://scan.bohr.life", apiUrl: "https://scan.bohr.life/api" },
+      },
+    },
+    677: {
+      name: "BOT Chain",
+      blockExplorers: {
+        blockscout: { name: "BOT Chain Explorer", url: "https://scan.botchain.ai", apiUrl: "https://scan.botchain.ai/api" },
+      },
+    },
+  },
+  verify: {
+    blockscout: { enabled: true },
+    etherscan: { enabled: false },
+    sourcify: { enabled: false },
   },
 });

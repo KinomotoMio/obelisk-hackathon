@@ -12,7 +12,9 @@
     "export-abi": "hardhat run scripts/export-abi.ts",
     "deploy:local": "hardhat --build-profile production --network hardhat run scripts/deploy.ts",
     "deploy:testnet": "hardhat --build-profile production --network botTestnet run scripts/deploy.ts",
-    "deploy:mainnet": "hardhat --build-profile production --network botMainnet run scripts/deploy.ts"
+    "deploy:mainnet": "hardhat --build-profile production --network botMainnet run scripts/deploy.ts",
+    "verify:testnet": "hardhat --build-profile production --network botTestnetPublic run scripts/verify.ts",
+    "verify:mainnet": "hardhat --build-profile production --network botMainnetPublic run scripts/verify.ts"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox-viem": "^5.0.7",
