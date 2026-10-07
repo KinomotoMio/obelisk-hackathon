@@ -1,12 +1,13 @@
 ---
 name: obelisk-usage
 description: >
-  Turn on, check, send, or turn off Obelisk's Skill usage reporting with the `obelisk usage` CLI:
-  how often the user really invoked minted Skills, counted once per wallet on BOT Chain. Use when
-  the user says "开启上报", "开启使用量上报", "上报 Skill 使用情况", "关闭上报", "我上报了什么",
-  "turn on usage reporting", "report my Skill usage", or pastes a reporting prompt copied from the
-  Obelisk App. Never turn reporting on without showing the preview and getting the user's
-  confirmation.
+  Turn on, check, send, or turn off Obelisk's Skill usage reporting, and judge the scenes and
+  outcomes of Skill invocations, with the `obelisk usage` CLI: how often the user really invoked
+  minted Skills, where, and how it went, counted once per wallet on BOT Chain. Use when the user
+  says "开启上报", "开启使用量上报", "上报 Skill 使用情况", "关闭上报", "我上报了什么", "判断 Skill
+  调用的结果", "统计顺利率", "turn on usage reporting", "judge my Skill invocations", or pastes a
+  reporting prompt copied from the Obelisk App. Never turn reporting on or run the judge without
+  showing the preview and getting the user's confirmation.
 allowed-tools:
   - Bash(obelisk:*)
 ---
@@ -35,6 +36,8 @@ are public under the wallet address.
 | `obelisk usage report` | Sends what increased since the last report. Fails while reporting is off. | Yes |
 | `obelisk usage report --if-due` | The same, at most once a day; does nothing while reporting is off. For schedulers. | Yes |
 | `obelisk usage disable` | Turns reporting off. Totals already reported stay on chain. | No |
+| `obelisk usage judge [--harness claude\|codex] [--limit <n>]` | **Preview only.** How many invocations would be judged, in how many runs of the local harness, and what each run reads. | No |
+| `obelisk usage judge --confirm` | Runs the judge on the user's own Claude Code or Codex and stores scenes and outcomes locally. | No (local only) |
 
 Each command prints one JSON object; `next` says what to do next. Errors use
 the `{ "error": ... }` envelope and exit with code 1.
@@ -56,6 +59,27 @@ the `{ "error": ... }` envelope and exit with code 1.
 
 Do not add `--confirm` on your own. A confirmation the user gave earlier does
 not carry over to a new preview.
+
+## "Judge how my Skill invocations went" (判断 Skill 调用的结果)
+
+Reports always carry fact signals, counted by rule: a tool error after the
+Skill load, the person correcting or interrupting, one file edited three or
+more times, the same Skill loaded again. Scenes and outcomes (顺利 / 有返工 /
+失败 / 无法判断) need a judgment by the user's own AI coding assistant:
+
+1. Run `obelisk usage judge`. If it returns `nothing_to_judge`, say so.
+2. Show the user: how many invocations and which Skills, how many runs of
+   which harness (`claude` or `codex`), that each run reads the part of the
+   session after the Skill load (`reads`), that it uses their own
+   subscription (`cost`), and that the text and reasons stay on this computer
+   (`stays`). Ask them to confirm.
+3. Only after they confirm, run the command from `next`. Report how many were
+   judged and the outcomes; if `status` is `partial`, say what stopped it
+   (`error`) and that running the same command continues.
+
+Do not judge inside this conversation instead of running the command, and do
+not read the sessions yourself to judge them: the command sends each slice
+only to the harness, in a run that saves no session.
 
 ## Other requests
 

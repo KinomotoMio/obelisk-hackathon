@@ -173,6 +173,7 @@ test('build:skill ships the standalone usage reporting skill, which previews bef
   assert.match(skill, /开启上报/);
   assert.match(skill, /Bash\(obelisk:\*\)/);
   assert.match(skill, /obelisk usage enable --confirm/);
+  assert.match(skill, /obelisk usage judge --confirm/);
   assert.match(skill, /Do not add `--confirm` on your own/);
   assert.deepEqual(findDynamicSkillContent(skill), []);
 });

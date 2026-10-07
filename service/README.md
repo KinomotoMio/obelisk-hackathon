@@ -283,8 +283,10 @@ How to read the fields:
   (`signal/tool-error`, `signal/user-correction`, `signal/repeated-edit`,
   `signal/repeated-invocation`); keys are `keccak256` of those ids
   ([`packages/core/src/usage-buckets.ts`](../packages/core/src/usage-buckets.ts)).
-  Show `judged` and `unknown` next to `smoothRate`. Scene and outcome counts
-  are filled in by #25; until then they are empty arrays and zeros.
+  Show `judged` and `unknown` next to `smoothRate`. Fact signals are counted
+  by rule on each reporter's computer; scenes and outcomes come from
+  `obelisk usage judge` (#25), so they cover only the invocations a reporter
+  had judged and can be fewer than `totalInvocations`.
 - **Trend.** The chain keeps no history that a view can return and BOT Chain
   has no `eth_getLogs`, so the trend comes from this service's own record of
   the reports it relayed: each confirmed `ReportUsage` adds the invocations it

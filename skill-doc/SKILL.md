@@ -196,7 +196,8 @@ change nothing, and the `--confirm` step runs only after the user agrees.
 ## Usage reporting
 
 Requests to turn on, check, send, or turn off Skill usage reporting ("开启上报",
-"上报 Skill 使用情况", "turn on usage reporting") belong to the `obelisk-usage`
+"上报 Skill 使用情况", "turn on usage reporting"), or to judge how Skill
+invocations went ("判断 Skill 调用的结果"), belong to the `obelisk-usage`
 skill. Turning it on writes on chain from then on: preview with
 `obelisk usage enable` and add `--confirm` only after the user agrees.
 
