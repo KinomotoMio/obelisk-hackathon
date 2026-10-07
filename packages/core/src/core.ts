@@ -22,6 +22,7 @@ import {
 } from './provider-settings.ts';
 import type { ProviderRegistry } from './providers/registry.ts';
 import { createQueryApi, createAttuneApi } from './query.ts';
+import { historySessions, summarizeHistory, type HistoryPeriod, type HistorySession, type HistorySummary } from './history-summary.ts';
 import { querySessionDetail, type SessionDetailForRead } from './session-detail-query.ts';
 import { recognizeSkillInvocations } from './skill-invocations.ts';
 import type { SkillInvocation, SkillInvocationFilter } from './skill-invocations.ts';
@@ -447,6 +448,22 @@ export async function withSkillInvocations<T>(fn: (db: SqliteDb, invocations: Sk
       return rethrowUnlessSchemaBlocked(error);
     }
     return await fn(db, invocations);
+  } finally {
+    db.close();
+  }
+}
+
+// A period of history summed up, plus the named sessions the user took part
+// in, from the freshly refreshed index (AI 能力履历, #28). Read-only.
+export function readHistory(period: HistoryPeriod, sessionIds: string[] = []): { summary: HistorySummary; sessions: Map<string, HistorySession> } {
+  refreshQueryIndex();
+  const db = openReadDb();
+  try {
+    try {
+      return { summary: summarizeHistory(db, period), sessions: historySessions(db, sessionIds) };
+    } catch (error) {
+      return rethrowUnlessSchemaBlocked(error);
+    }
   } finally {
     db.close();
   }
