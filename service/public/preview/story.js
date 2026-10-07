@@ -98,6 +98,8 @@ export function applyProvenance(story, provenance, base = '') {
   const runSteps = new Map(provenance.steps.map((step) => [step.id, step]));
   const runRoles = new Map(provenance.roles.map((role) => [role.id, role]));
   const chainId = provenance.run.network?.chainId ?? null;
+  // The Playground's made-up run for page development (playground/src/fixture.ts) is never presented as real.
+  const fixture = /^fixture-/.test(String(provenance.run.id));
 
   const roles = story.roles.map((role) => {
     const real = runRoles.get(role.id);
@@ -157,11 +159,13 @@ export function applyProvenance(story, provenance, base = '') {
     roles,
     steps,
     source: {
-      kind: provenance.run.dryRun ? 'dry-run' : 'playground-run',
-      label: provenance.run.dryRun ? '试运行数据' : '真实运行',
-      note: provenance.run.dryRun
-        ? '这次 Playground 运行没有调用模型，也没有上链，只用来检查流程。'
-        : '界面截图和链上交易来自一次 Playground 真实运行；仍为示意的画面单独标出。',
+      kind: fixture ? 'fixture' : provenance.run.dryRun ? 'dry-run' : 'playground-run',
+      label: fixture ? '示例数据' : provenance.run.dryRun ? '试运行数据' : '真实运行',
+      note: fixture
+        ? '这是开发页面用的示例运行（fixture），步骤、截图和交易都是编出来的，不是真实数据。'
+        : provenance.run.dryRun
+          ? '这次 Playground 运行没有调用模型，也没有上链，只用来检查流程。'
+          : '界面截图和链上交易来自一次 Playground 真实运行；仍为示意的画面单独标出。',
       run: {
         id: provenance.run.id,
         scenario: provenance.run.scenario?.title ?? provenance.run.scenario?.name ?? null,
@@ -176,16 +180,31 @@ export function applyProvenance(story, provenance, base = '') {
   };
 }
 
+const PUBLISHED_RUN = /^\/runs\/[A-Za-z0-9][A-Za-z0-9_-]{0,95}\/provenance\.json$/;
+
 /**
  * story.json under `root` (the page's directory, e.g. "/preview/"), with the
- * published run applied when it names one. story.run.provenance is relative
- * to `root`, and the record's screenshots are relative to the record.
+ * published run applied when it names one. story.run.provenance is either
+ * relative to `root`, or a run published to this service's run pages
+ * (`/runs/<run id>/provenance.json`, npm run playground -- publish, #32); the
+ * record's screenshots are relative to the record.
  */
 export async function loadStory(fetchJson, root = '/preview/') {
   const story = checkStory(await fetchJson(`${root}story.json`));
   const record = story.run?.provenance;
   if (!record) return story;
-  if (typeof record !== 'string' || !/^[\w-]+(\/[\w.-]+)*\.json$/.test(record) || record.includes('..')) fail('run.provenance must be a path under the page directory');
+  if (typeof record === 'string' && PUBLISHED_RUN.test(record)) {
+    return checkStory(applyProvenance(story, await fetchJson(record), record.replace(/[^/]*$/, '')));
+  }
+  if (typeof record !== 'string' || !/^[\w-]+(\/[\w.-]+)*\.json$/.test(record) || record.includes('..')) fail('run.provenance must be a path under the page directory or /runs/<run id>/provenance.json');
   const base = `${root}${record.replace(/[^/]*$/, '')}`;
   return checkStory(applyProvenance(story, await fetchJson(`${root}${record}`), base));
+}
+
+/** The run page of a step that came from a real run: /runs/<run id>?step=<its first run step>. */
+export function runPageUrl(provenance) {
+  const id = provenance?.runId;
+  if (typeof id !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9_-]{0,95}$/.test(id)) return null;
+  const step = provenance.steps?.[0]?.id;
+  return `/runs/${id}${typeof step === 'string' && /^[\w-]{1,64}$/.test(step) ? `?step=${step}` : ''}`;
 }

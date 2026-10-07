@@ -6,7 +6,7 @@
 // files next to it and this service's GET /v1/chain.
 
 import { showNetwork } from '/site/site.js';
-import { explorerTxUrl, loadStory, stepsOfRole, timelineUpTo } from '/preview/story.js';
+import { explorerTxUrl, loadStory, runPageUrl, stepsOfRole, timelineUpTo } from '/preview/story.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -167,7 +167,11 @@ function renderStep() {
   const prov = $('pv-step-prov');
   if (step.provenance) {
     const harness = step.provenance.harness ? ` · ${step.provenance.harness.kind}${step.provenance.harness.model ? ` ${step.provenance.harness.model}` : ''}` : '';
-    prov.textContent = `出处：运行 ${step.provenance.runId} · 步骤 ${step.provenance.steps.map((item) => item.id).join('、')} · ${step.provenance.sessions} 个 session${harness}`;
+    const page = runPageUrl(step.provenance);
+    prov.replaceChildren(
+      `出处：运行 ${step.provenance.runId} · 步骤 ${step.provenance.steps.map((item) => item.id).join('、')} · ${step.provenance.sessions} 个 session${harness}`,
+      ...(page ? [' · ', el('a', { class: 'pv-run-link', href: page }, '查看这次运行的记录 →')] : []),
+    );
     prov.hidden = false;
   } else {
     prov.hidden = true;
@@ -212,7 +216,7 @@ function renderSource() {
   const run = source.run;
   const details = run ? ` 运行 ${run.id}${run.network ? ` · ${run.network}` : ''}${run.gitCommit ? ` · 代码 ${run.gitCommit}` : ''}。` : '';
   $('pv-source-note').replaceChildren(source.note ?? '', details,
-    run?.record ? el('a', { href: `/preview/${run.record}`, text: ' 查看出处记录' }) : '');
+    run?.record ? el('a', { href: run.record.startsWith('/runs/') ? run.record.replace(/\/provenance\.json$/, '') : `/preview/${run.record}`, text: ' 查看出处记录' }) : '');
   $('pv-source').classList.toggle('real', real);
   $('pv-source').hidden = false;
   $('pv-roles-note').textContent = real

@@ -8,7 +8,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-import { applyProvenance, checkStory, explorerTxUrl, loadStory, stepsOfRole, timelineUpTo } from '../service/public/preview/story.js';
+import { applyProvenance, checkStory, explorerTxUrl, loadStory, runPageUrl, stepsOfRole, timelineUpTo } from '../service/public/preview/story.js';
 
 const story = JSON.parse(readFileSync(new URL('../service/public/preview/story.json', import.meta.url), 'utf8'));
 const provenance = JSON.parse(readFileSync(new URL('../playground/examples/provenance.example.json', import.meta.url), 'utf8'));
@@ -69,4 +69,27 @@ test('only safe links and paths come out of the data', async () => {
   const fetchJson = async (url) => { fetched.push(url); return url.endsWith('story.json') ? { ...story, run: { provenance: '../../v1/admin.json' } } : provenance; };
   await assert.rejects(loadStory(fetchJson), /must be a path under the page directory/);
   assert.deepEqual(fetched, ['/preview/story.json']);
+});
+
+test('a run published to /runs/<id> is read from there, and each real step links to its run page (#32)', async () => {
+  const mapped = { ...story, run: { provenance: `/runs/${provenance.run.id}/provenance.json` }, steps: story.steps.map((step) => (step.id === 'mint' ? { ...step, playgroundStep: 'a-distill-mint' } : step)) };
+  const fetched = [];
+  const real = await loadStory(async (url) => { fetched.push(url); return url.endsWith('story.json') ? mapped : provenance; });
+  assert.deepEqual(fetched, ['/preview/story.json', `/runs/${provenance.run.id}/provenance.json`]);
+  const mint = real.steps.find((step) => step.id === 'mint');
+  assert.ok(mint.screens.filter((screen) => screen.image).every((screen) => screen.image.startsWith(`/runs/${provenance.run.id}/screenshots/`)));
+  assert.equal(runPageUrl(mint.provenance), `/runs/${provenance.run.id}?step=a-distill-mint`);
+  assert.equal(runPageUrl({ runId: '../x', steps: [] }), null);
+  assert.equal(runPageUrl({ runId: 'run-1', steps: [{ id: 'a b' }] }), '/runs/run-1');
+
+  for (const bad of ['/runs/../provenance.json', '/runs/x/../../v1/admin.json', '/runs/x/events.jsonl', 'https://evil.example/runs/x/provenance.json']) {
+    await assert.rejects(loadStory(async (url) => (url.endsWith('story.json') ? { ...story, run: { provenance: bad } } : provenance)), /must be a path/, bad);
+  }
+});
+
+test('the Playground fixture run is never presented as a real run', () => {
+  const fixture = structuredClone(provenance);
+  fixture.run.id = 'fixture-demo-loop';
+  const shown = checkStory(applyProvenance(story, fixture, '/runs/fixture-demo-loop/'));
+  assert.deepEqual([shown.source.kind, shown.source.label], ['fixture', '示例数据']);
 });

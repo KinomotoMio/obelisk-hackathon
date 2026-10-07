@@ -80,6 +80,7 @@
 .pv-step-title { font-size: 17px; font-weight: 600; line-height: 1.45; }
 .pv-step-point { color: var(--fg-2); font-size: 13.5px; margin-top: 4px; max-width: 760px; }
 .pv-step-prov { color: var(--muted); font-size: 12.5px; margin-top: 6px; }
+.pv-run-link { color: var(--accent-2); white-space: nowrap; }
 
 /* Role panes */
 .pv-screens { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
