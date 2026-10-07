@@ -21,6 +21,7 @@ import {
   loadWallet,
   signRegisterKey,
   WALLET_KEYCHAIN_SERVICE,
+  walletActivation,
   WalletNotFoundError,
 } from '../packages/core/src/wallet.ts';
 import { makeTempDir } from './temp-dirs.mjs';
@@ -132,4 +133,10 @@ test('an interrupted create heals from the keychain and a lost key is never pape
 
   renameSync(join(home, 'wallet.json'), join(home, 'wallet.json.bak'));
   await assert.rejects(loadWallet(walletContext(home, secrets)), (error) => error instanceof WalletNotFoundError && /obelisk wallet create/.test(error.message));
+});
+
+test('activation compares the key on chain with the one this wallet derives', () => {
+  assert.equal(walletActivation({ registered: false, pubKey: null }, VECTOR_REGISTERED_KEY), 'not_activated');
+  assert.equal(walletActivation({ registered: true, pubKey: VECTOR_REGISTERED_KEY.toUpperCase().replace('0X', '0x') }, VECTOR_REGISTERED_KEY), 'active');
+  assert.equal(walletActivation({ registered: true, pubKey: `0x01${'22'.repeat(32)}` }, VECTOR_REGISTERED_KEY), 'different_key');
 });

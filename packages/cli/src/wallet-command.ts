@@ -14,6 +14,7 @@ import {
   deriveEncryptionKey,
   loadWallet,
   signRegisterKey,
+  walletActivation,
   type WalletContext,
 } from '../../core/src/wallet.ts';
 import {
@@ -22,7 +23,6 @@ import {
   resolveServiceUrl,
   ServiceError,
   type ChainInfo,
-  type KeyInfo,
 } from '../../core/src/obelisk-service.ts';
 
 export const WALLET_USAGE = 'Usage: obelisk wallet create | show | activate [--confirm]';
@@ -50,13 +50,6 @@ function addressUrl(chain: ChainInfo, address: string): string | null {
   return chain.explorerUrl ? `${chain.explorerUrl}/address/${address}` : null;
 }
 
-type Activation = 'active' | 'not_activated' | 'different_key';
-
-function activationOf(key: KeyInfo, registeredKey: string): Activation {
-  if (!key.registered || !key.pubKey) return 'not_activated';
-  return key.pubKey.toLowerCase() === registeredKey.toLowerCase() ? 'active' : 'different_key';
-}
-
 async function create(deps: WalletCommandDeps) {
   const ctx = context(deps);
   const { status, address } = await createWallet(ctx);
@@ -80,7 +73,7 @@ async function show(deps: WalletCommandDeps) {
     const client = service(deps);
     const chain = await client.chain();
     const key = await client.key(account.address);
-    const activation = activationOf(key, registeredKey);
+    const activation = walletActivation(key, registeredKey);
     return {
       ...base,
       network: networkLabel(chain.chainId),
@@ -109,7 +102,7 @@ async function activate(deps: WalletCommandDeps, confirm: boolean) {
   const keyRegistry = chain.contracts.KeyRegistry;
   const network = networkLabel(chain.chainId);
   const current = await client.key(account.address);
-  const state = activationOf(current, registeredKey);
+  const state = walletActivation(current, registeredKey);
 
   if (state === 'active') {
     return {
@@ -170,7 +163,7 @@ async function activate(deps: WalletCommandDeps, confirm: boolean) {
   }
 
   const after = await client.key(account.address);
-  if (activationOf(after, registeredKey) !== 'active') {
+  if (walletActivation(after, registeredKey) !== 'active') {
     throw new Error(`Transaction ${outcome.txHash} was confirmed, but KeyRegistry does not show this wallet's key yet; run \`obelisk wallet show\` to check again`);
   }
   return {

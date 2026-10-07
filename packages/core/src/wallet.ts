@@ -169,6 +169,20 @@ export async function loadWallet(ctx: WalletContext): Promise<{ record: WalletRe
   return { record: healed, account };
 }
 
+// --- Activation --------------------------------------------------------------
+
+export type WalletActivation = 'active' | 'not_activated' | 'different_key';
+
+/**
+ * Whether KeyRegistry holds this wallet's encryption key: `registeredKey` is
+ * what deriveEncryptionKey() gives for the wallet, `registered`/`pubKey` what
+ * the chain has.
+ */
+export function walletActivation(key: { registered: boolean; pubKey: string | null }, registeredKey: string): WalletActivation {
+  if (!key.registered || !key.pubKey) return 'not_activated';
+  return key.pubKey.toLowerCase() === registeredKey.toLowerCase() ? 'active' : 'different_key';
+}
+
 export interface EncryptionKeyPair {
   privateKey: Uint8Array;
   publicKey: Uint8Array;
