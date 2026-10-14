@@ -35,7 +35,7 @@ import { systemSecretStore } from '../../core/src/keychain.ts';
 import { skillAccessTypes } from '../../core/src/chain-protocol.ts';
 import type { Hex } from 'viem';
 
-export const SKILL_FETCH_USAGE = 'Usage: obelisk skill fetch <skill id | fingerprint> [--version <n>] [--name <name>] [--project <dir>] [--harness claude|codex] [--receipt <use-tx>] [--confirm]';
+export const SKILL_FETCH_USAGE = 'Usage: obelisk skill fetch <skill id | fingerprint> [--version <n>] [--name <name>] [--project <dir>] [--harness claude|codex] [--receipt <use-tx> [--access <buyer>:<deadline>:<signature>]] [--confirm]';
 
 const NAME_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
@@ -60,8 +60,16 @@ async function readOptional(path: string): Promise<string | null> {
   }
 }
 
+/** A SkillAccess request a browser wallet already signed (the web market's install prompt). */
+interface SignedAccess {
+  buyer: Hex;
+  deadline: string;
+  signature: Hex;
+}
+
 interface FetchOptions {
   receipt: Hex | null;
+  access: SignedAccess | null;
   version: number | null;
   name: string | null;
   project: string | null;
@@ -92,7 +100,14 @@ async function fetchSkill(ref: string, options: FetchOptions, deps: SkillChainDe
   if (!info.content) {
     throw new Error(`${label} is minted, but its body is not stored on the Obelisk online service; its author can store it by running \`obelisk skill mint <name> --confirm ${fingerprint}\` again`);
   }
-  if (info.content.locked && options.receipt) {
+  if (info.content.locked && options.receipt && options.access) {
+    // Bought in the browser: the buyer's wallet signed this access; the service checks it against the receipt.
+    const delivered = await client.licensedSkillContent(info.version.fingerprint, {
+      buyer: options.access.buyer, useTransaction: options.receipt,
+      deadline: options.access.deadline, signature: options.access.signature,
+    });
+    info.content = delivered.content;
+  } else if (info.content.locked && options.receipt) {
     if (!chain.market) throw new Error('No settlement contract on this network');
     const paths = resolveObeliskPaths({ env: envOf(deps) });
     const { account } = await loadWallet({ paths, secrets: deps.secrets ?? systemSecretStore() });
@@ -149,6 +164,7 @@ async function fetchSkill(ref: string, options: FetchOptions, deps: SkillChainDe
     options.project !== null ? ` --project ${JSON.stringify(options.project)}` : '',
     ` --harness ${options.harness}`,
     options.receipt ? ` --receipt ${options.receipt}` : '',
+    options.access ? ` --access ${options.access.buyer}:${options.access.deadline}:${options.access.signature}` : '',
   ].join('');
   const warnings = findDynamicSkillContent(body).map((item) =>
     `The body contains ${item}, which Claude Code rewrites at load time, so its invocations will not be recognized as this version.`);
@@ -208,7 +224,7 @@ async function fetchSkill(ref: string, options: FetchOptions, deps: SkillChainDe
 export async function runSkillFetchCommand(args: string[], deps: SkillChainDeps = {}): Promise<unknown> {
   const [ref, ...rest] = args;
   if (!ref || ref.startsWith('--')) throw new Error(SKILL_FETCH_USAGE);
-  const options: FetchOptions = { version: null, name: null, project: null, confirm: false, harness: 'claude', receipt: null };
+  const options: FetchOptions = { version: null, name: null, project: null, confirm: false, harness: 'claude', receipt: null, access: null };
   for (let i = 0; i < rest.length; i++) {
     const flag = rest[i];
     const value = rest[i + 1];
@@ -219,8 +235,13 @@ export async function runSkillFetchCommand(args: string[], deps: SkillChainDeps 
     else if (flag === '--harness' && (value === 'codex' || value === 'claude')) options.harness = value;
     else if (flag === '--project') options.project = value;
     else if (flag === '--receipt' && /^0x[0-9a-fA-F]{64}$/.test(value)) options.receipt = value as Hex;
+    else if (flag === '--access' && /^0x[0-9a-fA-F]{40}:\d{1,12}:0x[0-9a-fA-F]{130}$/.test(value)) {
+      const [buyer, deadline, signature] = value.split(':') as [Hex, string, Hex];
+      options.access = { buyer, deadline, signature };
+    }
     else throw new Error(SKILL_FETCH_USAGE);
     i++;
   }
+  if (options.access && !options.receipt) throw new Error('--access goes with the --receipt it was signed for');
   return fetchSkill(ref, options, deps);
 }
