@@ -1,0 +1,24 @@
+{
+  "capturedAt": "2026-10-07T21:33:39.467Z",
+  "networks": [
+    {
+      "chainId": 968,
+      "block": 26065779,
+      "transactions": 109,
+      "skills": 20,
+      "invocations": 39,
+      "shares": 15,
+      "opens": 13
+    },
+    {
+      "chainId": 677,
+      "block": 25899210,
+      "transactions": 10,
+      "skills": 4,
+      "invocations": 5,
+      "shares": 0,
+      "opens": 0
+    }
+  ],
+  "method": "Unique transaction hashes from logs emitted by the five deployed contracts, from deployment through the recorded block. Excludes deployment and funding. Shares and opens count ShareCreated and ShareOpened events. Skills use the live market API total."
+}

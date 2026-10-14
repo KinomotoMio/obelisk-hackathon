@@ -1,0 +1,4 @@
+Text replacements (English -> Chinese, verbatim):
+- HACKATHON BUILD (top-right label) -> 黑客松成果
+- Title three lines "PUTTING" / "CONTEXT" / "ON-CHAIN" (last line violet) -> two lines "把上下文" / "放上链" (second line violet), same left position and same very large size, bold Chinese display weight
+- "BOT Chain. Provenance, usage, payment, privacy." -> BOT Chain：出处、用量、付费、隐私。 (keep "BOT Chain" in Latin letters)

@@ -1,0 +1,14 @@
+Use case: infographic-diagram
+Asset type: 16:9 presentation slide for a hackathon pitch, at least 1672x941.
+Style: match Image 1 and Image 2 exactly. They are FLAT UI-style slides: warm off-white paper (#f2f1ec) with fine grain, a thin black hairline frame with crop marks and tick marks, a small solid black square at the bottom-right, thin black outlined cards, a halftone dot-gradient strip on the left edge of cards, soft lavender (#d9d0fb, accent #8c73f2) highlight panels, small circular light-grey icon badges with simple line icons, and a big uppercase title in a wide rounded technical display typeface with the second line in violet.
+Strictly flat: NO 3D, NO perspective, NO glass or metal render, NO shadows, NO photoreal objects.
+READABILITY IS THE TOP PRIORITY: every piece of text the audience must read is LARGE: body lines at least 2.8% of the image height, card headings larger still, high-contrast dark ink on light, titles very large. Use fewer, bigger elements instead of many small ones. Only decorative captions (like 'WHO YOU ARE') may stay small, and the top-right label may stay small. No paragraphs, short phrases only, generous whitespace, nothing cramped.
+Leave the top-left corner (22% width x 12% height) completely empty paper. Do not draw any logo or wordmark.
+Render only the exact text listed below, verbatim and correctly spelled. Add no other text.
+
+Layout: stacked wide rows exactly like Image 2 (halftone strip on the left of each row, a number, a name with a small caption, a text block on the right, a status mark at the far right). Four rows. Top-right small label: "DEMO".
+Title: "ONE LOOP," / "END TO END." (second line violet).
+Row 01 name "Find", caption "BY MEASURED SCENES", text "Pick a resume Skill."
+Row 02 name "Use", caption "LOCALLY", text "It reads your own history."
+Row 03 name "Prove", caption "ON-CHAIN", text "Numbers link to on-chain records."
+Row 04 (lavender) name "Show", caption "ONE WALLET", text "Share the evidence with a recruiter's wallet." 

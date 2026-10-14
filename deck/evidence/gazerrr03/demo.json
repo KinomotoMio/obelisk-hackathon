@@ -1,0 +1,12 @@
+{
+  "source": "index.html",
+  "demo": "demo.html",
+  "screenshot": "../../assets/gazerrr03-resume-demo.jpg",
+  "changes": {
+    "mintedSkills": {
+      "original": 0,
+      "illustrative": 3
+    }
+  },
+  "note": "Illustrative count only, labeled in the HTML screenshot and deck. No on-chain records changed. Other counts and summaries preserve the supplied source."
+}

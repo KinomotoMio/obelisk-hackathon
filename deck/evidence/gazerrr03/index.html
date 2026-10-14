@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>AI 能力履历</title>
+<style>
+  /* Colours and type follow the Obelisk App (app/src/renderer/styles/base.css). */
+  :root {
+    --bg:#0a0b14; --bg-2:#11131f; --surface:rgba(255,255,255,0.03); --surface-strong:rgba(255,255,255,0.06);
+    --fg:rgba(255,255,255,0.92); --fg-2:rgba(255,255,255,0.72); --muted:rgba(255,255,255,0.5); --hairline:rgba(255,255,255,0.08);
+    --accent:#a78bfa; --accent-2:#c4b5fd; --accent-soft:rgba(167,139,250,0.12);
+    --ok:#4ade80; --ok-soft:rgba(74,222,128,0.12); --warn:#fbbf24; --warn-soft:rgba(251,191,36,0.14);
+    --chain:#38bdf8; --chain-soft:rgba(56,189,248,0.12);
+    --font-sans:-apple-system, BlinkMacSystemFont, "Inter", "PingFang SC", "Noto Sans SC", "Segoe UI", system-ui, sans-serif;
+    --font-mono:ui-monospace, "JetBrains Mono", "SF Mono", Menlo, monospace;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body {
+    color:var(--fg); font:14px/1.6 var(--font-sans); min-height:100vh; padding:40px 24px 64px;
+    background-color:var(--bg);
+    background-image:radial-gradient(80% 60% at 100% 0%, rgba(236,72,153,0.10), transparent 55%),
+      radial-gradient(70% 60% at 0% 100%, rgba(99,102,241,0.12), transparent 60%),
+      linear-gradient(to bottom, var(--bg) 0%, var(--bg-2) 100%);
+  }
+  a { color:var(--accent-2); text-decoration:none; }
+  a:hover { text-decoration:underline; }
+  .page { max-width:1120px; margin:0 auto; display:flex; flex-direction:column; gap:16px; }
+  .mono { font-family:var(--font-mono); font-size:12.5px; }
+  .muted { color:var(--muted); font-weight:400; }
+  .note { font-size:12.5px; color:var(--muted); }
+  .warn { color:var(--warn); }
+  .net { margin:0 0.25em; }
+  .pill.chain { gap:0; }
+  .pill .net { margin:0 0.2em; }
+  .card { background:var(--surface); border:1px solid var(--hairline); border-radius:14px; padding:18px 20px; }
+  .card h2 { font-size:13px; font-weight:600; color:var(--fg-2); letter-spacing:0.02em; margin-bottom:12px; }
+  .pill { display:inline-flex; align-items:center; gap:6px; padding:2px 10px; border-radius:999px; font-size:12px; font-weight:600; white-space:nowrap; }
+  .pill.ok { background:var(--ok-soft); color:var(--ok); }
+  .pill.warn { background:var(--warn-soft); color:var(--warn); }
+  .pill.acc { background:var(--accent-soft); color:var(--accent-2); }
+  .pill.chain { background:var(--chain-soft); color:var(--chain); }
+  .pill.dim { background:var(--surface-strong); color:var(--fg-2); }
+  .new { display:inline-block; margin-right:5px; padding:0 5px; border-radius:4px; font-size:10.5px; font-weight:700; line-height:16px; background:var(--warn-soft); color:var(--warn); vertical-align:1px; }
+  .head { display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; align-items:flex-start; padding:24px; }
+  .head h1 { font-size:24px; font-weight:700; letter-spacing:-0.01em; }
+  .headline { color:var(--fg-2); font-size:15px; margin-top:4px; max-width:720px; }
+  .meta { margin-top:10px; font-size:12.5px; color:var(--muted); }
+  .head .pills { display:flex; gap:8px; flex-wrap:wrap; }
+  .stats { display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; }
+  .stat { padding:14px 18px; }
+  .stat b { display:block; font-size:28px; font-weight:700; letter-spacing:-0.02em; font-variant-numeric:tabular-nums; }
+  .stat span { color:var(--muted); font-size:12.5px; }
+  .stats-note { margin-top:-6px; padding:0 4px; }
+  .columns { display:grid; grid-template-columns:420px 1fr; gap:16px; align-items:start; }
+  .stack { display:flex; flex-direction:column; gap:16px; min-width:0; }
+  .radar { width:100%; height:auto; display:block; margin:-4px 0 6px; }
+  .radar .grid { fill:none; stroke:rgba(255,255,255,0.12); }
+  .radar .shape { fill:rgba(167,139,250,0.25); stroke:var(--accent); stroke-width:2; stroke-linejoin:round; }
+  .radar .dots { fill:var(--accent-2); }
+  .radar .labels { font-family:var(--font-sans); font-size:17px; fill:rgba(255,255,255,0.86); }
+  .radar .labels .v { font-size:14px; fill:var(--muted); }
+  .dims { display:flex; flex-direction:column; gap:9px; margin:4px 0 12px; }
+  .dim { display:grid; grid-template-columns:1fr auto; gap:4px 10px; align-items:baseline; font-size:13px; }
+  .dim-n { color:var(--fg-2); }
+  .bar { grid-column:1 / -1; height:6px; border-radius:999px; background:var(--surface-strong); overflow:hidden; }
+  .bar > i { display:block; height:100%; border-radius:999px; background:var(--accent); }
+  .ev { display:grid; grid-template-columns:1fr auto; gap:6px 14px; align-items:start; padding:12px 0; border-bottom:1px solid var(--hairline); }
+  .ev:first-of-type { padding-top:0; }
+  .ev:last-child { border-bottom:none; padding-bottom:0; }
+  .ev-title { font-weight:600; font-size:14px; }
+  .ev-summary { color:var(--fg-2); font-size:13px; margin-top:2px; }
+  .ev-meta { display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin-top:8px; }
+  .table-wrap { overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th { text-align:left; color:var(--muted); font-weight:500; font-size:12px; padding:8px 10px; border-bottom:1px solid var(--hairline); white-space:nowrap; }
+  td { padding:10px; border-bottom:1px solid var(--hairline); vertical-align:middle; }
+  tr:last-child td { border-bottom:none; }
+  .num { text-align:right; white-space:nowrap; }
+  .skill-name { font-weight:600; min-width:10em; overflow-wrap:anywhere; }
+  td.record { white-space:nowrap; }
+  .table-wrap + .note { margin-top:10px; }
+  .callout { border-left:3px solid var(--accent); background:var(--accent-soft); padding:12px 16px; border-radius:0 10px 10px 0; font-size:13px; color:var(--fg-2); }
+  .sources { list-style:none; display:flex; flex-direction:column; gap:6px; font-size:12.5px; color:var(--fg-2); }
+  .sources li::before { content:"·"; color:var(--accent-2); margin-right:8px; }
+  @media (max-width:900px) { .columns { grid-template-columns:1fr; } }
+  @media (max-width:640px) {
+    body { padding:20px 16px 48px; }
+    .stats { grid-template-columns:repeat(2, 1fr); }
+    .head { padding:18px; }
+    .ev { grid-template-columns:1fr; }
+    .ev > .pill { justify-self:start; }
+    /* The Skill table as one block per Skill, each figure with its label. */
+    .table-wrap thead { display:none; }
+    .table-wrap table, .table-wrap tbody { display:block; }
+    .table-wrap tr { display:grid; grid-template-columns:repeat(2, 1fr); gap:8px 12px; padding:12px 0; border-bottom:1px solid var(--hairline); }
+    .table-wrap tr:last-child { border-bottom:none; }
+    .table-wrap td { display:block; padding:0; border:none; text-align:left; }
+    .table-wrap td:first-child { grid-column:1 / -1; }
+    .table-wrap td[data-label]::before { content:attr(data-label); display:block; font-size:11.5px; color:var(--muted); font-family:var(--font-sans); }
+  }
+  @media print {
+    :root { --fg:#16181d; --fg-2:#3c4049; --muted:#6b7180; --hairline:#e4e6eb; --surface:#fff; --surface-strong:#f1f2f5; --accent-soft:#efeafd; --accent-2:#6d4fd6; --chain:#0b78b5; --ok:#15803d; --warn:#a15c00; }
+    body { background:#fff; padding:0; }
+    .radar .labels { fill:#16181d; }
+    .radar .grid { stroke:#d6d8de; }
+    .card { break-inside:avoid; }
+  }
+</style>
+</head>
+<body>
+<main class="page">
+  <header class="card head">
+    <div>
+      <h1>AI 能力履历</h1>
+      <p class="headline">从混乱的现场里定位根因，再收敛成可交付、可核对的改动</p>
+      <div class="meta">持有人 <span class="mono">0x5468…A8E2</span> <a href="https://scan.bohr.life/address/0x5468e6e82b44D2316557Ec9019214807452dA8E2" target="_blank" rel="noopener noreferrer">钱包 ↗</a> · 统计范围 2026-04-11 至 2026-10-07 · 生成于 2026-10-07</div>
+    </div>
+    <div class="pills"><span class="pill chain">数据可在<span class="net">BOT Chain 测试网</span>核对</span><span class="pill dim">由 Obelisk 从本机历史统计</span></div>
+  </header>
+
+  <div class="stats">
+    <div class="card stat"><b>601</b><span>个 session</span></div>
+    <div class="card stat"><b>126</b><span>个活跃日</span></div>
+    <div class="card stat"><b>112</b><span>个项目目录</span></div>
+    <div class="card stat"><b>0</b><span>个已铸造 Skill</span></div>
+  </div>
+  <p class="note stats-note">Codex 567 · Claude Code 33 · DeepSeek 1。只计入持有人亲自参与（有自己输入）的 session。</p>
+
+  <div class="columns">
+    
+      <section class="card">
+        <h2>能力维度 <span class="muted">· session 数</span></h2>
+        <svg class="radar" viewBox="-55 0 510 345" role="img" aria-label="能力维度：前端与交互 47 个 session，开发新功能 44 个 session，视觉设计 42 个 session，文档写作与沟通 30 个 session，调试与排障 26 个 session，演示文稿 23 个 session，代码审查 22 个 session，AI 与机器学习 18 个 session">
+            <g class="grid"><polygon points="200.0,58.0 279.2,90.8 312.0,170.0 279.2,249.2 200.0,282.0 120.8,249.2 88.0,170.0 120.8,90.8"/><polygon points="200.0,95.3 252.8,117.2 274.7,170.0 252.8,222.8 200.0,244.7 147.2,222.8 125.3,170.0 147.2,117.2"/><polygon points="200.0,132.7 226.4,143.6 237.3,170.0 226.4,196.4 200.0,207.3 173.6,196.4 162.7,170.0 173.6,143.6"/><path d="M200 170 L200.0 58.0 M200 170 L279.2 90.8 M200 170 L312.0 170.0 M200 170 L279.2 249.2 M200 170 L200.0 282.0 M200 170 L120.8 249.2 M200 170 L88.0 170.0 M200 170 L120.8 90.8"/></g>
+            <polygon class="shape" points="200.0,58.0 274.1,95.9 300.1,170.0 250.6,220.6 200.0,232.0 161.2,208.8 147.6,170.0 169.7,139.7"/>
+            <g class="dots"><circle cx="200.0" cy="58.0" r="3"/><circle cx="274.1" cy="95.9" r="3"/><circle cx="300.1" cy="170.0" r="3"/><circle cx="250.6" cy="220.6" r="3"/><circle cx="200.0" cy="232.0" r="3"/><circle cx="161.2" cy="208.8" r="3"/><circle cx="147.6" cy="170.0" r="3"/><circle cx="169.7" cy="139.7" r="3"/></g>
+            <g class="labels"><text x="200.0" y="22.0" text-anchor="middle">前端与交互</text><text class="v" x="200.0" y="41.0" text-anchor="middle">47 个 session</text><text x="289.1" y="76.9" text-anchor="start">开发新功能</text><text class="v" x="289.1" y="95.9" text-anchor="start">44 个 session</text><text x="326.0" y="166.0" text-anchor="start">视觉设计</text><text class="v" x="326.0" y="185.0" text-anchor="start">42 个 session</text><text x="289.1" y="255.1" text-anchor="start">文档写作与沟通</text><text class="v" x="289.1" y="274.1" text-anchor="start">30 个 session</text><text x="200.0" y="310.0" text-anchor="middle">调试与排障</text><text class="v" x="200.0" y="329.0" text-anchor="middle">26 个 session</text><text x="110.9" y="255.1" text-anchor="end">演示文稿</text><text class="v" x="110.9" y="274.1" text-anchor="end">23 个 session</text><text x="74.0" y="166.0" text-anchor="end">代码审查</text><text class="v" x="74.0" y="185.0" text-anchor="end">22 个 session</text><text x="110.9" y="76.9" text-anchor="end">AI 与机器学习</text><text class="v" x="110.9" y="95.9" text-anchor="end">18 个 session</text></g>
+          </svg><div class="dims">
+          <div class="dim">
+            <div class="dim-label">前端与交互<span class="muted"> · 技术领域</span></div>
+            <div class="dim-n mono">47</div>
+            <div class="bar"><i style="width:100%"></i></div>
+          </div>
+          <div class="dim">
+            <div class="dim-label">开发新功能<span class="muted"> · 任务类型</span></div>
+            <div class="dim-n mono">44</div>
+            <div class="bar"><i style="width:94%"></i></div>
+          </div>
+          <div class="dim">
+            <div class="dim-label">视觉设计<span class="muted"> · 技术领域</span></div>
+            <div class="dim-n mono">42</div>
+            <div class="bar"><i style="width:89%"></i></div>
+          </div>
+          <div class="dim">
+            <div class="dim-label">文档写作与沟通<span class="muted"> · 任务类型</span></div>
+            <div class="dim-n mono">30</div>
+            <div class="bar"><i style="width:64%"></i></div>
+          </div>
+          <div class="dim">
+            <div class="dim-label">调试与排障<span class="muted"> · 任务类型</span></div>
+            <div class="dim-n mono">26</div>
+            <div class="bar"><i style="width:55%"></i></div>
+          </div>
+          <div class="dim">
+            <div class="dim-label">演示文稿<span class="muted"> · 产出物</span></div>
+            <div class="dim-n mono">23</div>
+            <div class="bar"><i style="width:49%"></i></div>
+          </div>
+          <div class="dim">
+            <div class="dim-label">代码审查<span class="muted"> · 任务类型</span></div>
+            <div class="dim-n mono">22</div>
+            <div class="bar"><i style="width:47%"></i></div>
+          </div>
+          <div class="dim">
+            <div class="dim-label">AI 与机器学习<span class="muted"> · 技术领域</span></div>
+            <div class="dim-n mono">18</div>
+            <div class="bar"><i style="width:38%"></i></div>
+          </div></div>
+        <p class="note">能力维度由这次生成时 AI 阅读 session 后归类，只计列出的 session；场景判断（#25）目前只覆盖已铸造 Skill 的调用，还没有覆盖全部历史。结果判断（#25）只针对已铸造 Skill 的调用、按 Skill 上链，所以各能力维度不显示顺利率；Skill 的顺利率见下表。</p>
+      </section>
+    <div class="stack">
+      
+      <section class="card">
+        <h2>解决过的代表性问题</h2>
+        
+          <div class="ev">
+            <div>
+              <div class="ev-title">Maze 角色出生穿透地图坠落</div>
+              <div class="ev-summary">用 Roblox Studio MCP 逐层核对碰撞体，把 1448 个 MeshPart 锚定并开启碰撞、不再让 Scenery 承载主碰撞，出生点改到 SpawnMarker 顶面，角色不再穿透地面下坠</div>
+              <div class="ev-meta"><span class="pill acc">调试与排障</span><span class="note">Codex · 2026-05-09</span></div>
+            </div>
+            <span class="pill dim">佐证可私密出示</span>
+          </div>
+          <div class="ev">
+            <div>
+              <div class="ev-title">hopper 取消后 cd 到错误目录</div>
+              <div class="ev-summary">定位到独立 CLI 进程改不了父终端 cwd 这一根因，把 cd 交给 shell 侧承接，选择取消后落到上一步选中的项目目录，并把它推到了 master</div>
+              <div class="ev-meta"><span class="pill acc">调试与排障</span><span class="note">Codex · 2026-04-27</span></div>
+            </div>
+            <span class="pill dim">佐证可私密出示</span>
+          </div>
+          <div class="ev">
+            <div>
+              <div class="ev-title">把抓取服务接成 MCP 工具</div>
+              <div class="ev-summary">先把 MCP 的传输与工具模型讲透，再把已有抓取服务包成 MCP 工具接进本地 Agent，改动拆成原子 PR 提交并清理已合并工作树</div>
+              <div class="ev-meta"><span class="pill acc">AI 与机器学习</span><span class="pill acc">开发新功能</span><span class="note">Codex · 2026-06-11</span></div>
+            </div>
+            <span class="pill dim">佐证可私密出示</span>
+          </div>
+          <div class="ev">
+            <div>
+              <div class="ev-title">把混在一起的改动拆成六个堆叠 PR</div>
+              <div class="ev-summary">从 onboarding 画像控件选型出发，把未提交改动按依赖顺序拆成 6 个 stacked PR，逐个补维护者 review，处理分支保护限制后全部重栈并合并</div>
+              <div class="ev-meta"><span class="pill acc">代码审查</span><span class="pill acc">前端与交互</span><span class="note">Codex · 2026-05-24</span></div>
+            </div>
+            <span class="pill dim">佐证可私密出示</span>
+          </div>
+      </section>
+      
+      <section class="card">
+        <h2>沉淀的 Skill <span class="muted">· 链上可核对</span></h2>
+        <p class="note">这个钱包还没有铸造 Skill。</p>
+      </section>
+      
+      <div class="callout">Skill 的铸造和调用统计记录在<span class="net">BOT Chain 测试网</span>上。代表性问题的佐证 session 由持有人私密分享给招聘方的钱包：可限定打开次数和有效期，阅读页带水印，持有人会收到已读回执。</div>
+    </div>
+  </div>
+
+  <section class="card">
+    <h2>数据从哪里来</h2>
+    <ul class="sources">
+      <li>session、活跃日、项目目录和能力维度的计数：由 Obelisk 在持有人电脑上从本机历史统计，内容本身没有离开这台电脑。</li>
+      <li>Skill、调用量、钱包数、顺利率和衍生关系：<span class="net">BOT Chain 测试网</span>上的公开记录，经 Obelisk 在线服务读取，<a href="https://scan.bohr.life/address/0xD42208e780225e90C5DE7f56A7F007058230900b" target="_blank" rel="noopener noreferrer">Skill 资产合约 ↗</a>。</li>
+      <li>能力维度的归类和代表性问题的文字由生成时的 AI 根据对应 session 撰写；佐证 session 由持有人决定是否私密出示。</li>
+    </ul>
+  </section>
+</main>
+</body>
+</html>

@@ -1,0 +1,11 @@
+Text replacements (English -> Chinese, verbatim):
+- EXPLICIT MEMORY 2026 -> 显式记忆 2026
+- Title: "MEMORY WITH THE" / "HUMAN IN THE LOOP" (second line violet) -> "记忆，" / "由人来把关" (second line violet)
+- Implicit Memory / HIDDEN & NOT STORED -> 隐式记忆 / 隐藏，不留存
+- TEMPORARY CONTEXT / NOT PERSISTED / CLEARED AFTER SESSION -> 临时上下文 / 不会持久保存 / 会话结束即清空
+- Queryable Sessions / REAL CONVERSATIONS -> 可查询的会话 / 真实对话
+- SEARCH ON DEMAND / RETRIEVE RELEVANT SESSIONS / GROUND AGENT RESPONSES -> 按需检索 / 取回相关会话 / 让 Agent 回答有据可依
+- Approved Memory / CURATED CONCLUSIONS -> 经确认的记忆 / 精选结论
+- HUMAN APPROVED / ON-CHAIN RECORD / DURABLE & VERIFIED -> 由人确认 / 链上记录 / 持久且可验证
+- OBELISK × AI × BLOCKCHAIN / BUILD BEYOND (bottom-left) -> keep exactly as is in English
+- MEMORY ARCHITECTURE PRINCIPLES -> 记忆架构原则

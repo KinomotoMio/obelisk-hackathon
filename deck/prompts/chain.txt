@@ -1,0 +1,18 @@
+Use case: infographic-diagram
+Asset type: 16:9 landscape presentation slide for a hackathon pitch (aim for at least 1672x941).
+Style references: Image 1 and Image 2 are the TARGET look; match them closely. Warm off-white paper background (#f2f1ec) with fine grain; thin black hairline frame inset from the edges with small crop marks, tick marks and registration dots; a small solid black square at the bottom-right corner; thin black outlined cards; halftone dot-gradient texture strips on the left edge of cards; soft lavender (#d9d0fb, accent #8c73f2) highlight panels; circular light-grey icon badges with simple clean line icons; a big uppercase title in the same wide rounded technical display typeface as 'QUERY WHAT ACTUALLY HAPPENED' in Image 1, with part of the title in violet like Image 2.
+Legibility is the top priority: body text must be a clean dark sans-serif, LARGE and high contrast (clearly larger than the small grey spaced-out text in the references), short phrases only, generous whitespace, nothing cramped, no tiny footnotes.
+Keep the top-left corner (about 22% of the width and 12% of the height) completely empty paper, with no logo and no wordmark, because the logo is overlaid later.
+Do not add any text other than the exact text listed below. Render every string verbatim and spelled correctly.
+
+Primary request: an exploded 3D-style stack diagram. Content reference Image 3 (layout/concept inspiration only; do not copy its text or colors) shows a stack of translucent glass-and-black technical layers, each labelled; reproduce that idea (isometric, clean, premium product-render style, glass layers with a violet glowing core) but restyle it into the target paper look, and relabel in English.
+Top-right small label: "ON-CHAIN".
+Title (two lines, second line violet): "FIVE CONTRACTS," / "ONE PUBLIC LEDGER."
+Center-right: five stacked translucent layers on a black base plate labelled "BOT Chain". Labels on the right side with thin leader lines, each with a bold name and a short readable line:
+"SkillMarket" - "Priced offers, royalties, receipts"
+"UsageStats" - "Real usage by wallet and scene"
+"SkillRegistry" - "Versions and lineage"
+"ShareRegistry" - "Who may open what"
+"KeyRegistry" - "Wallet to encryption key"
+Left: a small black cube labelled "Your machine" with caption "Sessions and plaintext stay local", and a thin arrow labelled "signed actions only" pointing toward the stack.
+Bottom strip text: "No owner. No admin key. No upgrade path." 

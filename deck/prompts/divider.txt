@@ -1,0 +1,11 @@
+Use case: infographic-diagram
+Asset type: 16:9 presentation slide for a hackathon pitch, at least 1672x941.
+Style: match Image 1 and Image 2 exactly. They are FLAT UI-style slides: warm off-white paper (#f2f1ec) with fine grain, a thin black hairline frame with crop marks and tick marks, a small solid black square at the bottom-right, thin black outlined cards, a halftone dot-gradient strip on the left edge of cards, soft lavender (#d9d0fb, accent #8c73f2) highlight panels, small circular light-grey icon badges with simple line icons, and a big uppercase title in a wide rounded technical display typeface with the second line in violet.
+Strictly flat: NO 3D, NO perspective, NO glass or metal render, NO shadows, NO photoreal objects.
+READABILITY IS THE TOP PRIORITY: every piece of text the audience must read is LARGE: body lines at least 2.8% of the image height, card headings larger still, high-contrast dark ink on light, titles very large. Use fewer, bigger elements instead of many small ones. Only decorative captions (like 'WHO YOU ARE') may stay small, and the top-right label may stay small. No paragraphs, short phrases only, generous whitespace, nothing cramped.
+Leave the top-left corner (22% width x 12% height) completely empty paper. Do not draw any logo or wordmark.
+Render only the exact text listed below, verbatim and correctly spelled. Add no other text.
+
+Layout: section divider like the cover (Image 3, the cover): large empty paper on the left for the title, a flat line-art illustration on the right. Illustration: a row of five flat rectangular ledger blocks drawn as black line art with halftone shading, linked by a dashed line, the middle block highlighted in violet. FLAT line art only, absolutely no 3D render. Include thin orbital arcs and registration dots like the cover.
+Top-right small label: "HACKATHON BUILD".
+Title (three lines, last line violet): "PUTTING" / "CONTEXT" / "ON-CHAIN". Small readable line below the title: "BOT Chain. Provenance, usage, payment, privacy." 

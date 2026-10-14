@@ -22,3 +22,12 @@ chain/cache/
 chain/types/
 chain/coverage/
 chain/deployments/31337.json
+
+# Pitch deck: build output (served copy lives in service/public/slides), image
+# generation candidates, review screenshots and third-party style references.
+deck/out/
+deck/gen/
+deck/gen-zh/
+deck/review/
+deck/refs/
+deck/.cache/

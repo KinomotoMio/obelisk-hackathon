@@ -1,0 +1,5 @@
+Use case: text-localization
+Asset type: 16:9 presentation slide, keep the exact same pixel layout and size as Image 1.
+Input images: Image 1: the slide to localize (edit target).
+Primary request: Translate every piece of English text in Image 1 into Simplified Chinese, in the same positions and the same hierarchy (big title, small captions, card text). Change ONLY the text. Keep unchanged: the paper background, hairline frame and crop marks, halftone strips, card shapes, icons, arrows, violet highlights, the OBELISK wordmark (keep it in Latin letters), numbers, timestamps' digits, and code like run_sql.
+Typography: titles in a bold geometric Chinese sans-serif (like Noto Sans SC Bold/Black), small captions in a regular/light Chinese sans-serif with modest letter spacing. Chinese characters must be perfectly formed, correctly written, crisp and high-contrast. Each Chinese text must fit in the same space as the English it replaces (use shorter wording if needed, never overflow or overlap). Render each text exactly once, verbatim from the list below. Do not add any other text.

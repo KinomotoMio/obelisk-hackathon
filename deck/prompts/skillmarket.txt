@@ -1,0 +1,13 @@
+Use case: infographic-diagram
+Asset type: 16:9 presentation slide for a hackathon pitch, at least 1672x941.
+Style: match Image 1 and Image 2 exactly. They are FLAT UI-style slides: warm off-white paper (#f2f1ec) with fine grain, a thin black hairline frame with crop marks and tick marks, a small solid black square at the bottom-right, thin black outlined cards, a halftone dot-gradient strip on the left edge of cards, soft lavender (#d9d0fb, accent #8c73f2) highlight panels, small circular light-grey icon badges with simple line icons, and a big uppercase title in a wide rounded technical display typeface with the second line in violet.
+Title weight: regular/medium weight like Image 1 and Image 2 (NOT extra-bold), title cap height about 6% of the image height, exactly two lines.
+Strictly flat: NO 3D, NO perspective, NO glass or metal render, NO shadows, NO photoreal objects.
+READABILITY IS THE TOP PRIORITY. TEXT SIZE RULE: body text lines are about 3.6% of the image height (roughly 34px on a 941px-tall slide), card headings about 4.5%, the title about 9%. Cards are big and few; if text does not fit at that size, use fewer words, never smaller type. Every piece of text the audience must read is LARGE: card headings larger still, high-contrast dark ink on light, titles very large. Use fewer, bigger elements instead of many small ones. Only decorative captions (like 'WHO YOU ARE') may stay small, and the top-right label may stay small. No paragraphs, short phrases only, generous whitespace, nothing cramped.
+Leave the top-left corner (22% width x 12% height) completely empty paper. Do not draw any logo or wordmark.
+Render only the exact text listed below, verbatim and correctly spelled. Add no other text.
+
+Layout: three stacked rows on the left (Image 2 row style: number, bold name, one short line) and one black result panel on the right with two stacked entries, joined by a thin arrow. Top-right small label: "SKILL MARKET".
+Title: "KNOWLEDGE-FOR-PAY," / "AS PLAINTEXT." (second line violet).
+Rows: "01 Copyable" "Plain text. Copied everywhere." / "02 Unread" "Most just follow the crowd." / "03 Bloat" "Too many Skills slow the harness."
+Black panel (white text, violet small captions): "RESULT" "No real monetization" "Income depends on traffic." and "RESULT" "No measurable utility" "Nobody knows if it works." 

@@ -1,0 +1,730 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Obelisk — Context-native first</title>
+<style>
+/*{{FONTS}}*/
+
+:root{
+  --paper:#f2f1ec; --paper-2:#e8e5dd; --ink:#101012; --ink-2:#4a4a4f; --mute:#8a8a90; --line:#101012;
+  --hair:rgba(16,16,18,.16);
+  --violet:#8c73f2; --violet-d:#5b3fd6; --violet-l:#d9d0fb;
+  --night:#09090d; --night-2:#14141b; --night-line:rgba(255,255,255,.14);
+  --display:'Audiowide','Inter',system-ui,sans-serif;
+  --serif:'Instrument Serif','Times New Roman',serif;
+  --sans:'Inter',-apple-system,'PingFang SC','Helvetica Neue',sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,Menlo,monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#050507;overflow:hidden;font-family:var(--sans);-webkit-font-smoothing:antialiased}
+body.idle{cursor:none}
+
+/* ---------- stage ---------- */
+#stage{position:absolute;left:50%;top:50%;width:1920px;height:1080px;transform-origin:0 0;overflow:hidden;background:var(--paper)}
+.slide{position:absolute;inset:0;width:1920px;height:1080px;overflow:hidden;opacity:0;visibility:hidden;
+  transition:opacity .6s ease,visibility 0s .6s;color:var(--ink);background:var(--paper)}
+.slide.active{opacity:1;visibility:visible;transition:opacity .6s ease}
+.slide.dark{background:var(--night);color:#f4f2fb}
+
+/* dotted paper / night grid */
+.slide::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background-image:radial-gradient(rgba(16,16,18,.13) 1px,transparent 1.4px);background-size:32px 32px;background-position:16px 16px;
+  -webkit-mask-image:linear-gradient(180deg,#000,transparent 70%);mask-image:linear-gradient(180deg,#000,transparent 70%)}
+.slide.dark::before{background-image:radial-gradient(rgba(255,255,255,.16) 1px,transparent 1.4px)}
+
+/* reveal */
+[data-r]{opacity:0;transform:translateY(26px);transition:opacity .8s cubic-bezier(.2,.7,.2,1),transform .8s cubic-bezier(.2,.7,.2,1);transition-delay:calc(var(--d,0)*100ms + 120ms)}
+.slide.active [data-r],body.overview [data-r]{opacity:1;transform:none}
+[data-r="fade"]{transform:none}
+[data-r="img"]{transform:scale(1.05);transition-duration:1.6s}
+.slide.active [data-r="img"],body.overview [data-r="img"]{transform:none}
+
+/* ---------- chrome ---------- */
+.chrome{position:absolute;inset:0;pointer-events:none;z-index:20}
+.chrome .tl{position:absolute;left:72px;top:56px;display:flex;align-items:center;gap:18px;font:400 15px/1 var(--display);letter-spacing:.01em}
+.mark{display:grid;grid-template-columns:repeat(2,9px);gap:4px}
+.mark i{display:block;height:9px;background:currentColor}.mark i:last-child{background:var(--violet)}
+.chrome .tr{position:absolute;right:72px;top:52px;text-align:right;font:500 13px/1.6 var(--mono);letter-spacing:.16em;text-transform:uppercase;opacity:.7}
+.chrome .bl{position:absolute;left:72px;bottom:52px;font:500 13px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;opacity:.6}
+.chrome .br{position:absolute;right:72px;bottom:52px;font:500 13px/1 var(--mono);letter-spacing:.2em;opacity:.7}
+.chrome::before{content:'';position:absolute;inset:20px;border:1px solid currentColor;opacity:.28}
+.chrome::after{content:'';position:absolute;right:26px;bottom:26px;width:9px;height:9px;background:currentColor;opacity:.8}
+.corner{display:none}
+.corner.a{left:34px;top:34px;border-left-width:1.5px;border-top-width:1.5px}
+.corner.b{right:34px;top:34px;border-right-width:1.5px;border-top-width:1.5px}
+.corner.c{left:34px;bottom:34px;border-left-width:1.5px;border-bottom-width:1.5px}
+.corner.d{right:34px;bottom:34px;border-right-width:1.5px;border-bottom-width:1.5px}
+.slide.cover .chrome .tl,.slide.cover .chrome .bl{display:none}
+
+/* ---------- type ---------- */
+.eyebrow{font:500 15px/1 var(--mono);letter-spacing:.24em;text-transform:uppercase;color:var(--violet-d)}
+.dark .eyebrow{color:var(--violet)}
+.h-serif{font:400 76px/1.14 var(--display);letter-spacing:.01em;text-transform:uppercase;max-width:1500px}
+.h-serif em{font-style:normal;color:var(--violet-d)}
+.dark .h-serif em{color:var(--violet)}
+.h-wide{font:400 64px/1.14 var(--display);letter-spacing:.01em;text-transform:uppercase}
+.lede{font:400 28px/1.5 var(--sans);color:var(--ink-2);max-width:760px}
+.dark .lede{color:rgba(244,242,251,.72)}
+.mono{font-family:var(--mono)}
+.abs{position:absolute}
+
+/* ---------- 01 cover ---------- */
+.cover .coverimg{position:absolute;inset:0;width:1920px;height:1080px;object-fit:cover}
+.cover::before{display:none}
+
+/* ---------- 02 forgetting ---------- */
+.forget .mono-img{position:absolute;right:0;top:0;height:1080px;width:auto;mix-blend-mode:multiply;-webkit-mask-image:linear-gradient(90deg,transparent,#000 30%);mask-image:linear-gradient(90deg,transparent,#000 30%)}
+.forget h2{position:absolute;left:100px;top:300px;font:400 66px/1.16 var(--display);letter-spacing:.01em;text-transform:uppercase;max-width:960px}
+.forget h2 span{color:var(--violet-d)}
+.forget .meta{position:absolute;left:104px;top:700px;font:400 28px/1.6 var(--sans);color:var(--ink-2);max-width:700px}
+.forget .tags{position:absolute;left:104px;top:226px;font:500 14px/2 var(--mono);letter-spacing:.24em;text-transform:uppercase;color:var(--violet-d)}
+
+/* ---------- 03 insight ---------- */
+.insight h2{position:absolute;left:100px;top:230px;width:820px}
+.insight .lede{position:absolute;left:104px;top:690px;max-width:700px}
+.insight .src{position:absolute;left:104px;top:860px;font:500 14px/1.8 var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
+.stack{position:absolute;right:96px;top:150px;width:760px}
+.card{position:relative;background:rgba(255,255,255,.72);border:1.5px solid var(--line);padding:22px 28px;margin-bottom:-6px;
+  display:flex;gap:22px;align-items:flex-start;box-shadow:0 18px 40px -26px rgba(16,16,18,.5)}
+.card .n{font:500 13px/1.9 var(--mono);letter-spacing:.14em;color:var(--mute);min-width:72px}
+.card .t{font:500 23px/1.4 var(--sans);letter-spacing:-.01em}
+.card .t small{display:block;font:400 17px/1.5 var(--sans);color:var(--ink-2);margin-top:4px}
+.card.hit{background:var(--violet-l);border-color:var(--violet-d);transform:translateX(-44px)}
+.card.hit .n{color:var(--violet-d)}
+.stack .card:nth-child(1){margin-left:56px}.stack .card:nth-child(2){margin-left:18px}.stack .card:nth-child(4){margin-left:34px}.stack .card:nth-child(5){margin-left:8px}
+.slide.active .card{animation:none}
+
+/* ---------- 04 how it works ---------- */
+.how h2{position:absolute;left:100px;top:150px}
+.flow{position:absolute;left:100px;right:100px;top:420px;display:grid;grid-template-columns:1fr 70px 1fr 70px 1fr;align-items:stretch}
+.panel{border:1.5px solid var(--line);background:rgba(255,255,255,.55);padding:34px 36px;min-height:460px;position:relative}
+.panel .k{font:500 14px/1 var(--mono);letter-spacing:.22em;color:var(--violet-d);display:flex;justify-content:space-between}
+.panel h3{font:400 24px/1.2 var(--display);letter-spacing:.01em;text-transform:uppercase;margin:22px 0 8px}
+.panel p.s{font:400 20px/1.5 var(--sans);color:var(--ink-2);margin-bottom:26px}
+.row{display:flex;gap:14px;align-items:flex-start;border-top:1px solid var(--hair);padding:14px 0;font:400 19px/1.45 var(--sans)}
+.row b{font:500 12px/1.9 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--mute);min-width:104px}
+.row code{font:400 17px/1.4 var(--mono);color:var(--violet-d)}
+.panel.focus{background:var(--violet-l);border-color:var(--violet-d)}
+.arrow{display:flex;align-items:center;justify-content:center}
+.arrow svg{width:46px;height:20px}
+.bubble{background:#fff;border:1.5px solid var(--violet-d);padding:16px 18px;font:500 20px/1.4 var(--sans);margin-bottom:14px}
+.ans{background:var(--night);color:#f4f2fb;padding:20px 22px;font:400 20px/1.5 var(--sans);margin-bottom:14px}
+.ans em{font-style:normal;color:var(--violet)}
+
+/* ---------- 05 architecture ---------- */
+.arch h2{position:absolute;left:100px;top:150px}
+.arch .lede{position:absolute;left:104px;top:420px;max-width:520px;font-size:24px}
+.chips{position:absolute;left:100px;top:560px;display:flex;flex-direction:column;gap:12px;width:360px}
+.chips .lab{font:500 13px/1 var(--mono);letter-spacing:.22em;text-transform:uppercase;color:var(--mute);margin-bottom:6px}
+.chip{border:1.5px solid var(--line);background:rgba(255,255,255,.6);padding:12px 18px;font:500 20px/1.2 var(--sans);display:flex;justify-content:space-between}
+.chip i{font:400 13px/1.7 var(--mono);font-style:normal;color:var(--mute);letter-spacing:.08em}
+.core{position:absolute;left:700px;top:360px;width:420px;height:520px}
+.core .sheet{position:absolute;left:0;width:340px;height:104px;border:1.5px solid var(--line);background:var(--paper)}
+.core .sheet:nth-child(1){top:0;left:80px;opacity:.35}.core .sheet:nth-child(2){top:34px;left:60px;opacity:.55}
+.core .sheet:nth-child(3){top:68px;left:40px;opacity:.8}.core .sheet:nth-child(4){top:102px;left:20px;background:var(--violet-l);border-color:var(--violet-d)}
+.core .main{position:absolute;left:0;top:176px;width:340px;padding:30px;background:var(--night);color:#f4f2fb;border:1.5px solid var(--night)}
+.core .main b{display:block;font:400 22px/1.2 var(--display);letter-spacing:.01em;margin-bottom:14px}
+.core .main span{font:400 17px/1.7 var(--mono);color:var(--violet);display:block}
+.core .main p{margin-top:16px;font:400 18px/1.5 var(--sans);color:rgba(244,242,251,.7)}
+.sides{position:absolute;right:100px;top:300px;width:620px;display:flex;flex-direction:column;gap:26px}
+.side{border:1.5px solid var(--line);padding:30px 34px;background:rgba(255,255,255,.55);position:relative}
+.side .k{font:500 13px/1 var(--mono);letter-spacing:.22em;color:var(--violet-d);text-transform:uppercase}
+.side h3{font:400 26px/1.15 var(--display);margin:12px 0 10px;letter-spacing:.01em}
+.side p{font:400 20px/1.5 var(--sans);color:var(--ink-2)}
+.side.agent{background:var(--night);color:#f4f2fb;border-color:var(--night)}
+.side.agent p{color:rgba(244,242,251,.7)}.side.agent .k{color:var(--violet)}
+.side code{font:400 17px/1 var(--mono);background:rgba(140,115,242,.18);padding:3px 8px;color:inherit}
+svg.wires{position:absolute;inset:0;pointer-events:none;overflow:visible}
+
+/* ---------- 06 product ---------- */
+
+.product .list{position:absolute;left:104px;top:640px;width:560px}
+.product .list div{border-top:1px solid var(--hair);padding:18px 0;display:flex;gap:20px;font:400 22px/1.4 var(--sans);color:var(--ink-2)}
+.product .list b{font:500 14px/2 var(--mono);letter-spacing:.18em;color:var(--violet-d);min-width:46px}
+.product .list strong{font-weight:600;color:var(--ink)}
+.shot{position:absolute;right:-120px;top:200px;width:1100px;border-radius:16px;overflow:hidden;
+  box-shadow:0 60px 100px -40px rgba(16,16,18,.55),0 0 0 1.5px rgba(16,16,18,.9);transform:perspective(2400px) rotateY(-9deg) rotateX(2deg);transform-origin:100% 50%}
+.slide.active .shot{transform:perspective(2400px) rotateY(-9deg) rotateX(2deg)}
+.shot img{display:block;width:100%}
+.callout{position:absolute;z-index:5;background:var(--violet);color:#fff;padding:10px 16px;font:500 14px/1 var(--mono);letter-spacing:.16em;text-transform:uppercase}
+
+/* ---------- 07 chain ---------- */
+.chain h2{position:absolute;left:100px;top:150px;width:1500px}
+.pipe{position:absolute;left:100px;right:100px;top:480px;display:grid;grid-template-columns:repeat(5,1fr);gap:0}
+.node{padding:0 28px 0 0;position:relative}
+.node .dot{width:22px;height:22px;border:1.5px solid var(--line);background:var(--paper);position:relative;z-index:2;margin-bottom:26px}
+.node:nth-child(1) .dot,.node:last-child .dot{background:var(--violet-d);border-color:var(--violet-d)}
+.node::before{content:"";position:absolute;left:22px;right:0;top:10px;height:1.5px;background:var(--line)}
+.node:last-child::before{display:none}
+.node .k{font:500 13px/1 var(--mono);letter-spacing:.2em;color:var(--mute)}
+.node h3{font:400 28px/1.15 var(--display);margin:12px 0 12px;letter-spacing:.01em}
+.node p{font:400 20px/1.5 var(--sans);color:var(--ink-2)}
+.ledger{position:absolute;left:100px;right:100px;bottom:130px;display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.ledger div{border:1.5px solid var(--line);padding:20px 24px;background:rgba(255,255,255,.55)}
+.ledger b{display:block;font:400 18px/1.2 var(--display);letter-spacing:.01em;margin-bottom:10px}
+.ledger span{font:400 18px/1.5 var(--sans);color:var(--ink-2)}
+.ledger .cap{position:absolute;left:0;top:-38px;font:500 13px/1 var(--mono);letter-spacing:.22em;text-transform:uppercase;color:var(--violet-d);border:0;padding:0;background:none}
+
+/* ---------- 08 principles ---------- */
+.princ .art{position:absolute;right:0;top:0;height:1080px;width:760px;object-fit:cover;object-position:30% 50%;mix-blend-mode:multiply;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 40%);mask-image:linear-gradient(90deg,transparent,#000 40%)}
+.princ h2{position:absolute;left:100px;top:150px}
+.plist{position:absolute;left:100px;top:380px;width:1100px}
+.plist div{display:grid;grid-template-columns:80px 600px 1fr;align-items:baseline;border-top:1.5px solid var(--line);padding:22px 0}
+.plist b{font:500 14px/1 var(--mono);letter-spacing:.2em;color:var(--violet-d)}
+.plist h3{font:400 26px/1.1 var(--display);letter-spacing:.01em}
+.plist p{font:400 20px/1.45 var(--sans);color:var(--ink-2)}
+
+/* ---------- 09 close ---------- */
+.close .art{position:absolute;inset:0;width:1920px;height:1080px;object-fit:cover}
+.close .chrome::before,.close .chrome::after{display:none}
+.close h2{position:absolute;left:100px;top:300px;font:400 82px/1.16 var(--display);letter-spacing:.01em;text-transform:uppercase}
+.close h2 em{font-style:normal;color:var(--violet-d)}
+.close .sub{position:absolute;left:104px;top:690px;font:500 16px/1 var(--mono);letter-spacing:.3em;text-transform:uppercase;color:var(--ink-2)}
+.close .links{position:absolute;left:104px;bottom:120px;display:flex;gap:56px;font:500 14px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--mute)}
+
+/* ================= v2 deck ================= */
+/* ================= v2 deck ================= */
+.hd-e{position:absolute;left:104px;top:150px}
+.hd{position:absolute;left:100px;top:196px}
+.dots{display:inline-block;width:10px;height:10px;background:var(--violet);margin-right:12px}
+.tag{display:inline-block;font:500 12px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;padding:7px 10px;border:1px solid currentColor;color:var(--mute)}
+.tag.v{color:var(--violet-d)}
+.note{position:absolute;font:500 13px/1.7 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
+
+/* 02 landscape */
+.land .duo{position:absolute;left:100px;right:100px;top:400px;display:grid;grid-template-columns:1fr 1fr;gap:40px}
+.land .big{border:1.5px solid var(--line);background:rgba(255,255,255,.55);padding:44px 48px;height:500px;position:relative}
+.land .big .n{font:500 14px/1 var(--mono);letter-spacing:.22em;color:var(--violet-d)}
+.land .big h3{font:400 62px/1.08 var(--display);text-transform:uppercase;margin:30px 0 26px;letter-spacing:.01em}
+.land .big p{font:400 26px/1.5 var(--sans);color:var(--ink-2);max-width:700px}
+.land .big .tags{position:absolute;left:48px;bottom:44px;display:flex;gap:10px;flex-wrap:wrap}
+
+/* 03 memory */
+.mem .cols{position:absolute;left:100px;right:100px;top:420px;display:grid;grid-template-columns:1fr 1fr;gap:40px}
+.mem .pc{border:1.5px solid var(--line);padding:38px 44px;height:420px;position:relative;background:rgba(255,255,255,.55)}
+.mem .pc.dk{background:var(--night);color:#f4f2fb;border-color:var(--night)}
+.mem .pc .k{font:500 13px/1 var(--mono);letter-spacing:.22em;text-transform:uppercase;color:var(--violet-d)}
+.mem .pc.dk .k{color:var(--violet)}
+.mem .pc h3{font:400 38px/1.15 var(--display);margin:20px 0 14px;text-transform:uppercase}
+.mem .pc p{font:400 23px/1.5 var(--sans);color:var(--ink-2);max-width:700px}
+.mem .pc.dk p{color:rgba(244,242,251,.72)}
+.mem .risk{position:absolute;left:44px;right:44px;bottom:38px}
+.mem .risk .l{display:flex;justify-content:space-between;font:500 12px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;margin-bottom:12px;opacity:.75}
+.mem .risk .b{height:14px;border:1px solid currentColor}
+.mem .risk .b i{display:block;height:100%;background:var(--violet)}
+.mem .pc.dk .risk .b i{background:var(--violet)}
+.mem .foot{position:absolute;left:104px;right:100px;bottom:112px;font:400 21px/1.5 var(--sans);color:var(--ink-2)}
+.mem .foot b{font-weight:600;color:var(--ink)}
+
+/* 04 skill market */
+.mkt .rows{position:absolute;left:100px;top:430px;width:960px}
+.mkt .rows div{display:grid;grid-template-columns:70px 250px 1fr;gap:12px;border-top:1.5px solid var(--line);padding:26px 0;align-items:baseline}
+.mkt .rows b{font:500 14px/1 var(--mono);letter-spacing:.2em;color:var(--violet-d)}
+.mkt .rows h3{font:400 28px/1.1 var(--display);text-transform:uppercase}
+.mkt .rows p{font:400 22px/1.45 var(--sans);color:var(--ink-2)}
+.mkt .res{position:absolute;right:100px;top:430px;width:620px;display:flex;flex-direction:column;gap:24px}
+.mkt .res div{padding:34px 38px;background:var(--night);color:#f4f2fb}
+.mkt .res .k{font:500 13px/1 var(--mono);letter-spacing:.22em;text-transform:uppercase;color:var(--violet);margin-bottom:14px}
+.mkt .res h4{font:400 30px/1.2 var(--display);text-transform:uppercase;margin-bottom:12px}
+.mkt .res p{font:400 21px/1.5 var(--sans);color:rgba(244,242,251,.72)}
+
+/* 05 two things */
+.two .duo{position:absolute;left:100px;right:100px;top:380px;display:grid;grid-template-columns:1fr 1fr;gap:40px}
+.two .box{border:1.5px solid var(--line);background:rgba(255,255,255,.55);padding:42px 48px;height:560px;position:relative}
+.two .box.f{background:var(--violet-l);border-color:var(--violet-d)}
+.two .box .n{font:500 14px/1 var(--mono);letter-spacing:.22em;color:var(--violet-d)}
+.two .box h3{font:400 40px/1.12 var(--display);text-transform:uppercase;margin:22px 0 10px}
+.two .box .sub{font:400 24px/1.4 var(--sans);color:var(--ink-2);margin-bottom:26px}
+.two .box li{list-style:none;border-top:1px solid var(--hair);padding:16px 0 16px 30px;position:relative;font:400 23px/1.45 var(--sans)}
+.two .box li::before{content:'';position:absolute;left:0;top:27px;width:10px;height:10px;background:var(--violet-d)}
+
+/* 06 thesis */
+.thesis .moon{position:absolute;right:0;top:0;height:1080px;width:auto;mix-blend-mode:multiply;-webkit-mask-image:linear-gradient(90deg,transparent,#000 30%);mask-image:linear-gradient(90deg,transparent,#000 30%)}
+.thesis h2{position:absolute;left:100px;top:230px;width:1000px;font:400 78px/1.16 var(--display);text-transform:uppercase}
+.thesis h2 em{font-style:normal;color:var(--violet-d)}
+.thesis .cmp{position:absolute;left:104px;top:690px;width:900px}
+.thesis .cmp div{display:grid;grid-template-columns:220px 1fr;gap:16px;border-top:1.5px solid var(--line);padding:18px 0;font:400 23px/1.4 var(--sans);color:var(--ink-2)}
+.thesis .cmp b{font:500 13px/2 var(--mono);letter-spacing:.2em;text-transform:uppercase}
+.thesis .cmp .no b{color:var(--mute)}.thesis .cmp .no span{text-decoration:line-through;text-decoration-color:rgba(16,16,18,.35)}
+.thesis .cmp .yes b{color:var(--violet-d)}.thesis .cmp .yes span{color:var(--ink);font-weight:500}
+
+/* 07 divider */
+.divider .art{position:absolute;inset:0;width:1920px;height:1080px;object-fit:cover}
+.divider .chrome::before,.divider .chrome::after{display:none}
+.divider h2{position:absolute;left:100px;top:380px;font:400 92px/1.1 var(--display);text-transform:uppercase;width:820px}
+.divider h2 em{font-style:normal;color:var(--violet-d)}
+.divider .sub{position:absolute;left:104px;top:760px;font:500 16px/1.9 var(--mono);letter-spacing:.28em;text-transform:uppercase;color:var(--ink-2)}
+
+/* 08 map */
+.map .g{position:absolute;left:100px;right:100px;top:400px}
+.map .r{display:grid;grid-template-columns:1fr 70px 1.15fr 260px;gap:0;align-items:center;border-top:1.5px solid var(--line);padding:26px 0}
+.map .r:last-child{border-bottom:1.5px solid var(--line)}
+.map .p{font:400 26px/1.35 var(--sans);color:var(--ink-2)}
+.map .a{font:500 26px/1.35 var(--sans)}
+.map .a small{display:block;font:400 19px/1.4 var(--sans);color:var(--ink-2);margin-top:4px}
+.map .c{font:500 13px/1.5 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--violet-d);text-align:right}
+.map .ar{text-align:center}
+.map .ar svg{width:44px;height:18px}
+.map .hdr{display:grid;grid-template-columns:1fr 70px 1.15fr 260px;font:500 12px/1 var(--mono);letter-spacing:.22em;text-transform:uppercase;color:var(--mute);padding-bottom:14px}
+.map .hdr span:last-child{text-align:right}
+
+/* 09 relay */
+.relay .tri{position:absolute;left:100px;right:100px;top:420px;display:grid;grid-template-columns:1fr 90px 1fr 90px 1fr;align-items:stretch}
+.relay .bx{border:1.5px solid var(--line);background:rgba(255,255,255,.55);padding:34px 36px;min-height:430px}
+.relay .bx.n{background:var(--night);color:#f4f2fb;border-color:var(--night)}
+.relay .bx .k{font:500 13px/1 var(--mono);letter-spacing:.22em;text-transform:uppercase;color:var(--violet-d)}
+.relay .bx.n .k{color:var(--violet)}
+.relay .bx h3{font:400 30px/1.15 var(--display);text-transform:uppercase;margin:18px 0 16px}
+.relay .bx li{list-style:none;padding:11px 0 11px 24px;border-top:1px solid var(--hair);font:400 21px/1.4 var(--sans);position:relative;color:var(--ink-2)}
+.relay .bx.n li{border-color:var(--night-line);color:rgba(244,242,251,.78)}
+.relay .bx li::before{content:'';position:absolute;left:0;top:21px;width:8px;height:8px;background:var(--violet)}
+.relay .lk{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;font:500 12px/1.4 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--violet-d);text-align:center}
+.relay .lk svg{width:60px;height:18px}
+.relay .foot{position:absolute;left:104px;bottom:112px;font:500 14px/1.8 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
+
+/* 10 mint */
+.mint .steps{position:absolute;left:100px;top:420px;width:760px}
+.mint .steps>div{display:grid;grid-template-columns:70px 1fr;border-top:1.5px solid var(--line);padding:22px 0;gap:6px}
+.mint .steps b{font:500 14px/1.9 var(--mono);letter-spacing:.2em;color:var(--violet-d)}
+.mint .steps h4{font:500 26px/1.3 var(--sans)}
+.mint .steps p{font:400 20px/1.45 var(--sans);color:var(--ink-2);margin-top:4px}
+.mint .tree{position:absolute;right:80px;top:300px;width:880px;height:620px}
+.mint .tree text{font-family:var(--sans)}
+
+/* 11 usage */
+.use .l{position:absolute;left:100px;top:430px;width:700px}
+.use .l div{display:flex;justify-content:space-between;align-items:baseline;border-top:1.5px solid var(--line);padding:22px 0;font:500 24px/1.3 var(--sans)}
+.use .l span{font:500 13px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--violet-d)}
+.use .card2{position:absolute;right:100px;top:380px;width:860px;border:1.5px solid var(--line);background:rgba(255,255,255,.65);padding:36px 42px}
+.use .card2 .k{font:500 13px/1 var(--mono);letter-spacing:.22em;text-transform:uppercase;color:var(--mute);display:flex;justify-content:space-between}
+.use .desc{font:400 24px/1.4 var(--sans);margin:16px 0 26px;padding:16px 20px;background:var(--paper-2)}
+.use .bar{display:grid;grid-template-columns:220px 1fr;gap:18px;align-items:center;margin:14px 0;font:500 20px/1 var(--sans)}
+.use .bar i{display:block;height:22px;background:var(--violet-d)}
+.use .bar i.g{background:#b9b7b0}
+.use .bar i.s{background:repeating-linear-gradient(90deg,var(--violet-d) 0 6px,transparent 6px 10px)}
+
+/* 12 market split */
+.split .flow2{position:absolute;left:100px;right:100px;top:420px}
+.split .pay{border:1.5px solid var(--line);background:var(--night);color:#f4f2fb;padding:26px 34px;display:flex;justify-content:space-between;align-items:center;font:400 28px/1.2 var(--display);text-transform:uppercase}
+.split .pay span{font:500 14px/1.4 var(--mono);letter-spacing:.18em;color:var(--violet)}
+.split .alloc{display:grid;grid-template-columns:5fr 3fr 2fr 1.2fr;gap:0;margin-top:0;border:1.5px solid var(--line);border-top:0}
+.split .alloc div{padding:26px 24px;border-right:1.5px solid var(--line);background:rgba(255,255,255,.6)}
+.split .alloc div:last-child{border-right:0}
+.split .alloc div:first-child{background:var(--violet-l)}
+.split .alloc b{display:block;font:500 12px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--violet-d);margin-bottom:10px}
+.split .alloc h4{font:500 24px/1.25 var(--sans)}
+.split .alloc p{font:400 18px/1.4 var(--sans);color:var(--ink-2);margin-top:6px}
+.split .terms{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:40px}
+.split .terms div{border:1.5px solid var(--line);padding:22px 26px;background:rgba(255,255,255,.55)}
+.split .terms b{display:block;font:500 12px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--violet-d);margin-bottom:10px}
+.split .terms span{font:400 21px/1.45 var(--sans);color:var(--ink-2)}
+
+/* 13 share */
+.share .seq{position:absolute;left:100px;right:100px;top:430px;display:grid;grid-template-columns:repeat(4,1fr);gap:0}
+.share .st{padding-right:34px;position:relative}
+.share .st::before{content:'';position:absolute;left:0;right:0;top:10px;height:1.5px;background:var(--line)}
+.share .st:last-child::before{right:34px}
+.share .st .dot{position:relative;z-index:2;width:22px;height:22px;background:var(--paper);border:1.5px solid var(--line);margin-bottom:28px}
+.share .st:nth-child(2) .dot{background:var(--violet-d);border-color:var(--violet-d)}
+.share .st .k{font:500 13px/1 var(--mono);letter-spacing:.2em;color:var(--mute)}
+.share .st h3{font:400 28px/1.15 var(--display);text-transform:uppercase;margin:12px 0}
+.share .st p{font:400 21px/1.5 var(--sans);color:var(--ink-2)}
+.share .rules{position:absolute;left:100px;right:100px;bottom:130px;display:grid;grid-template-columns:repeat(5,1fr);gap:16px}
+.share .rules div{border:1.5px solid var(--line);padding:18px 20px;background:rgba(255,255,255,.55)}
+.share .rules b{display:block;font:500 12px/1 var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--violet-d);margin-bottom:8px}
+.share .rules span{font:400 19px/1.4 var(--sans);color:var(--ink-2)}
+
+/* 14 status */
+.stat .net{position:absolute;left:100px;right:100px;top:400px;display:grid;grid-template-columns:1.25fr 1fr;gap:40px}
+.stat .nb{border:1.5px solid var(--line);padding:38px 44px;background:rgba(255,255,255,.55);height:480px;position:relative}
+.stat .nb.f{background:var(--violet-l);border-color:var(--violet-d)}
+.stat .nb .k{display:flex;justify-content:space-between;font:500 13px/1 var(--mono);letter-spacing:.22em;text-transform:uppercase;color:var(--violet-d)}
+.stat .nb h3{font:400 40px/1.1 var(--display);text-transform:uppercase;margin:20px 0 6px}
+.stat .nb .id{font:500 15px/1 var(--mono);letter-spacing:.14em;color:var(--mute);margin-bottom:22px}
+.stat .nb li{list-style:none;border-top:1px solid var(--hair);padding:13px 0 13px 28px;position:relative;font:400 22px/1.4 var(--sans)}
+.stat .nb li::before{content:'';position:absolute;left:0;top:23px;width:10px;height:10px;background:var(--violet-d)}
+.stat .nb.m li::before{background:transparent;border:1.5px solid var(--ink)}
+.stat .foot{position:absolute;left:104px;bottom:112px;font:500 13px/1.8 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
+
+/* ---------- UI ---------- */
+#bar{position:fixed;left:0;top:0;height:3px;background:var(--violet);width:0;z-index:50;transition:width .4s}
+#help{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);font:500 12px/1 var(--mono);letter-spacing:.14em;color:#aaa;background:rgba(0,0,0,.6);padding:10px 16px;border-radius:99px;opacity:0;transition:opacity .4s;z-index:60;pointer-events:none;text-transform:uppercase}
+#help.show{opacity:1}
+body.overview #stage{background:#050507}
+body.overview .slide{opacity:1;visibility:visible;cursor:pointer;outline:2px solid rgba(255,255,255,.1);transition:transform .5s cubic-bezier(.2,.7,.2,1)}
+body.overview .slide.active{outline:4px solid var(--violet)}
+body.overview .chrome .br{display:block}
+@media (prefers-reduced-motion:reduce){*{transition-duration:.01s!important;transition-delay:0s!important}}
+@media print{
+  @page{size:1920px 1080px;margin:0}
+  html,body{overflow:visible;height:auto;background:#fff}
+  #stage{position:static;transform:none!important;height:auto;overflow:visible}
+  .slide{position:relative;opacity:1;visibility:visible;page-break-after:always;break-after:page}
+  [data-r]{opacity:1;transform:none}
+  #bar,#help{display:none}
+}
+</style>
+</head>
+<body>
+<div id="bar"></div>
+<div id="stage">
+
+<section class="slide light cover" data-title="Cover">
+  <img class="coverimg" data-r="img" src="assets/cover.jpg" alt="Obelisk — BOT Chain — Build Beyond · ETH Wuhan 2026">
+</section>
+
+<section class="slide light land" data-title="Landscape">
+  <div class="chrome">
+    <div class="tl"><span class="mark"><i></i><i></i><i></i><i></i></span>OBELISK</div>
+    <div class="tr">Landscape</div><div class="bl">Where the industry is</div><div class="br"></div>
+  </div>
+  <div class="eyebrow hd-e" data-r>Two mainstream directions</div>
+  <h2 class="h-serif hd" data-r style="--d:1">Memory <em>and</em> Skill Market</h2>
+  <div class="duo">
+    <div class="big" data-r style="--d:2"><div class="n">01</div><h3>Memory</h3><p>Give agents a persistent brain: remember the user, remember what happened.</p><div class="tags"><span class="tag">Digital twin</span><span class="tag">Brain-like recall</span></div></div>
+    <div class="big" data-r style="--d:3"><div class="n">02</div><h3>Skill Market</h3><p>Package know-how as Skills and let others download, share and pay for them.</p><div class="tags"><span class="tag">Plaintext Skills</span><span class="tag">Knowledge-for-pay</span></div></div>
+  </div>
+</section>
+
+<section class="slide light mem" data-title="Memory problem">
+  <div class="chrome">
+    <div class="tl"><span class="mark"><i></i><i></i><i></i><i></i></span>OBELISK</div>
+    <div class="tr">Direction 01 · Memory</div><div class="bl">The Memory problem</div><div class="br"></div>
+  </div>
+  <div class="eyebrow hd-e" data-r>Memory</div>
+  <h2 class="h-serif hd" data-r style="--d:1">Profiles forgive.<br><em>Facts don’t.</em></h2>
+  <div class="cols">
+    <div class="pc" data-r style="--d:2"><div class="k">Who you are</div><h3>User profile</h3><p>Preferences, habits, style. A wrong guess is cheap: you notice, you correct it, and the profile gets better. Traditional memory fits here.</p>
+      <div class="risk"><div class="l"><span>Cost of a wrong answer</span><span>Low</span></div><div class="b"><i style="width:18%"></i></div></div></div>
+    <div class="pc dk" data-r style="--d:3"><div class="k">What happened</div><h3>Factual recall</h3><p>Decisions, causes, what was tried. A confident wrong answer is silent and expensive. Obelisk retrieves and reassembles facts from the raw trajectory, with sources.</p>
+      <div class="risk"><div class="l"><span>Cost of a wrong answer</span><span>Catastrophic</span></div><div class="b"><i style="width:100%"></i></div></div></div>
+  </div>
+  <p class="foot" data-r style="--d:4">The “digital twin” story is hard to deliver. <b>Facts are the part that can be done right.</b></p>
+</section>
+
+<section class="slide light mkt" data-title="Skill market problem">
+  <div class="chrome">
+    <div class="tl"><span class="mark"><i></i><i></i><i></i><i></i></span>OBELISK</div>
+    <div class="tr">Direction 02 · Skill Market</div><div class="bl">The Skill Market problem</div><div class="br"></div>
+  </div>
+  <div class="eyebrow hd-e" data-r>Skill Market</div>
+  <h2 class="h-serif hd" data-r style="--d:1">Knowledge-for-pay,<br><em>as plaintext.</em></h2>
+  <div class="rows">
+    <div data-r style="--d:2"><b>01</b><h3>Copyable</h3><p>A Skill is plain text. It is copied and re-shared everywhere.</p></div>
+    <div data-r style="--d:3"><b>02</b><h3>Unread</h3><p>Few people judge quality or fit. Most just follow the crowd.</p></div>
+    <div data-r style="--d:4"><b>03</b><h3>Bloat</h3><p>As models get stronger, a crowded Skill list can make the harness perform worse.</p></div>
+  </div>
+  <div class="res">
+    <div data-r style="--d:3"><div class="k">Result · money</div><h4>No real monetization</h4><p>Income depends on creators grinding traffic on platforms.</p></div>
+    <div data-r style="--d:4"><div class="k">Result · trust</div><h4>No measurable utility</h4><p>Nobody can tell whether a Skill actually works, or where.</p></div>
+  </div>
+</section>
+
+<section class="slide light two" data-title="What Obelisk does">
+  <div class="chrome">
+    <div class="tl"><span class="mark"><i></i><i></i><i></i><i></i></span>OBELISK</div>
+    <div class="tr">What Obelisk does</div><div class="bl">Two things</div><div class="br"></div>
+  </div>
+  <div class="eyebrow hd-e" data-r>Obelisk, on facts</div>
+  <h2 class="h-serif hd" data-r style="--d:1">Distill for free.<br><em>Deliver in context.</em></h2>
+  <div class="duo">
+    <div class="box" data-r style="--d:2"><div class="n">01</div><h3>Zero-cost distillation</h3><div class="sub">Facts in, experience out.</div>
+      <ul><li>No curation: positive and anti-patterns become Skills straight from the run</li><li>Works across every coding agent</li><li>No cold start: no month of ramp-up, no pile of accumulated errors</li></ul></div>
+    <div class="box f" data-r style="--d:3"><div class="n">02</div><h3>High-match context</h3><div class="sub">Knowledge-for-pay 2.0.</div>
+      <ul><li>Raw trajectories show how a Skill was born</li><li>…and where it really works</li><li>We organize that into context that fits what you are doing now</li></ul></div>
+  </div>
+</section>
+
+<section class="slide light thesis" data-title="Thesis">
+  <img class="moon" data-r="img" src="assets/moon.jpg" alt="">
+  <div class="chrome">
+    <div class="tl"><span class="mark"><i></i><i></i><i></i><i></i></span>OBELISK</div>
+    <div class="tr">Our thesis</div><div class="bl">Why context</div><div class="br"></div>
+  </div>
+  <div class="eyebrow hd-e" data-r>Our thesis</div>
+  <h2 data-r style="--d:1">AI-Native should be <em>context-native</em> first.</h2>
+  <div class="cmp" data-r style="--d:3">
+    <div class="no"><b>Looks like a match</b><span>Same name. Same tool facet.</span></div>
+    <div class="yes"><b>Is a match</b><span>Born from, and proven in, the scene you are in now.</span></div>
+  </div>
+</section>
+
+<section class="slide light divider" data-title="On-chain">
+  <img class="art" data-r="img" src="assets/chain-divider.jpg" alt="">
+  <div class="chrome">
+    <div class="tl"><span class="mark"><i></i><i></i><i></i><i></i></span>OBELISK</div>
+    <div class="tr">ETH Wuhan 2026<br>AI × Blockchain</div><div class="bl"></div><div class="br"></div>
+  </div>
+  <div class="eyebrow hd-e" data-r style="top:300px">Built during the hackathon</div>
+  <h2 data-r style="--d:1">Putting <em>context</em> on-chain</h2>
+  <div class="sub" data-r style="--d:2">BOT Chain<br>Provenance · Usage · Payment · Privacy</div>
+</section>
+
+<section class="slide light map" data-title="Gaps to chain">
+  <div class="chrome">
+    <div class="tl"><span class="mark"><i></i><i></i><i></i><i></i></span>OBELISK</div>
+    <div class="tr">On-chain</div><div class="bl">Each gap, an answer</div><div class="br"></div>
+  </div>
+  <div class="eyebrow hd-e" data-r>Why a chain</div>
+  <h2 class="h-serif hd" data-r style="--d:1">Every gap gets<br>an <em>on-chain</em> answer</h2>
+  <div class="g">
+    <div class="hdr" data-r style="--d:1"><span>Gap</span><span></span><span>On-chain answer</span><span>Contract</span></div>
+    <div class="r" data-r style="--d:2"><div class="p">Text is copied, attribution is lost</div><div class="ar"><svg viewBox="0 0 46 20" fill="none" stroke="#101012" stroke-width="1.5"><path d="M0 10h42M34 2l8 8-8 8"/></svg></div><div class="a">Fingerprinted versions and a lineage<small>Authors prove priority; forks stay attached to their parents.</small></div><div class="c">SkillRegistry</div></div>
+    <div class="r" data-r style="--d:3"><div class="p">Nobody can measure utility</div><div class="ar"><svg viewBox="0 0 46 20" fill="none" stroke="#101012" stroke-width="1.5"><path d="M0 10h42M34 2l8 8-8 8"/></svg></div><div class="a">Real usage, from real sessions<small>Invocations, distinct wallets, scenes and outcomes.</small></div><div class="c">UsageStats</div></div>
+    <div class="r" data-r style="--d:4"><div class="p">Money depends on traffic</div><div class="ar"><svg viewBox="0 0 46 20" fill="none" stroke="#101012" stroke-width="1.5"><path d="M0 10h42M34 2l8 8-8 8"/></svg></div><div class="a">Priced offers with royalties up the lineage<small>Payment settles on-chain, with receipts.</small></div><div class="c">SkillMarket</div></div>
+    <div class="r" data-r style="--d:5"><div class="p">Context is too sensitive to send</div><div class="ar"><svg viewBox="0 0 46 20" fill="none" stroke="#101012" stroke-width="1.5"><path d="M0 10h42M34 2l8 8-8 8"/></svg></div><div class="a">Wallet-bound encrypted shares<small>Limits, expiry, revocation and open receipts.</small></div><div class="c">KeyRegistry<br>ShareRegistry</div></div>
+  </div>
+</section>
+
+<section class="slide light relay" data-title="Architecture">
+  <div class="chrome">
+    <div class="tl"><span class="mark"><i></i><i></i><i></i><i></i></span>OBELISK</div>
+    <div class="tr">Architecture</div><div class="bl">Users sign, the service relays</div><div class="br"></div>
+  </div>
+  <div class="eyebrow hd-e" data-r>How it fits together</div>
+  <h2 class="h-serif hd" data-r style="--d:1">Users sign.<br><em>The relay pays.</em></h2>
+  <div class="tri">
+    <div class="bx" data-r style="--d:2"><div class="k">Your machine</div><h3>Local Obelisk</h3><ul><li>Sessions never leave unless you share</li><li>Distills Skills, finds evidence</li><li>Signs EIP-712 actions with your wallet</li></ul></div>
+    <div class="lk" data-r="fade" style="--d:3">signed<br>action<svg viewBox="0 0 46 20" fill="none" stroke="#101012" stroke-width="1.5"><path d="M0 10h42M34 2l8 8-8 8"/></svg></div>
+    <div class="bx" data-r style="--d:3"><div class="k">Online service</div><h3>Relay</h3><ul><li>Checks the signature, pays gas</li><li>Stores ciphertext and public Skill bodies</li><li>Never sees plaintext session content</li></ul></div>
+    <div class="lk" data-r="fade" style="--d:4">transaction<svg viewBox="0 0 46 20" fill="none" stroke="#101012" stroke-width="1.5"><path d="M0 10h42M34 2l8 8-8 8"/></svg></div>
+    <div class="bx n" data-r style="--d:4"><div class="k">BOT Chain</div><h3>Five contracts</h3><ul><li>The actor is the signer, never the relayer</li><li>No owner, no admin key, no upgrade path</li><li>State read via view functions</li></ul></div>
+  </div>
+</section>
+
+<section class="slide light mint" data-title="Skill assets">
+  <div class="chrome">
+    <div class="tl"><span class="mark"><i></i><i></i><i></i><i></i></span>OBELISK</div>
+    <div class="tr">SkillRegistry</div><div class="bl">Skills as assets</div><div class="br"></div>
+  </div>
+  <div class="eyebrow hd-e" data-r>Provenance</div>
+  <h2 class="h-serif hd" data-r style="--d:1">Mint it. <em>Lineage stays.</em></h2>
+  <div class="steps">
+    <div data-r style="--d:2"><b>01</b><div><h4>Say one sentence</h4><p>“Distill how I do X into a Skill.”</p></div></div>
+    <div data-r style="--d:3"><b>02</b><div><h4>Obelisk finds the evidence</h4><p>Related sessions, a provenance card, birth scenes.</p></div></div>
+    <div data-r style="--d:4"><b>03</b><div><h4>Mint the fingerprint</h4><p>Author, version and parent recorded on-chain.</p></div></div>
+    <div data-r style="--d:5"><b>04</b><div><h4>Forks attach to the parent</h4><p>Derivative work is traceable and queryable.</p></div></div>
+  </div>
+  <svg class="tree" viewBox="0 0 880 620" fill="none" data-r style="--d:3">
+  <g stroke="#101012" stroke-width="1.5">
+    <path d="M440 120V170M440 170H190V230M440 170H690V230M190 330V390M690 330V390M690 390H520V450M690 390H860V450" stroke-dasharray="4 6"/>
+    <rect x="300" y="20" width="280" height="100" fill="#f2f1ec"/>
+    <rect x="60" y="230" width="260" height="100" fill="#f2f1ec"/>
+    <rect x="560" y="230" width="260" height="100" fill="#d9d0fb" stroke="#5b3fd6"/>
+    <rect x="60" y="390" width="260" height="100" fill="#f2f1ec"/>
+    <rect x="420" y="450" width="200" height="90" fill="#f2f1ec"/>
+    <rect x="700" y="450" width="170" height="90" fill="#f2f1ec"/>
+  </g>
+  <g font-family="Inter,sans-serif">
+    <text x="320" y="62" font-size="24" font-weight="600" fill="#101012">Skill · v1 → v2</text><text x="320" y="96" font-size="17" fill="#4a4a4f">Author A · fingerprint</text>
+    <text x="80" y="272" font-size="22" font-weight="600" fill="#101012">Fork</text><text x="80" y="304" font-size="17" fill="#4a4a4f">Author B · parent = v2</text>
+    <text x="580" y="272" font-size="22" font-weight="600" fill="#101012">Fork</text><text x="580" y="304" font-size="17" fill="#4a4a4f">Author C · parent = v2</text>
+    <text x="80" y="432" font-size="22" font-weight="600" fill="#101012">Fork of fork</text><text x="80" y="464" font-size="17" fill="#4a4a4f">Author D</text>
+    <text x="440" y="492" font-size="20" font-weight="600" fill="#101012">Fork</text><text x="440" y="522" font-size="16" fill="#4a4a4f">Author E</text>
+    <text x="720" y="492" font-size="20" font-weight="600" fill="#101012">Fork</text><text x="720" y="522" font-size="16" fill="#4a4a4f">Author F</text>
+  </g>
+  <g font-family="JetBrains Mono,monospace" font-size="13" letter-spacing="2" fill="#5b3fd6">
+    <text x="300" y="14">GENEALOGY · ON-CHAIN</text>
+  </g>
+</svg>
+</section>
+
+<section class="slide light use" data-title="Usage">
+  <div class="chrome">
+    <div class="tl"><span class="mark"><i></i><i></i><i></i><i></i></span>OBELISK</div>
+    <div class="tr">UsageStats</div><div class="bl">Real usage</div><div class="br"></div>
+  </div>
+  <div class="eyebrow hd-e" data-r>Measurable</div>
+  <h2 class="h-serif hd" data-r style="--d:1">Don’t read the description.<br><em>Read the evidence.</em></h2>
+  <div class="l">
+    <div data-r style="--d:2">Invocations<span>per version</span></div>
+    <div data-r style="--d:3">Distinct wallets<span>de-duplicated</span></div>
+    <div data-r style="--d:4">Scenes<span>where it was used</span></div>
+    <div data-r style="--d:5">Outcomes<span>with sample sizes</span></div>
+  </div>
+  <div class="card2" data-r style="--d:3">
+    <div class="k"><span>Skill: “Frontend”</span><span class="tag v">Illustrative</span></div>
+    <div class="desc">Author’s description: “Great for any frontend work.”</div>
+    <div class="k" style="margin-bottom:6px"><span>Measured scenes</span></div>
+    <div class="bar"><span>Creative decks</span><i style="width:88%"></i></div>
+    <div class="bar"><span>Landing pages</span><i class="s" style="width:46%"></i></div>
+    <div class="bar"><span>E-commerce admin</span><i class="g" style="width:10%"></i></div>
+  </div>
+  <div class="note" data-r style="--d:5;left:104px;bottom:112px">Every count traces back to a real session, reported by a signing wallet</div>
+</section>
+
+<section class="slide light split" data-title="Market">
+  <div class="chrome">
+    <div class="tl"><span class="mark"><i></i><i></i><i></i><i></i></span>OBELISK</div>
+    <div class="tr">SkillMarket</div><div class="bl">Royalties follow the lineage</div><div class="br"></div>
+  </div>
+  <div class="eyebrow hd-e" data-r>Payment</div>
+  <h2 class="h-serif hd" data-r style="--d:1">Royalties<br><em>follow the lineage.</em></h2>
+  <div class="flow2">
+    <div class="pay" data-r style="--d:2">Buyer pays for a Skill version<span>One transaction · one receipt · split is illustrative</span></div>
+    <div class="alloc" data-r style="--d:3">
+      <div><b>Author</b><h4>Direct creator</h4><p>Paid on the purchase</p></div>
+      <div><b>Parent</b><h4>Upstream author</h4><p>Royalty set at listing</p></div>
+      <div><b>Grandparent…</b><h4>Further up</h4><p>Up to 16 levels</p></div>
+      <div><b>Platform</b><h4>Fee</h4><p>Fixed rate</p></div>
+    </div>
+    <div class="terms" data-r style="--d:4">
+      <div><b>Access mode</b><span>Free · per retrieval · perpetual for a version</span></div>
+      <div><b>License</b><span>Personal or commercial. No copyright transfer.</span></div>
+      <div><b>Proof</b><span>Every receipt and allocation is enumerable on-chain.</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="slide light share" data-title="Private share">
+  <div class="chrome">
+    <div class="tl"><span class="mark"><i></i><i></i><i></i><i></i></span>OBELISK</div>
+    <div class="tr">KeyRegistry · ShareRegistry</div><div class="bl">Private context</div><div class="br"></div>
+  </div>
+  <div class="eyebrow hd-e" data-r>Context, not just text</div>
+  <h2 class="h-serif hd" data-r style="--d:1">Hand it to <em>one wallet.</em></h2>
+  <div class="seq">
+    <div class="st" data-r style="--d:2"><div class="dot"></div><div class="k">01</div><h3>Check</h3><p>Secrets, keys and local paths are found and masked before anything leaves.</p></div>
+    <div class="st" data-r style="--d:3"><div class="dot"></div><div class="k">02</div><h3>Encrypt</h3><p>Sealed on your machine to the recipient’s registered key.</p></div>
+    <div class="st" data-r style="--d:4"><div class="dot"></div><div class="k">03</div><h3>Rules</h3><p>Recorded on-chain, enforced when the recipient asks to open.</p></div>
+    <div class="st" data-r style="--d:5"><div class="dot"></div><div class="k">04</div><h3>Open</h3><p>The recipient signs an open receipt, then the key is released.</p></div>
+  </div>
+  <div class="rules" data-r style="--d:5">
+    <div><b>Recipient</b><span>One wallet only</span></div>
+    <div><b>Limit</b><span>Open N times</span></div>
+    <div><b>Expiry</b><span>Time-boxed</span></div>
+    <div><b>Revoke</b><span>Any time</span></div>
+    <div><b>Receipt</b><span>Who opened, when</span></div>
+  </div>
+</section>
+
+<section class="slide light stat" data-title="Status">
+  <div class="chrome">
+    <div class="tl"><span class="mark"><i></i><i></i><i></i><i></i></span>OBELISK</div>
+    <div class="tr">Status</div><div class="bl">What runs today</div><div class="br"></div>
+  </div>
+  <div class="eyebrow hd-e" data-r>Where we are</div>
+  <h2 class="h-serif hd" data-r style="--d:1">Real loop on testnet.<br><em>Frozen build for mainnet.</em></h2>
+  <div class="net">
+    <div class="nb f" data-r style="--d:2"><div class="k"><span>Testnet</span><span>Live</span></div><h3>BOT Chain testnet</h3><div class="id">CHAIN ID 968</div>
+      <ul><li>Sign, relay, mint, use, buy and settle: the whole loop</li><li>Real AI sessions drive the usage data</li><li>Test tokens, simulated roles: labeled as such</li></ul></div>
+    <div class="nb m" data-r style="--d:3"><div class="k"><span>Mainnet</span><span>Verification</span></div><h3>BOT Chain mainnet</h3><div class="id">CHAIN ID 677</div>
+      <ul><li>Same frozen code as testnet</li><li>A small number of real transactions, with explorer links</li><li>Separate worker, storage and wallets</li></ul></div>
+  </div>
+</section>
+
+<section class="slide light close" data-title="Slogan">
+  <img class="art" data-r="img" src="assets/closing.jpg" alt="">
+  <div class="chrome">
+    <div class="tl"><span class="mark"><i></i><i></i><i></i><i></i></span>OBELISK</div>
+    <div class="tr">ETH Wuhan 2026<br>AI × Blockchain</div><div class="bl">Thank you</div><div class="br"></div>
+  </div>
+  <div class="eyebrow abs" style="left:104px;top:200px" data-r>Our belief</div>
+  <h2 data-r style="--d:1">Context-native first.<br><em>AI-native follows.</em></h2>
+  <div class="sub" data-r style="--d:3">AI-Native should be context-native first.</div>
+  <div class="links" data-r style="--d:4"><span>github.com/tommy0103/obelisk</span><span>Built on BOT Chain</span></div>
+</section>
+
+</div>
+<div id="help">← → navigate · O overview · F fullscreen · P print/PDF</div>
+
+<script>
+(() => {
+  const W = 1920, H = 1080;
+  const stage = document.getElementById('stage');
+  const slides = [...document.querySelectorAll('.slide')];
+  const bar = document.getElementById('bar');
+  const help = document.getElementById('help');
+  let cur = 0, overview = false, idleT;
+
+  // page numbers
+  slides.forEach((s, i) => {
+    const br = s.querySelector('.chrome .br');
+    if (br) br.textContent = String(i + 1).padStart(2, '0') + ' / ' + String(slides.length).padStart(2, '0');
+  });
+
+  function fit() {
+    const k = Math.min(innerWidth / W, innerHeight / H);
+    stage.style.transform = `translate(${-W * k / 2}px,${-H * k / 2}px) scale(${k})`;
+  }
+
+  function layoutOverview() {
+    const gap = 24, cols = slides.length > 12 ? 4 : 3, rows = Math.ceil(slides.length / cols);
+    const s = Math.min((W - gap * (cols + 1)) / cols, (H - gap * (rows + 1)) / rows * W / H);
+    const left = (W - cols * s - (cols - 1) * gap) / 2;
+    const top = (H - rows * (s * H / W) - (rows - 1) * gap) / 2;
+    slides.forEach((el, i) => {
+      const x = left + (i % cols) * (s + gap);
+      const y = top + Math.floor(i / cols) * (s * H / W + gap);
+      el.style.transformOrigin = '0 0';
+      el.style.transform = `translate(${x}px,${y}px) scale(${s / W})`;
+    });
+  }
+  function clearOverview() { slides.forEach(el => { el.style.transform = ''; el.style.transformOrigin = ''; }); }
+
+  function go(n, push = true) {
+    cur = Math.max(0, Math.min(slides.length - 1, n));
+    slides.forEach((s, i) => s.classList.toggle('active', i === cur));
+    bar.style.width = ((cur + 1) / slides.length * 100) + '%';
+    if (push) history.replaceState(null, '', '#' + (cur + 1));
+  }
+  function toggleOverview(on = !overview) {
+    overview = on;
+    document.body.classList.toggle('overview', on);
+    on ? layoutOverview() : clearOverview();
+  }
+  function fullscreen() {
+    document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.();
+  }
+
+  addEventListener('keydown', e => {
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    const k = e.key;
+    if (overview) {
+      if (k === 'Escape' || k === 'o' || k === 'O' || k === 'Enter') return toggleOverview(false);
+      const cols = slides.length > 12 ? 4 : 3;
+      if (k === 'ArrowRight') return go(cur + 1);
+      if (k === 'ArrowLeft') return go(cur - 1);
+      if (k === 'ArrowDown') return go(cur + cols);
+      if (k === 'ArrowUp') return go(cur - cols);
+      return;
+    }
+    if (['ArrowRight', 'ArrowDown', 'PageDown', ' ', 'Enter'].includes(k)) { e.preventDefault(); go(cur + 1); }
+    else if (['ArrowLeft', 'ArrowUp', 'PageUp', 'Backspace'].includes(k)) { e.preventDefault(); go(cur - 1); }
+    else if (k === 'Home') go(0);
+    else if (k === 'End') go(slides.length - 1);
+    else if (k === 'o' || k === 'O' || k === 'Escape') toggleOverview(true);
+    else if (k === 'f' || k === 'F') fullscreen();
+    else if (k === 'p' || k === 'P') print();
+    else if (k === '?') help.classList.toggle('show');
+  });
+  slides.forEach((s, i) => s.addEventListener('click', e => {
+    if (overview) { go(i); toggleOverview(false); e.stopPropagation(); }
+  }));
+  document.addEventListener('click', e => {
+    if (overview) return;
+    e.clientX > innerWidth * .3 ? go(cur + 1) : go(cur - 1);
+  });
+  let tx = null;
+  addEventListener('touchstart', e => tx = e.touches[0].clientX, { passive: true });
+  addEventListener('touchend', e => {
+    if (tx == null) return; const dx = e.changedTouches[0].clientX - tx; tx = null;
+    if (Math.abs(dx) > 50) go(cur + (dx < 0 ? 1 : -1));
+  });
+  addEventListener('resize', () => { fit(); if (overview) layoutOverview(); });
+  addEventListener('hashchange', () => go((parseInt(location.hash.slice(1)) || 1) - 1, false));
+  addEventListener('mousemove', () => {
+    document.body.classList.remove('idle'); clearTimeout(idleT);
+    idleT = setTimeout(() => document.body.classList.add('idle'), 2500);
+  });
+
+  fit();
+  go((parseInt(location.hash.slice(1)) || 1) - 1, false);
+  help.classList.add('show'); setTimeout(() => help.classList.remove('show'), 3500);
+})();
+</script>
+</body>
+</html>

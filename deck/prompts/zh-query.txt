@@ -1,0 +1,18 @@
+Text replacements (English -> Chinese, verbatim):
+- EXPLICIT MEMORY -> 显式记忆
+- QUERY WHAT ACTUALLY HAPPENED -> 查询真正发生过的事
+- FROM REAL SESSIONS TO GROUNDED ANSWERS -> 从真实会话到有据可查的回答
+- REAL SESSION TRANSCRIPTS / CAPTURE USER ACTIONS, MESSAGES AND TOOL CALLS -> 真实会话记录 / 记录用户操作、消息与工具调用
+- AGENT QUERY AT THE MOMENT OF NEED / SEARCH REAL SESSIONS TO FIND RELEVANT CONTEXT -> 需要时由 Agent 发起查询 / 检索真实会话，找到相关上下文
+- ANSWER WITH SOURCE EVIDENCE / A CLEAR ANSWER WITH LINKS TO THE ORIGINAL SESSIONS -> 回答附带来源证据 / 清晰的回答，并链接回原始会话
+- User message -> 用户消息; "Analyze last quarter's revenue by region." -> “按地区分析上季度收入。”
+- Tool call -> 工具调用 (keep run_sql("revenue_by_region", {quarter: "2025-Q1"}) as code)
+- Tool result -> 工具结果; "Query returned 12 rows." -> “查询返回 12 行。”
+- Assistant message -> 助手消息; "Here's the breakdown by region with key takeaways." -> “这是按地区的拆分和要点。”
+- Ask the agent -> 询问 Agent; "What did we decide about the Q1 revenue analysis?" -> 关于 Q1 收入分析，我们当时是怎么决定的？
+- SEARCHES RELEVANT SESSIONS / FINDS MESSAGES, TOOL CALLS AND RESULTS -> 检索相关会话 / 找到消息、工具调用与结果
+- UNDERSTANDS CONTEXT / GROUNDS THE ANSWER IN ACTUAL SESSION MEMORY -> 理解上下文 / 让回答以真实会话为依据
+- RETURNS A SOURCED ANSWER / WITH LINKS TO ORIGINAL SESSIONS -> 返回带来源的回答 / 并链接到原始会话
+- Answer -> 回答; "We decided to use the Q1 2025 revenue breakdown by region and focus on APAC and EMEA for next steps." -> 我们决定采用 2025 年 Q1 按地区的收入拆分，下一步聚焦 APAC 和 EMEA。
+- SOURCES -> 来源; Session: Revenue analysis -> 会话：收入分析; Tool call: run_sql -> 工具调用：run_sql; Assistant message -> 助手消息
+- Dates like "Mar 12, 2025 • 10:14 AM" -> 2025年3月12日 10:14 ; times like "10:14 AM" -> 10:14
