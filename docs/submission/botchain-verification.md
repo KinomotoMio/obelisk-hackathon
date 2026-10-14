@@ -38,7 +38,7 @@ Obelisk 原本是给 coding agent 用的显式记忆基础设施：在本地索�
 | 3 | 明确的 Connect Wallet 入口，支持 MetaMask、OKX Wallet 等 | 每个页面右上角「连接钱包」；EIP-6963 自动识别已安装的 EVM 钱包（MetaMask、OKX Wallet、Rabby 等），未安装时给出安装入口 |
 | 4 | 可切换至 BOT Chain Mainnet（Chain ID 677） | 钱包菜单、首页核验区和链上体验页都有「切换到 BOT Chain 主网」；钱包里没有该网络时自动以 `https://rpc.botchain.ai`、`https://scan.botchain.ai` 添加 |
 | 5 | 主网合约地址及区块浏览器链接 | 见下方「主网合约」，五份合约源码均已验证 |
-| 6 | 至少一笔用户钱包签名并成功发起的主网交易 | 链上体验页：钱包做 EIP-712 签名后，**由同一个钱包**把 `registerKeyBySig` 发到 KeyRegistry（`from` 即用户地址）。服务按链上回执核对后收录，首页实时列出。见下方「用户钱包发起的主网交易」 |
+| 6 | 至少一笔用户钱包签名并成功发起的主网交易 | MetaMask 钱包 `0x13E2…8261` 在 Skill 市场签名并**自己发送**两笔 `SkillMarket.buyBySig`（领取 #1、以 0.003 BOT 购买 #4），`from` 即用户地址；#4 的付款在同一笔交易里按族谱分给四方。链上体验页同样支持钱包自己发送 `registerKeyBySig`。服务按链上回执核对后收录，首页实时列出。见下方「用户钱包发起的主网交易」 |
 | 7 | BOT Chain 在产品中的实际应用说明 | 见上方「项目意义」与下方「BOT Chain 在产品中做什么」；Skill 市场可直接用钱包购买或领取 |
 
 ## 主网合约（BOT Chain Mainnet · Chain ID 677）
@@ -58,6 +58,18 @@ Obelisk 原本是给 coding agent 用的显式记忆基础设施：在本地索�
 | 事项 | 发起钱包 | 交易 |
 | --- | --- | --- |
 | MetaMask 领取 Skill #1，钱包自己发送 `SkillMarket.buyBySig` | [0x13E2…8261](https://scan.botchain.ai/address/0x13E23Bf9567e15Dc3DeFd14adD6AE96B99598261) | [0x644495d2…38a8](https://scan.botchain.ai/tx/0x644495d222f111a9eeca5f993a6a0234080b0dc4564d2a4942962c9af45a38a8) |
+| MetaMask 以 0.003 BOT 购买 Skill #4，钱包自己发送 `SkillMarket.buyBySig` | [0x13E2…8261](https://scan.botchain.ai/address/0x13E23Bf9567e15Dc3DeFd14adD6AE96B99598261) | [0xeeee3529…2dc4](https://scan.botchain.ai/tx/0xeeee3529d6c70710c1a0c7546ffc39b878241d47d3dc4fce6f7dc4ff7f6c2dc4) |
+
+两次购买之后，同一钱包各签了一次 `UseSkill`，由服务代付记录取用：[#1 0x2ab49e66…9220](https://scan.botchain.ai/tx/0x2ab49e66a12dbe71898449e75a6397c60b1c108ffcc93d6cf6b6f16f46b99220)、[#4 0xe0a6cb5b…4aee](https://scan.botchain.ai/tx/0xe0a6cb5ba50b5722525b405c4608995efd1389dc693ecf4858312b1839034aee)。
+
+#4 购买交易里的 4 条 `Allocated` 事件（合约直接转账，0.003 BOT 全部分完）：
+
+| 收款方 | 依据 | 金额 |
+| --- | --- | --- |
+| 平台 `0x9107…2EcB` | 平台抽成 5% | 0.00015 BOT |
+| #4 作者 `0x095E…AeD5F` | 余下 0.00285 的 90%（10% 作为版税上交父 Skill #2） | 0.002565 BOT |
+| #2 作者 `0x095E…AeD5F` | 收到 0.000285，再把其中 10% 上交父 Skill #1 | 0.0002565 BOT |
+| #1 作者 `0xACb1…69C8` | 族谱根节点 | 0.0000285 BOT |
 
 收录记录可通过 `GET /v1/direct` 读取（只收录 `from` 不是代付钱包、调用 Obelisk 合约且回执成功的交易）。
 
