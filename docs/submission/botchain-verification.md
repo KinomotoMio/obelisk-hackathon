@@ -87,12 +87,12 @@ Skill 详情页（例如 [主网 Skill #2](https://obelisk-service-mainnet.kinom
 
 | Skill | 方案 | 状态 |
 | --- | --- | --- |
-| #1 ai-building-collaboration | 免费领取，上游版税 10% | `待上架` |
-| #2 ai-building-half-hour-review（基于 #1） | 0.002 BOT 买断，上游版税 10% | `待上架` |
-| #3 small-project-evidence-loop | 免费领取 | `待上架` |
-| #4 scope-change-handoff（基于 #2） | 0.003 BOT 买断 | `待上架` |
+| #1 ai-building-collaboration | 免费领取，上游版税 10% | 已上架 · [0x028de29c…](https://scan.botchain.ai/tx/0x028de29c18c4d9f7021a433d9aec30d64d4fae68ef6a8a65f534ee716551dda4) |
+| #2 ai-building-half-hour-review（基于 #1） | 0.002 BOT 买断，上游版税 10% | 已上架 · [0x129fd557…](https://scan.botchain.ai/tx/0x129fd55798586e7b3db65472c8018df99b9cc71a39abc88835c3f7538ff0a2da) |
+| #3 small-project-evidence-loop | 免费领取 | 已上架 · [0xb2fd96c1…](https://scan.botchain.ai/tx/0xb2fd96c184f498117901c805394b368dd02d353db9675e3b39dbd9ef0140cd9c) |
+| #4 scope-change-handoff（基于 #2） | 0.003 BOT 买断 | 已上架 · [0xc27b8f99…](https://scan.botchain.ai/tx/0xc27b8f99e8aa1c4ed077aa5139b3fa33dcc8b97e37b36a45bee9e4fd5a657f1b) |
 
-上架由各作者的本机钱包签名、服务代付：`cd service && node --experimental-strip-types scripts/mainnet-list-offers.mjs --confirm`。主网四个 Skill 的正文本来就公开，购买获得的是链上授权与对作者、上游作者的回报；付费正文（licensed）的完整流程已在本地链测试中验证（`service/test/market-web-local-chain.test.mjs`）。
+上架由各作者的本机钱包签名 `ListSkill`、服务代付提交（`service/scripts/mainnet-list-offers.mjs`）。主网四个 Skill 的正文本来就公开，购买获得的是链上授权与对作者、上游作者的回报；付费正文（licensed）的完整流程已在本地链测试中验证（`service/test/market-web-local-chain.test.mjs`）。
 
 ## BOT Chain 在产品中做什么
 
