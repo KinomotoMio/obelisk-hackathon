@@ -53,11 +53,11 @@ Obelisk 原本是给 coding agent 用的显式记忆基础设施：在本地索�
 
 ## 用户钱包发起的主网交易
 
-在 [链上体验](https://obelisk-service-mainnet.kinomotomiovo.workers.dev/activate) 用浏览器钱包完成：连接 → 切换到 677 → 解锁解密密钥（`personal_sign`，不上链）→ EIP-712 签名 → **钱包自己发送** `KeyRegistry.registerKeyBySig`。
+在 [Skill 市场](https://obelisk-service-mainnet.kinomotomiovo.workers.dev/market/skills/1) 用浏览器钱包（MetaMask）完成：连接 → 切换到 677 → EIP-712 签名 `BuySkill` → **钱包自己发送** `SkillMarket.buyBySig` → 页面取回正文并给出安装 prompt。[链上体验](https://obelisk-service-mainnet.kinomotomiovo.workers.dev/activate) 同样支持钱包自己发送 `KeyRegistry.registerKeyBySig`。
 
 | 事项 | 发起钱包 | 交易 |
 | --- | --- | --- |
-| 浏览器钱包签名并发送 `registerKeyBySig` | `待填` | `待填` |
+| MetaMask 领取 Skill #1，钱包自己发送 `SkillMarket.buyBySig` | [0x13E2…8261](https://scan.botchain.ai/address/0x13E23Bf9567e15Dc3DeFd14adD6AE96B99598261) | [0x644495d2…38a8](https://scan.botchain.ai/tx/0x644495d222f111a9eeca5f993a6a0234080b0dc4564d2a4942962c9af45a38a8) |
 
 收录记录可通过 `GET /v1/direct` 读取（只收录 `from` 不是代付钱包、调用 Obelisk 合约且回执成功的交易）。
 
