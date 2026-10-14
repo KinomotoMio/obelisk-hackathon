@@ -108,7 +108,17 @@ export function memoryUsageTrend() {
   };
 }
 
-export function makeApp({ relayerKey = RELAYER_KEY, limits = {}, shares = memoryShareStore(), skillContent = memorySkillContent(), usageTrend = memoryUsageTrend() } = {}) {
+/** In-memory stand-in for the KV wallet-sent transaction index in src/index.ts. */
+export function memoryWalletTxs() {
+  const entries = new Map();
+  return {
+    entries,
+    async add(chainId, entry) { entries.set(`${chainId}:${entry.txHash}`, entry); },
+    async list(chainId) { return [...entries].filter(([key]) => key.startsWith(`${chainId}:`)).map(([, entry]) => entry); },
+  };
+}
+
+export function makeApp({ relayerKey = RELAYER_KEY, limits = {}, shares = memoryShareStore(), skillContent = memorySkillContent(), usageTrend = memoryUsageTrend(), walletTxs = memoryWalletTxs() } = {}) {
   const config = resolveChainConfig(env);
   const transport = http(config.rpcUrl);
   const account = relayerKey ? privateKeyToAccount(relayerKey) : null;
@@ -132,6 +142,7 @@ export function makeApp({ relayerKey = RELAYER_KEY, limits = {}, shares = memory
     shares,
     skillContent,
     usageTrend,
+    walletTxs,
     relay: (request) => relayResponse(relayer, request),
   };
   return {
@@ -155,6 +166,14 @@ export const deadline = () => String(Math.floor(Date.now() / 1000) + 600);
 export async function signAction(app, account, contract, types, action, message) {
   const domain = obeliskDomain(contract, app.config.chain.id, app.config.contracts[contract]);
   return account.signTypedData({ domain, types, primaryType: action, message });
+}
+
+/** A funded account standing in for a user's browser wallet that pays its own gas. */
+export async function fundedWallet(value = '1') {
+  const account = privateKeyToAccount(generatePrivateKey());
+  const deployer = createWalletClient({ account: privateKeyToAccount(DEPLOYER_KEY), chain: publicClient.chain, transport: http(env.RPC_URL) });
+  await publicClient.waitForTransactionReceipt({ hash: await deployer.sendTransaction({ to: account.address, value: parseEther(value) }) });
+  return { account, wallet: createWalletClient({ account, chain: publicClient.chain, transport: http(env.RPC_URL) }) };
 }
 
 export async function startLocalChain({ market = false } = {}) {

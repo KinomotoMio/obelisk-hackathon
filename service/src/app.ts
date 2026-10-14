@@ -11,6 +11,9 @@
 //   GET  /v1/tx/:hash                   status of a relayed transaction
 //   GET  /v1/txs?hashes=0x…,0x…         whether each transaction exists and succeeded (txcheck.ts)
 //   POST /v1/relay                      { action, message, signature } -> submitted on chain
+//   POST /v1/direct/prepare             the same signed action, checked, as a call the user's wallet sends itself (direct.ts)
+//   POST /v1/direct, GET /v1/direct     index / list confirmed transactions sent by users' own wallets (direct.ts)
+//   GET  /v1/stats                      live counters read from the contracts (direct.ts)
 //   POST /v1/shares                     upload a share's ciphertext + key package, relay CreateShare
 //   GET  /v1/shares/:id                 a share's on-chain rules, status, and receipts
 //   POST /v1/shares/:id/open            recipient-signed RecordOpen -> receipt on chain, then the key package
@@ -34,6 +37,7 @@ import { parseAddressParam, parseContractParam, readKey, readNonce, readTransact
 import type { Relayer, RelayRecord } from './relayer.ts';
 import { createShare, MAX_SHARE_BODY_BYTES, openShare, parseShareId, readShare, revokeShare, type ShareDeps, type ShareStore } from './shares.ts';
 import { readSkillList } from './market.ts';
+import { handleDirectRoute, type WalletTxStore } from './direct.ts';
 import { handleSettlementRoute } from './settlement.ts';
 import { handleSkillRoute, type SkillContentStore } from './skills.ts';
 import { checkTransactions, parseHashes, type TxCheckCache } from './txcheck.ts';
@@ -89,6 +93,8 @@ export interface AppDeps {
   skillContent?: SkillContentStore | null;
   /** What relayed usage reports added, for trends (KV); null when unbound. */
   usageTrend?: UsageTrendStore | null;
+  /** Transactions users' own wallets sent to Obelisk contracts (KV); absent or null when unbound. */
+  walletTxs?: WalletTxStore | null;
   /** Final answers of GET /v1/txs (KV); absent or null to look every transaction up. */
   txChecks?: TxCheckCache | null;
   /** The web reader's HTML (public/reader/index.html); absent when assets are not bound. */
@@ -217,6 +223,8 @@ export async function handleRequest(request: Request, deps: AppDeps): Promise<Re
     if (sitePath) return await sitePageResponse(deps, sitePath);
     if (parts[0] !== 'v1') throw new RequestError(404, 'not_found', `No route for ${request.method} ${pathname}`);
     const route = parts.slice(1);
+    const directResult = await handleDirectRoute(request, route, deps, () => readJsonBody(request));
+    if (directResult !== null) return json(directResult);
     const settlementResult = await handleSettlementRoute(request, route, deps);
     if (settlementResult !== null) return json(settlementResult);
 

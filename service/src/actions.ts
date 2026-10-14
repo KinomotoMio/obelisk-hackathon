@@ -14,16 +14,20 @@ import { getAddress, isAddress, isHex, size, type Address, type Hex } from 'viem
 import {
   keyRegistryTypes,
   shareRegistryTypes,
+  skillMarketTypes,
   skillRegistryTypes,
   usageStatsTypes,
 } from '../../chain/eip712.ts';
 import type { ContractName } from './chains.ts';
 
+/** The Skill market is optional per network (config.market), so it is not one of CONTRACT_NAMES. */
+export type ActionContract = ContractName | 'SkillMarket';
+
 type TypedField = { readonly name: string; readonly type: string };
 type TypeTable = Readonly<Record<string, readonly TypedField[]>>;
 
 export interface RelayAction {
-  contract: ContractName;
+  contract: ActionContract;
   functionName: string;
   /** Typed-data field holding the address that must have signed. */
   signerField: string;
@@ -40,6 +44,15 @@ export const RELAY_ACTIONS = {
   MintSkill: { contract: 'SkillRegistry', functionName: 'mintBySig', signerField: 'author', types: skillRegistryTypes },
   PublishVersion: { contract: 'SkillRegistry', functionName: 'publishVersionBySig', signerField: 'author', types: skillRegistryTypes },
   ReportUsage: { contract: 'UsageStats', functionName: 'reportBySig', signerField: 'reporter', types: usageStatsTypes },
+  // Listing and an authorized retrieval move no money, so the relay may pay their gas.
+  ListSkill: { contract: 'SkillMarket', functionName: 'listBySig', signerField: 'author', types: skillMarketTypes },
+  UseSkill: { contract: 'SkillMarket', functionName: 'useBySig', signerField: 'buyer', types: skillMarketTypes },
+} as const satisfies Record<string, RelayAction>;
+
+// A purchase carries the price as the transaction's value, so only the buyer's
+// own wallet sends it (POST /v1/direct/prepare); the relay never pays a principal.
+export const WALLET_ACTIONS = {
+  BuySkill: { contract: 'SkillMarket', functionName: 'buyBySig', signerField: 'buyer', types: skillMarketTypes },
 } as const satisfies Record<string, RelayAction>;
 
 export const INTERNAL_ACTIONS = {
@@ -47,14 +60,17 @@ export const INTERNAL_ACTIONS = {
 } as const satisfies Record<string, RelayAction>;
 
 export type RelayActionName = keyof typeof RELAY_ACTIONS;
-export type AnyActionName = RelayActionName | keyof typeof INTERNAL_ACTIONS;
+export type AnyActionName = RelayActionName | keyof typeof INTERNAL_ACTIONS | keyof typeof WALLET_ACTIONS;
 
 export function isRelayActionName(value: unknown): value is RelayActionName {
   return typeof value === 'string' && Object.hasOwn(RELAY_ACTIONS, value);
 }
 
-function actionDefinition(action: unknown, internal: boolean): RelayAction | null {
+function actionDefinition(action: unknown, internal: boolean, wallet: boolean): RelayAction | null {
   if (isRelayActionName(action)) return RELAY_ACTIONS[action];
+  if (wallet && typeof action === 'string' && Object.hasOwn(WALLET_ACTIONS, action)) {
+    return WALLET_ACTIONS[action as keyof typeof WALLET_ACTIONS];
+  }
   if (internal && typeof action === 'string' && Object.hasOwn(INTERNAL_ACTIONS, action)) {
     return INTERNAL_ACTIONS[action as keyof typeof INTERNAL_ACTIONS];
   }
@@ -152,10 +168,10 @@ export interface ParsedRelayRequest {
  * Validate a `POST /v1/relay` body: `{ action, message, signature }`.
  * `internal` also admits INTERNAL_ACTIONS, for the service's own flows.
  */
-export function parseRelayRequest(body: unknown, { internal = false }: { internal?: boolean } = {}): ParsedRelayRequest {
+export function parseRelayRequest(body: unknown, { internal = false, wallet = false }: { internal?: boolean; wallet?: boolean } = {}): ParsedRelayRequest {
   if (typeof body !== 'object' || body === null) throw new RequestError(400, 'invalid_request', 'Request body must be a JSON object');
   const { action, message, signature } = body as Record<string, unknown>;
-  const definition = actionDefinition(action, internal);
+  const definition = actionDefinition(action, internal, wallet);
   if (!definition) {
     throw new RequestError(400, 'unknown_action', `action must be one of: ${Object.keys(RELAY_ACTIONS).join(', ')}`);
   }

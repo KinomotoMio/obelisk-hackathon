@@ -6,12 +6,15 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { encodeFunctionData } from 'viem';
 
-import { parseRelayRequest, RELAY_ACTIONS, RequestError } from '../src/actions.ts';
+import { parseRelayRequest, RELAY_ACTIONS, RequestError, WALLET_ACTIONS } from '../src/actions.ts';
 import { handleRequest } from '../src/app.ts';
 import { pinnedDeployments } from '../../packages/core/src/chain-protocol.ts';
 import { resolveChainConfig } from '../src/chains.ts';
 import { HourlyRateLimiter } from '../src/limits.ts';
 import { CONTRACT_ABIS } from '../src/relayer.ts';
+import { skillMarketAbi } from '../../chain/abi/index.ts';
+
+const ABIS = { ...CONTRACT_ABIS, SkillMarket: skillMarketAbi };
 
 const deployment = JSON.parse(readFileSync(new URL('../../chain/deployments/968.json', import.meta.url), 'utf8'));
 
@@ -29,6 +32,8 @@ const samples = {
     reporter: user, fingerprint: bytes32, cumulativeInvocations: '3',
     scenes: [{ key: bytes32, cumulative: '2' }], outcomes: [], nonce: '0', deadline: '1900000000',
   },
+  ListSkill: { author: user, skillId: '1', versionIndex: '0', mode: 2, license: 0, price: '1000000000000000', royaltyBps: 1000, nonce: '0', deadline: '1900000000' },
+  UseSkill: { buyer: user, offerId: '1', nonce: '0', deadline: '1900000000' },
 };
 
 test('every relayable action maps its signed fields onto the contract function, nonce omitted', () => {
@@ -37,11 +42,20 @@ test('every relayable action maps its signed fields onto the contract function, 
     const parsed = parseRelayRequest({ action, message, signature });
     const { contract, functionName } = RELAY_ACTIONS[action];
     // Encoding against the real ABI fails if the argument list is wrong.
-    encodeFunctionData({ abi: CONTRACT_ABIS[contract], functionName, args: parsed.args });
+    encodeFunctionData({ abi: ABIS[contract], functionName, args: parsed.args });
     assert.equal(parsed.args.at(-1), signature);
     assert.equal(parsed.signer, user);
     assert.equal(parsed.nonce, 0n);
   }
+});
+
+test('a purchase carries its price, so only the buyer’s own wallet may send it, never the relay', () => {
+  const message = { buyer: user, offerId: '1', nonce: '0', deadline: '1900000000' };
+  assert.throws(() => parseRelayRequest({ action: 'BuySkill', message, signature }),
+    (error) => error instanceof RequestError && error.code === 'unknown_action');
+  const parsed = parseRelayRequest({ action: 'BuySkill', message, signature }, { wallet: true });
+  encodeFunctionData({ abi: skillMarketAbi, functionName: WALLET_ACTIONS.BuySkill.functionName, args: parsed.args });
+  assert.equal(parsed.signer, user);
 });
 
 test('RecordOpen is not relayable; the key-release flow submits it', () => {

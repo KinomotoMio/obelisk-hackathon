@@ -12,6 +12,7 @@ import { createPublicClient, createWalletClient, type Hex } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 
 import { RequestError } from './actions.ts';
+import type { WalletTxEntry, WalletTxStore } from './direct.ts';
 import { errorResponse, handleRequest, relayResponse, type TxIndex } from './app.ts';
 import { resolveChainConfig, type ChainEnv, type ServiceChainConfig } from './chains.ts';
 import { HourlyRateLimiter, parseLimit } from './limits.ts';
@@ -133,6 +134,26 @@ function kvUsageTrend(kv: KVNamespace | undefined): UsageTrendStore | null {
   };
 }
 
+/** Wallet-sent transactions, one key each (`wallettx:<chainId>:<hash>`), the entry in its metadata. */
+function kvWalletTxs(kv: KVNamespace | undefined): WalletTxStore | null {
+  if (!kv) return null;
+  return {
+    async add(chainId, entry) {
+      await kv.put(`wallettx:${chainId}:${entry.txHash}`, '', { metadata: entry });
+    },
+    async list(chainId) {
+      const entries: WalletTxEntry[] = [];
+      let cursor: string | undefined;
+      do {
+        const page = await kv.list<WalletTxEntry>({ prefix: `wallettx:${chainId}:`, cursor });
+        for (const key of page.keys) if (key.metadata) entries.push(key.metadata);
+        cursor = page.list_complete ? undefined : page.cursor;
+      } while (cursor);
+      return entries;
+    },
+  };
+}
+
 /** Final answers of GET /v1/txs (confirmed or reverted), one key per transaction: `txcheck:<chainId>:<hash>`. */
 function kvTxChecks(kv: KVNamespace | undefined): TxCheckCache | null {
   if (!kv) return null;
@@ -156,6 +177,7 @@ export default {
         skillContent: r2SkillContent(env.BLOBS),
         usageTrend: kvUsageTrend(env.INDEX),
         txChecks: kvTxChecks(env.INDEX),
+        walletTxs: kvWalletTxs(env.INDEX),
         relay: (forwarded) => env.RELAY_QUEUE.get(env.RELAY_QUEUE.idFromName('relay')).fetch(forwarded),
         readerPage: env.ASSETS ? () => env.ASSETS!.fetch(new URL('/reader/index.html', request.url)) : undefined,
         sitePage: env.ASSETS ? (path) => env.ASSETS!.fetch(new URL(path, request.url)) : undefined,

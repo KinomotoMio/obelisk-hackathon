@@ -26,9 +26,9 @@ import {
   type WalletClient,
 } from 'viem';
 
-import { keyRegistryAbi, shareRegistryAbi, skillRegistryAbi, usageStatsAbi } from '../../chain/abi/index.ts';
-import { obeliskDomain } from '../../chain/eip712.ts';
-import { parseRelayRequest, RequestError, type ParsedRelayRequest } from './actions.ts';
+import { keyRegistryAbi, shareRegistryAbi, skillMarketAbi, skillRegistryAbi, usageStatsAbi } from '../../chain/abi/index.ts';
+import { EIP712_VERSION, obeliskDomain } from '../../chain/eip712.ts';
+import { parseRelayRequest, RequestError, type ActionContract, type ParsedRelayRequest } from './actions.ts';
 import { explorerTxUrl, type ContractName, type ServiceChainConfig } from './chains.ts';
 
 export const CONTRACT_ABIS: Record<ContractName, Abi> = {
@@ -37,6 +37,19 @@ export const CONTRACT_ABIS: Record<ContractName, Abi> = {
   SkillRegistry: skillRegistryAbi,
   UsageStats: usageStatsAbi,
 };
+
+/** Where an action's contract lives on this network and its ABI; the market is optional. */
+export function actionTarget(config: ServiceChainConfig, contract: ActionContract): { address: Address; abi: Abi } {
+  if (contract !== 'SkillMarket') return { address: config.contracts[contract], abi: CONTRACT_ABIS[contract] };
+  if (!config.market) throw new RequestError(503, 'market_not_deployed', 'Skill settlement is not deployed on this network yet');
+  return { address: config.market, abi: skillMarketAbi as Abi };
+}
+
+function actionDomain(config: ServiceChainConfig, contract: ActionContract, address: Address) {
+  return contract === 'SkillMarket'
+    ? { name: 'ObeliskSkillMarket', version: EIP712_VERSION, chainId: config.chain.id, verifyingContract: address }
+    : obeliskDomain(contract, config.chain.id, address);
+}
 
 /** Seconds a signature must still be valid for when it reaches the relay. */
 export const MIN_DEADLINE_HEADROOM_SECONDS = 30n;
@@ -48,7 +61,7 @@ export interface RateLimiter {
 
 export interface RelayRecord {
   action: string;
-  contract: ContractName;
+  contract: ActionContract;
   signer: Address;
   submittedAt: string;
 }
@@ -77,7 +90,7 @@ function stringifyArg(value: unknown): string {
 }
 
 /** Turn a revert from estimateGas into the contract's own error name. */
-function contractRejection(error: unknown, request: ParsedRelayRequest): RequestError | null {
+export function contractRejection(error: unknown, request: ParsedRelayRequest): RequestError | null {
   if (!(error instanceof BaseError)) return null;
   const reverted = error.walk((cause) => cause instanceof ContractFunctionRevertedError);
   if (!(reverted instanceof ContractFunctionRevertedError)) return null;
@@ -99,9 +112,9 @@ function isNonceConflict(error: unknown): boolean {
 /** Reject a signature not made by the action's named signer (401). */
 export async function verifyActionSignature(publicClient: PublicClient, config: ServiceChainConfig, request: ParsedRelayRequest): Promise<void> {
   const contract = request.definition.contract;
-  const address = config.contracts[contract];
+  const { address } = actionTarget(config, contract);
   const recovered = await recoverTypedDataAddress({
-    domain: obeliskDomain(contract, config.chain.id, address),
+    domain: actionDomain(config, contract, address),
     types: request.definition.types as Record<string, { name: string; type: string }[]>,
     primaryType: request.action,
     message: request.message,
@@ -114,6 +127,46 @@ export async function verifyActionSignature(publicClient: PublicClient, config: 
   if (!code || code === '0x') {
     throw new RequestError(401, 'invalid_signature', `The signature was not made by ${request.signer}`);
   }
+}
+
+export interface CheckedAction {
+  request: ParsedRelayRequest;
+  address: Address;
+  abi: Abi;
+}
+
+/**
+ * Everything checked before a signed action may cost gas, whoever then sends
+ * it: a deadline with headroom (400), the signer's current nonce (409), and
+ * the signer's own signature (401).
+ */
+export async function checkSignedAction(
+  publicClient: PublicClient,
+  config: ServiceChainConfig,
+  body: unknown,
+  { internal = false, wallet = false, now }: { internal?: boolean; wallet?: boolean; now?: () => number } = {},
+): Promise<CheckedAction> {
+  const request = parseRelayRequest(body, { internal, wallet });
+  const contract = request.definition.contract;
+  const { address, abi } = actionTarget(config, contract);
+
+  const nowSeconds = BigInt(Math.floor((now?.() ?? Date.now()) / 1000));
+  if (request.deadline <= nowSeconds + MIN_DEADLINE_HEADROOM_SECONDS) {
+    throw new RequestError(400, 'deadline_too_soon', `Signature deadline ${request.deadline} has passed or is less than ${MIN_DEADLINE_HEADROOM_SECONDS}s away; sign again with a later deadline`);
+  }
+
+  const expectedNonce = await publicClient.readContract({ address, abi, functionName: 'nonces', args: [request.signer] }) as bigint;
+  if (request.nonce !== expectedNonce) {
+    throw new RequestError(
+      409,
+      'stale_nonce',
+      `Signed with nonce ${request.nonce}, but ${contract} expects ${expectedNonce} for ${request.signer}; read the nonce again and re-sign`,
+      { expectedNonce: expectedNonce.toString() },
+    );
+  }
+
+  await verifyActionSignature(publicClient, config, request);
+  return { request, address, abi };
 }
 
 export class Relayer {
@@ -132,27 +185,7 @@ export class Relayer {
   /** `internal` admits the service's own actions (RecordOpen, #9); see actions.ts. */
   async relay(body: unknown, { internal = false }: { internal?: boolean } = {}): Promise<RelayResult> {
     const { config, publicClient } = this.#deps;
-    const request = parseRelayRequest(body, { internal });
-    const contract = request.definition.contract;
-    const address = config.contracts[contract];
-    const abi = CONTRACT_ABIS[contract];
-
-    const nowSeconds = BigInt(Math.floor((this.#deps.now?.() ?? Date.now()) / 1000));
-    if (request.deadline <= nowSeconds + MIN_DEADLINE_HEADROOM_SECONDS) {
-      throw new RequestError(400, 'deadline_too_soon', `Signature deadline ${request.deadline} has passed or is less than ${MIN_DEADLINE_HEADROOM_SECONDS}s away; sign again with a later deadline`);
-    }
-
-    const expectedNonce = await publicClient.readContract({ address, abi, functionName: 'nonces', args: [request.signer] }) as bigint;
-    if (request.nonce !== expectedNonce) {
-      throw new RequestError(
-        409,
-        'stale_nonce',
-        `Signed with nonce ${request.nonce}, but ${contract} expects ${expectedNonce} for ${request.signer}; read the nonce again and re-sign`,
-        { expectedNonce: expectedNonce.toString() },
-      );
-    }
-
-    await verifyActionSignature(publicClient, config, request);
+    const { request, address, abi } = await checkSignedAction(publicClient, config, body, { internal, now: this.#deps.now });
 
     const txHash = await this.#serialized(() => this.#submit(request, address, abi));
     const explorerUrl = explorerTxUrl(config, txHash);

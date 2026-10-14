@@ -8,24 +8,27 @@
 import { getAddress, isAddress, isHash, type Address, type Hex, type PublicClient } from 'viem';
 
 import { RequestError } from './actions.ts';
-import { CONTRACT_NAMES, explorerAddressUrl, explorerTxUrl, type ContractName, type ServiceChainConfig } from './chains.ts';
-import { CONTRACT_ABIS, type RelayRecord } from './relayer.ts';
+import { CONTRACT_NAMES, explorerAddressUrl, explorerTxUrl, type ServiceChainConfig } from './chains.ts';
+import { actionTarget, CONTRACT_ABIS, type RelayRecord } from './relayer.ts';
+import type { ActionContract } from './actions.ts';
 
 export function parseAddressParam(value: string): Address {
   if (!isAddress(value, { strict: false })) throw new RequestError(400, 'invalid_address', `Not an address: ${value}`);
   return getAddress(value);
 }
 
-export function parseContractParam(value: string): ContractName {
-  const match = CONTRACT_NAMES.find((name) => name.toLowerCase() === value.toLowerCase());
-  if (!match) throw new RequestError(400, 'unknown_contract', `contract must be one of: ${CONTRACT_NAMES.join(', ')}`);
+export function parseContractParam(value: string): ActionContract {
+  const names: readonly ActionContract[] = [...CONTRACT_NAMES, 'SkillMarket'];
+  const match = names.find((name) => name.toLowerCase() === value.toLowerCase());
+  if (!match) throw new RequestError(400, 'unknown_contract', `contract must be one of: ${names.join(', ')}`);
   return match;
 }
 
-export async function readNonce(client: PublicClient, config: ServiceChainConfig, contract: ContractName, user: Address) {
+export async function readNonce(client: PublicClient, config: ServiceChainConfig, contract: ActionContract, user: Address) {
+  const { address, abi } = actionTarget(config, contract);
   const nonce = await client.readContract({
-    address: config.contracts[contract],
-    abi: CONTRACT_ABIS[contract],
+    address,
+    abi,
     functionName: 'nonces',
     args: [user],
   }) as bigint;
