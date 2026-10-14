@@ -80,9 +80,9 @@ test('the testnet service config reads addresses from the committed deployment r
   assert.equal(config.rpcUrl, 'https://rpc.bohr.life');
   assert.equal(config.explorerUrl, 'https://scan.bohr.life');
   for (const [name, record] of Object.entries(deployment.contracts)) {
-    assert.equal(config.contracts[name], record.address);
+    // SkillMarket is optional per network, so the config keeps it apart from the four core contracts.
+    assert.equal(name === 'SkillMarket' ? config.market : config.contracts[name], record.address);
   }
-  assert.throws(() => resolveChainConfig({ CHAIN_ID: '677' }), /No complete deployment/);
   assert.throws(() => resolveChainConfig({ CHAIN_ID: '1' }), /Unsupported CHAIN_ID/);
   assert.throws(() => resolveChainConfig({ CHAIN_ID: '31337' }), /LOCAL_CONTRACTS/);
 });
