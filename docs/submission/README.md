@@ -10,6 +10,7 @@
 | --- | --- |
 | [run-guide.md](run-guide.md) | **给评委的运行说明**：项目是什么、比赛期间做了什么、怎么体验（公开网页、链上核对、本机安装）、哪些是真实的哪些是示意 |
 | [before-and-during.md](before-and-during.md) | 赛前已有与比赛期间新增：分界点、提交范围、按领域对照、沿用组件来源 |
+| [botchain-verification.md](botchain-verification.md) | **BOT Chain 赛道最终核验**：评审七项要求逐项对应、主网合约、用户钱包发起的交易、代码位置 |
 | [mainnet.md](mainnet.md) | BOT Chain 主网合约地址、浏览器链接、演示交易（主网待部署；测试网地址和交易示例已列出） |
 | [demo-script.md](demo-script.md) | 演示脚本：两个待定前提、每一步的状态、6 分钟版和 4 分钟版、演示视频、备用方案、彩排清单 |
 | [qa.md](qa.md) | 问答准备：可能被问到的问题和有依据的回答 |
