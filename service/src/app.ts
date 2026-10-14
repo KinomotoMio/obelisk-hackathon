@@ -147,12 +147,15 @@ export const SITE_PAGES: Readonly<Record<string, string>> = {
   runs: '/runs/index.html',
   operations: '/operations/index.html',
   docs: '/docs/index.html',
+  start: '/start/index.html',
+  slides: '/slides/index.html',
 };
 
 /** The reader's policy (same origin only, never framed), revalidated on each visit. */
 export const SITE_HEADERS = { ...READER_HEADERS, 'cache-control': 'no-cache' };
 
 function sitePagePath(parts: string[]): string | null {
+  if (parts.length === 0) return SITE_PAGES.start!;
   const page = parts[0] !== undefined && Object.hasOwn(SITE_PAGES, parts[0]) ? SITE_PAGES[parts[0]]! : null;
   if (!page || parts.slice(1).some((part) => part.includes('.'))) return null;
   return page;
@@ -163,7 +166,15 @@ async function sitePageResponse(deps: AppDeps, path: string): Promise<Response> 
   const page = await deps.sitePage(path);
   if (page.status === 404) throw new RequestError(404, 'not_found', `This service has no page at ${path.replace(/\/index\.html$/, '')}`);
   if (!page.ok) throw new RequestError(502, 'page_unavailable', `The page could not be loaded (HTTP ${page.status})`);
-  return new Response(page.body, { status: 200, headers: SITE_HEADERS });
+  const headers = path === '/slides/index.html' ? {
+    ...SITE_HEADERS,
+    'content-security-policy': SITE_HEADERS['content-security-policy']
+      .replace("style-src 'self'", "style-src 'self' 'unsafe-inline'") + "; font-src 'self' data:",
+  } : path === '/start/index.html' ? {
+    ...SITE_HEADERS,
+    'content-security-policy': SITE_HEADERS['content-security-policy'] + "; media-src 'self'",
+  } : SITE_HEADERS;
+  return new Response(page.body, { status: 200, headers });
 }
 
 async function readerResponse(deps: AppDeps): Promise<Response> {

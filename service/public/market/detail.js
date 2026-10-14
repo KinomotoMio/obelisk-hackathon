@@ -7,6 +7,7 @@
 import { h, link, replace, s } from './dom.js';
 import * as api from './api.js';
 import { networkName } from '/site/site.js';
+import { walletPurchase } from './buy.js';
 import { addressLink, ago, count, day, empty, failure, loading, percent, promptBox, sceneChip, shortAddress, shortHex, title } from './ui.js';
 
 const OUTCOMES = [
@@ -181,7 +182,7 @@ function buyerAccess(offer) {
   return h('details', null, h('summary', null, '查看我的取用状态'), h('div', { class: 'toolbar' }, input, button), status);
 }
 
-function commerce(offer, content, promptName, unavailable) {
+function commerce(offer, content, promptName, unavailable, skill) {
   if (unavailable) return panel('取用方式', null, h('p', { class: 'fg2' }, '暂时无法读取上架信息，请稍后刷新。'));
   if (!offer) return panel('取用方式', null, h('p', { class: 'fg2' }, content?.locked === true ? '作者尚未开放购买，请稍后再来看看。' : typeof content?.body === 'string' ? '正文已公开。取用前，你的助手会展示内容并核对版本。' : '作者尚未提供在线正文，你可以先查看链上的版本与使用记录。'));
   const mode = { free: '免费取用', 'per-use': '按次取用', buyout: '此版本买断' }[offer.mode];
@@ -191,6 +192,9 @@ function commerce(offer, content, promptName, unavailable) {
     h('p', { class: 'lead' }, offer.mode === 'free' ? '免费' : `${offer.price} BOT`),
     h('p', { class: 'fg2' }, `${mode} · ${license}`),
     h('p', { class: 'muted' }, offer.mode === 'per-use' ? '每次购买获得一次正文取用；请结合上面的使用场景和效果判断是否适合你的任务。' : '结合真实使用记录和你的任务，决定是否把这份方法带进自己的工作。'),
+    h('p', { class: 'muted small' }, offer.mode === 'free' ? '领取由你的钱包发送，只付网络手续费。' : `付款由你的钱包直接发送：平台收取 5%，其余按链上族谱分给这个 Skill 的作者和上游作者。`),
+    walletPurchase({ skillId: skill.skillId, name: skill.name }, offer),
+    h('p', { class: 'muted small wb-or' }, '已经在用 Obelisk？也可以把下面这段交给助手，在命令行里完成购买与安装：'),
     promptBox(offer.mode === 'free' ? '交给助手取用' : '让助手帮我购买', { skill: 'obelisk-skill-assets', text: `我想取用 ${promptName}。请查看当前上架方案 #${offer.offerId} 和我已有的授权，说明价格、许可和网络费用，得到我的确认后再购买或使用已有额度，并安装。` }), buyerAccess(offer));
 }
 
@@ -244,7 +248,7 @@ export async function renderDetail(root, id) {
         chainInfo ? h('span', { class: 'pill chain' }, `可在${networkName(chainInfo.chainId)}上核对`) : null),
       skill.content?.description ? h('p', { class: 'lead', translate: 'no' }, skill.content.description) : null),
 
-    commerce(offerResult.offer, raw.content, promptName, offerResult.unavailable),
+    commerce(offerResult.offer, raw.content, promptName, offerResult.unavailable, { skillId: id, name: skill.name }),
 
     usage
       ? h('div', { class: 'kpis' },

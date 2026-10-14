@@ -220,3 +220,28 @@ h2 { font-size: 15px; font-weight: 600; }
   .topbar-title { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 2.5s; } .btn { transition: none; } }
+
+/* activation: one real BOT Chain transaction from the visitor's wallet */
+body.activate-page .page { max-width: 1080px; }
+.act-grid { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 18px; align-items: start; }
+.act-main { padding: 32px; }
+.act-eyebrow { color: #7dd3fc; text-transform: none; }
+.live-dot { width: 8px; height: 8px; border-radius: 50%; background: #4ade80; box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.6); animation: live 2s infinite; }
+@keyframes live { 70% { box-shadow: 0 0 0 8px rgba(74, 222, 128, 0); } 100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); } }
+.act-title { font-family: var(--brand-serif); font-weight: 500; font-size: clamp(26px, 3.4vw, 36px); line-height: 1.2; letter-spacing: -0.01em; margin-top: 6px; }
+.act-steps li { transition: border-color .2s, background .2s; }
+.act-steps li.active { box-shadow: 0 0 0 1px rgba(167, 139, 250, 0.25), 0 10px 30px -12px rgba(167, 139, 250, 0.45); }
+.act-side { position: sticky; top: 84px; padding: 22px; border-radius: 16px; border: 1px solid var(--hairline); background: linear-gradient(180deg, rgba(56, 189, 248, 0.06), rgba(167, 139, 250, 0.04)); }
+.act-facts { grid-template-columns: 1fr; gap: 2px 0; margin: 12px 0 0; }
+.act-facts dt { margin-top: 8px; font-size: 11.5px; text-transform: uppercase; letter-spacing: .06em; }
+.act-who { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 14px; color: var(--fg-2); font-size: 13px; }
+.act-who .mono { color: var(--fg); overflow-wrap: anywhere; }
+.act-status { display: flex; gap: 10px; align-items: flex-start; margin-top: 12px; padding: 10px 12px; border-radius: 10px; font-size: 13px; }
+.act-status.ok { background: var(--ok-soft); color: #bbf7d0; }
+.act-status .ic { margin-top: 2px; }
+.act-choice { margin-top: 14px; display: grid; gap: 6px; font-size: 13px; color: var(--fg-2); padding: 12px 14px; border-radius: 12px; background: var(--surface); border: 1px solid var(--hairline); }
+.act-choice strong { color: var(--fg); }
+.act-hash { overflow-wrap: anywhere; color: var(--fg-2); margin: 10px 0; }
+.act-done .icon { margin: 0 auto 12px; }
+.act-done .facts dd { font-size: 12.5px; }
+@media (max-width: 860px) { .act-grid { grid-template-columns: 1fr; } .act-side { position: static; } .act-main { padding: 22px; } }

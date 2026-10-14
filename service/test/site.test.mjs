@@ -42,15 +42,27 @@ test('every path under a public page returns its index.html with the strict head
   const unbound = await handleRequest(new Request('http://service.test/market'), deps(undefined));
   assert.equal(unbound.status, 503);
   assert.equal((await unbound.json()).error.code, 'page_unavailable');
-  assert.deepEqual(Object.keys(SITE_PAGES), ['market', 'preview', 'runs', 'operations', 'docs']);
+  assert.deepEqual(Object.keys(SITE_PAGES), ['market', 'preview', 'runs', 'operations', 'docs', 'start', 'slides']);
 });
 
 test('the shared shell builds no markup from strings and loads nothing from elsewhere', () => {
   for (const file of readdirSync(new URL('../public/site/', import.meta.url))) {
     const source = readFileSync(new URL(`../public/site/${file}`, import.meta.url), 'utf8');
     if (file.endsWith('.js')) assert.doesNotMatch(source, /innerHTML|outerHTML|insertAdjacentHTML|document\.write|eval\(|new Function/, file);
-    assert.doesNotMatch(source, /https?:\/\/(?!www\.w3\.org)/, `${file} loads nothing from another origin`);
+    // Links out (wallet downloads, the other network's site) are navigation, not loads.
+    assert.doesNotMatch(source, /(?:src|href)=["']https?:|fetch\(['"`]https?:|url\(['"]?https?:|import[^;]*['"]https?:/, `${file} loads nothing from another origin`);
   }
+});
+
+test('the landing page and every site page reach the wallet control through the shared shell', () => {
+  const landing = readFileSync(new URL('../public/start/index.html', import.meta.url), 'utf8');
+  assert.match(landing, /<script type="module" src="\/site\/i18n\.js"><\/script>/);
+  assert.match(readFileSync(new URL('../public/site/i18n.js', import.meta.url), 'utf8'), /import \{ startNavigation \} from '\.\/navigation\.js'/);
+  assert.match(readFileSync(new URL('../public/site/navigation.js', import.meta.url), 'utf8'), /mountWalletControl\(header\)/);
+  const wallet = readFileSync(new URL('../public/site/wallet.js', import.meta.url), 'utf8');
+  assert.match(wallet, /eip6963:requestProvider/, 'wallets are discovered through EIP-6963');
+  assert.match(wallet, /wallet_switchEthereumChain[\s\S]*wallet_addEthereumChain/, 'an unknown BOT Chain is added to the wallet');
+  assert.doesNotMatch(wallet, /privateKey|mnemonic|seed phrase/i);
 });
 
 test('the market page uses the shared shell, builds no markup from strings, and labels every stage 2 figure', () => {

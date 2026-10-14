@@ -110,6 +110,7 @@ function busy(btn, label) {
 
 function setWalletChip(address) {
   const chip = document.getElementById('topbar-wallet');
+  if (!chip) return;
   chip.textContent = shortAddress(address);
   chip.title = address;
   chip.hidden = !address;
@@ -664,102 +665,231 @@ function showReader(snapshot, opened) {
   );
 }
 
-// --- activation ------------------------------------------------------------
+// --- activation: one real BOT Chain transaction from the visitor's wallet ---
 
-async function bootActivate() {
-  document.title = '激活钱包 · Obelisk';
-  document.getElementById('topbar-title').textContent = '激活钱包';
-  const next = new URLSearchParams(location.search).get('next');
-  const nextPath = next && /^\/s\/0x[0-9a-fA-F]{64}$/.test(next) ? next : null;
+const ACTIVATE_STEPS = [
+  ['连接钱包', '支持 MetaMask、OKX Wallet、Rabby 等 EVM 钱包。只读取地址。'],
+  ['切换到 BOT Chain 主网', '钱包切换到 Chain ID 677；钱包里没有这个网络时会请你添加。'],
+  ['解锁解密密钥', '签名一段固定文字，在浏览器里算出只属于你的解密密钥。不上链、不花费。'],
+  ['签名并发送主网交易', 'EIP-712 签名授权登记公钥，再由你的钱包把交易发到 KeyRegistry 合约。'],
+];
 
-  const steps = (active) => h('ol', { class: 'steps' }, [
-    ['连接钱包', '选择你要用来接收分享的钱包。'],
-    ['解锁解密密钥', '签名一段固定文字，在浏览器里算出只属于你的解密密钥。不上链，不花费。'],
-    ['登记公钥', '签名后由 Obelisk 代付，把公钥登记到 BOT Chain。之后别人就能把内容加密给你。'],
-  ].map(([t, d], i) => h('li', { class: i < active ? 'done' : i === active ? 'active' : '' },
+function activateSteps(active) {
+  return h('ol', { class: 'steps act-steps' }, ACTIVATE_STEPS.map(([t, d], i) => h('li', { class: i < active ? 'done' : i === active ? 'active' : '' },
     h('span', { class: 'n' }, i < active ? icon('check') : String(i + 1)),
     h('div', {}, h('div', { class: 't', text: t }), h('div', { class: 'd', text: d })),
   )));
+}
 
-  const page = (active, action, notice) => {
-    show(h('section', { class: 'panel narrow' },
-      h('div', { class: 'eyebrow' }, icon('key'), 'Obelisk 钱包激活'),
-      h('h1', { text: '激活钱包，接收私密分享' }),
-      h('p', { class: 'lead', text: '激活会在 BOT Chain 上登记一把只用于解密的公钥。发送方用它加密，只有你的钱包能解开。由 Obelisk 代付，不花费你的代币。' }),
-      steps(active),
-      notice ? h('div', { class: `callout ${notice.tone ?? ''}` }, notice.text) : null,
-      h('div', { class: 'actions' }, action),
-      h('p', { class: 'note', text: 'Obelisk 不会索要你的私钥或助记词。签名只在你的钱包里完成。' }),
+function contractCard() {
+  const chain = state.chain;
+  const address = chain?.contracts?.KeyRegistry;
+  const explorer = chain?.explorerUrl;
+  return h('aside', { class: 'act-side' },
+    h('div', { class: 'eyebrow' }, icon('key'), '这笔交易做什么'),
+    h('dl', { class: 'facts act-facts' },
+      h('dt', {}, '网络'), h('dd', {}, `${chainName(chain?.chainId)} · Chain ID ${chain?.chainId ?? '—'}`),
+      h('dt', {}, '合约'), h('dd', {}, address && explorer
+        ? h('a', { class: 'mono', href: `${explorer}/address/${address}`, target: '_blank', rel: 'noopener noreferrer', translate: 'no' }, `KeyRegistry ${shortAddress(address)} ↗`)
+        : h('span', { class: 'mono', translate: 'no' }, `KeyRegistry ${shortAddress(address ?? '')}`)),
+      h('dt', {}, '方法'), h('dd', { class: 'mono', translate: 'no' }, 'registerKeyBySig(user, pubKey, deadline, signature)'),
+      h('dt', {}, '发起方'), h('dd', {}, '你的钱包（自付少量 BOT 手续费）；没有 BOT 时可选 Obelisk 代付'),
+    ),
+    h('p', { class: 'note', text: '登记后，别人可以把 session 片段加密分享给你；分享规则、打开回执和撤回都记录在 BOT Chain 上。' }),
+  );
+}
+
+async function waitForReceipt(hash, onTick) {
+  for (let i = 0; i < 60; i += 1) {
+    try {
+      const { body } = await api(`/v1/tx/${hash}`);
+      if (body.status === 'confirmed' || body.status === 'reverted') return body;
+    } catch (error) {
+      if (!(error instanceof ServiceError) || error.code !== 'unknown_transaction') throw error;
+    }
+    onTick?.(i);
+    await sleep(2500);
+  }
+  return { status: 'pending', txHash: hash, explorerUrl: state.chain?.explorerUrl ? `${state.chain.explorerUrl}/tx/${hash}` : null };
+}
+
+async function bootActivate() {
+  document.title = '链上体验 · Obelisk';
+  const titleNode = document.getElementById('topbar-title');
+  if (titleNode) titleNode.textContent = '链上体验';
+  document.body.classList.add('activate-page');
+  const next = new URLSearchParams(location.search).get('next');
+  const nextPath = next && /^\/s\/0x[0-9a-fA-F]{64}$/.test(next) ? next : null;
+  const wallet = await import('/site/wallet.js');
+
+  let stage = 0;
+  const page = (active, actions, notice, extra = null) => {
+    stage = active;
+    show(h('div', { class: 'act-grid' },
+      h('section', { class: 'panel act-main' },
+        h('div', { class: 'eyebrow act-eyebrow' }, h('span', { class: 'live-dot' }), `${chainName(state.chain?.chainId)} · Chain ID ${state.chain?.chainId ?? ''}`),
+        h('h1', { class: 'act-title', text: '用你的钱包，完成一次 BOT Chain 主网交互' }),
+        h('p', { class: 'lead', text: '激活 Obelisk：在 BOT Chain 上登记一把只用于解密的公钥。签名在你的钱包里完成，交易由你的钱包直接发出，可在区块浏览器逐笔核对。' }),
+        activateSteps(active),
+        extra,
+        notice ? h('div', { class: `callout ${notice.tone ?? ''}` }, notice.text) : null,
+        h('div', { class: 'actions' }, actions),
+        h('p', { class: 'note', text: 'Obelisk 不会索要你的私钥或助记词。每一次签名和交易都需要你在钱包里确认。' }),
+      ),
+      contractCard(),
     ));
-    return action;
   };
 
-  const done = (address, record, alreadyActive) => {
-    const copy = button('复制地址', async () => {
-      try { await navigator.clipboard.writeText(address); copy.replaceChildren(icon('check'), '已复制'); } catch { /* clipboard blocked */ }
-    }, { iconName: 'copy' });
-    show(h('section', { class: 'panel narrow denied' },
-      h('div', { class: 'icon ok' }, icon('check')),
-      h('h1', { text: alreadyActive ? '这个钱包已经激活' : '激活完成' }),
-      h('p', { class: 'fg2' }, '把这个地址发给要分享给你的人：'),
-      h('p', { class: 'address mono' }, address),
-      h('div', { class: 'actions' }, copy, nextPath ? h('a', { class: 'btn primary', href: nextPath }, '回到分享') : null),
-      h('p', { class: 'meta' }, `公钥登记在 ${chainName(state.chain?.chainId)}`, record ? ' · ' : null, chainLink(record, '登记记录')),
-    ));
+  const failNotice = (error) => {
+    if (error instanceof ServiceError) return serviceNotice(error);
+    const { rejected, message } = wallet.walletError(error);
+    return { tone: rejected ? '' : 'warn', text: message };
   };
 
-  const start = () => {
-    const connectBtn = page(0, button('连接钱包', async () => {
-      busy(connectBtn, '正在连接钱包…');
-      chooseWallet(await discoverWallets(), async (wallet) => {
-        try {
-          const address = await connect(wallet);
-          state.address = address;
-          setWalletChip(address);
-          const key = (await api(`/v1/keys/${address}`)).body;
-          if (key.registered) return done(address, key.explorerUrl ? { explorerUrl: key.explorerUrl } : null, true);
-          activate(address, key);
-        } catch (error) {
-          if (error instanceof ServiceError) return page(0, button('重试', start, { primary: true }), serviceNotice(error));
-          const { rejected, message } = walletError(error);
-          if (rejected) start(); else showError(message, start);
-        }
-      });
-    }, { primary: true, iconName: 'wallet' }));
-  };
-
-  const activate = (address) => {
-    const go = page(1, button('签名并激活', async () => {
-      busy(go, '请在钱包里签名（1/2）…');
+  const start = (notice) => {
+    const s = wallet.walletState();
+    if (s.address) return afterConnect(notice);
+    const btn = button('连接钱包', async () => {
+      busy(btn, '请在钱包里确认连接…');
       try {
-        if (!(await supportsX25519())) return page(1, button('重试', () => activate(address), { primary: true }), { tone: 'danger', text: '这个浏览器不支持所需的 X25519 算法，请升级到最新版 Chrome、Edge、Safari 或 Firefox。' });
-        const encryptionKey = await signEncryptionKey(state.wallet.provider, address);
-        const btn2 = page(2, button('签名并激活', () => undefined, { primary: true }));
-        busy(btn2, '请在钱包里签名（2/2）…');
-        const { nonce } = (await api(`/v1/keys/${address}`)).body;
-        const message = { user: address, pubKey: encryptionKey.registeredKey, nonce, deadline: String(Math.floor(Date.now() / 1000) + SIGNATURE_SECONDS) };
-        const signature = await signTyped(state.wallet.provider, address, 'RegisterKey', 'KeyRegistry', message);
-        busy(btn2, '正在登记到 BOT Chain…');
-        const { body } = await post('/v1/relay', { action: 'RegisterKey', message, signature });
-        for (let i = 0; i < 40 && body.status !== 'confirmed'; i += 1) {
-          await sleep(3000);
-          const key = (await api(`/v1/keys/${address}`)).body;
-          if (key.registered) break;
+        const connected = await wallet.connectWallet();
+        if (!connected) return start();
+        afterConnect();
+      } catch (error) { start(failNotice(error)); }
+    }, { primary: true, iconName: 'wallet' });
+    page(0, [btn], notice);
+  };
+
+  const afterConnect = (notice) => {
+    const s = wallet.walletState();
+    state.address = s.address;
+    if (s.onSiteChain) return unlock(notice);
+    const btn = button(`切换到 ${chainName(state.chain.chainId)}（${state.chain.chainId}）`, async () => {
+      busy(btn, '请在钱包里确认切换网络…');
+      try { await wallet.switchToSiteChain(); unlock(); } catch (error) { afterConnect(failNotice(error)); }
+    }, { primary: true, iconName: 'wallet' });
+    page(1, [btn], notice ?? { tone: 'warn', text: `钱包当前在 Chain ID ${s.chainId}。Obelisk 主网合约部署在 ${chainName(state.chain.chainId)}（Chain ID ${state.chain.chainId}）。` },
+      h('p', { class: 'act-who' }, '已连接 ', h('span', { class: 'mono', translate: 'no' }, s.address)));
+  };
+
+  const unlock = async (notice) => {
+    const address = wallet.walletState().address;
+    let key;
+    try { key = (await api(`/v1/keys/${address}`)).body; } catch (error) { return page(2, [button('重试', () => unlock(), { primary: true })], failNotice(error)); }
+    const status = key.registered
+      ? h('div', { class: 'act-status ok' }, icon('check'), h('span', {}, `这个钱包已在主网激活（公钥版本 v${key.version}）。你仍可以再发一笔交易，把链上公钥记录更新到 v${key.version + 1}。`))
+      : null;
+    const btn = button(key.registered ? '解锁密钥并更新链上记录' : '解锁解密密钥', async () => {
+      busy(btn, '请在钱包里签名（不上链）…');
+      try {
+        if (!(await supportsX25519())) return page(2, [button('重试', () => unlock(), { primary: true })], { tone: 'danger', text: '这个浏览器不支持所需的 X25519 算法，请升级到最新版 Chrome、Edge、Safari 或 Firefox。' });
+        const encryptionKey = await signEncryptionKey(wallet.walletState().provider, address);
+        submit(address, encryptionKey);
+      } catch (error) { unlock(failNotice(error)); }
+    }, { primary: true, iconName: 'key' });
+    const actions = [btn];
+    if (key.registered) actions.push(h('a', { class: 'btn', href: key.explorerUrl ?? '#', target: '_blank', rel: 'noopener noreferrer' }, icon('external'), '查看我的地址'));
+    page(2, actions, notice, h('div', {}, h('p', { class: 'act-who' }, '已连接 ', h('span', { class: 'mono', translate: 'no' }, address), h('span', { class: 'pill ok' }, h('span', { class: 'dot' }), `Chain ID ${state.chain.chainId}`)), status));
+  };
+
+  const signRegister = async (address, encryptionKey) => {
+    const { nonce } = (await api(`/v1/keys/${address}`)).body;
+    const message = { user: address, pubKey: encryptionKey.registeredKey, nonce, deadline: String(Math.floor(Date.now() / 1000) + SIGNATURE_SECONDS) };
+    await wallet.switchToSiteChain();
+    const signature = await wallet.walletState().provider.request({ method: 'eth_signTypedData_v4', params: [address, JSON.stringify(typedData('RegisterKey', 'KeyRegistry', state.chain, message))] });
+    return { action: 'RegisterKey', message, signature };
+  };
+
+  const submit = (address, encryptionKey, notice) => {
+    const symbol = state.chain.nativeCurrency?.symbol ?? 'BOT';
+    const balance = wallet.walletState().balance;
+    const direct = button('签名，并用我的钱包发送', async () => {
+      busy(direct, '请在钱包里签名（1/2）…');
+      try {
+        const signed = await signRegister(address, encryptionKey);
+        busy(direct, '正在检查签名并估算手续费…');
+        const { body: call } = await post('/v1/direct/prepare', signed);
+        if (!call.enoughBalance) {
+          return submit(address, encryptionKey, { tone: 'warn', text: `钱包余额 ${call.balance} ${symbol}，不足以支付约 ${call.estimatedFee} ${symbol} 的手续费。可以先充值 BOT，或选择由 Obelisk 代付。` });
         }
-        done(address, body, false);
-      } catch (error) {
-        if (error instanceof ServiceError) return page(1, button('重试', () => activate(address), { primary: true }), serviceNotice(error));
-        const { message } = walletError(error);
-        page(1, button('签名并激活', () => activate(address), { primary: true }), { tone: 'warn', text: message });
-      }
-    }, { primary: true, iconName: 'key' }));
+        busy(direct, '请在钱包里确认发送交易（2/2）…');
+        const hash = await wallet.walletState().provider.request({ method: 'eth_sendTransaction', params: [{ from: address, to: call.to, data: call.data, value: '0x0', gas: call.gas }] });
+        pending(hash, 'wallet');
+      } catch (error) { submit(address, encryptionKey, failNotice(error)); }
+    }, { primary: true, iconName: 'wallet' });
+    const relay = button(`由 Obelisk 代付（不需要 ${symbol}）`, async () => {
+      busy(relay, '请在钱包里签名…');
+      try {
+        const signed = await signRegister(address, encryptionKey);
+        busy(relay, '正在登记到 BOT Chain…');
+        const { body } = await post('/v1/relay', signed);
+        if (body.status === 'confirmed') return done(body, 'relay');
+        pending(body.txHash, 'relay');
+      } catch (error) { submit(address, encryptionKey, failNotice(error)); }
+    }, { iconName: 'check' });
+    page(3, [direct, relay], notice, h('div', { class: 'act-choice' },
+      h('p', {}, h('strong', {}, '用我的钱包发送：'), `交易的发起方是你的地址，手续费约 0.004 ${symbol}${balance === null ? '' : `（当前余额 ${balance} ${symbol}）`}。`),
+      h('p', {}, h('strong', {}, '由 Obelisk 代付：'), '你只签名，服务的代付钱包提交交易并支付手续费；合约仍以你的签名为准。'),
+    ));
+  };
+
+  const pending = async (hash, mode) => {
+    const explorer = state.chain.explorerUrl ? `${state.chain.explorerUrl}/tx/${hash}` : null;
+    show(h('section', { class: 'panel narrow center act-pending' },
+      h('div', { class: 'spinner' }),
+      h('h1', { text: '交易已发出，等待 BOT Chain 确认…' }),
+      h('p', { class: 'mono act-hash', translate: 'no' }, hash),
+      explorer ? h('p', {}, h('a', { href: explorer, target: '_blank', rel: 'noopener noreferrer' }, '在区块浏览器查看 ↗')) : null,
+    ));
+    try {
+      const result = await waitForReceipt(hash);
+      if (result.status === 'reverted') return showError('交易已上链但执行失败（reverted）。', () => start());
+      done(result, mode);
+    } catch (error) { showError(error.message, () => start()); }
+  };
+
+  const done = async (record, mode) => {
+    const address = wallet.walletState().address ?? state.address;
+    let indexed = null;
+    if (mode === 'wallet' && record.status === 'confirmed') {
+      indexed = await post('/v1/direct', { txHash: record.txHash }).then((r) => r.body).catch(() => null);
+    }
+    const key = await api(`/v1/keys/${address}`).then((r) => r.body).catch(() => null);
+    const copy = button('复制交易哈希', async () => {
+      try { await navigator.clipboard.writeText(record.txHash); copy.replaceChildren(icon('check'), '已复制'); } catch { /* clipboard blocked */ }
+    }, { iconName: 'copy' });
+    show(h('section', { class: 'panel narrow denied act-done' },
+      h('div', { class: 'icon ok' }, icon('check')),
+      h('h1', { class: 'center', text: record.status === 'confirmed' ? '交易已在 BOT Chain 主网确认' : '交易已发出' }),
+      h('p', { class: 'fg2 center', text: mode === 'wallet' ? '这笔交易由你的钱包签名并发出。任何人都可以在区块浏览器核对。' : '这笔交易由你签名授权、Obelisk 代付手续费提交。' }),
+      h('dl', { class: 'facts' },
+        h('dt', {}, '交易哈希'), h('dd', { class: 'mono', translate: 'no' }, record.txHash),
+        h('dt', {}, '发起钱包'), h('dd', { class: 'mono', translate: 'no' }, mode === 'wallet' ? address : `${state.chain.relayer ?? '代付钱包'}（代付）`),
+        h('dt', {}, '签名钱包'), h('dd', { class: 'mono', translate: 'no' }, address),
+        h('dt', {}, '合约 · 方法'), h('dd', { class: 'mono', translate: 'no' }, 'KeyRegistry · registerKeyBySig'),
+        record.blockNumber ? h('dt', {}, '区块') : null, record.blockNumber ? h('dd', { class: 'mono', translate: 'no' }, `#${record.blockNumber}`) : null,
+        key?.registered ? h('dt', {}, '链上公钥版本') : null, key?.registered ? h('dd', {}, `v${key.version}`) : null,
+      ),
+      indexed ? h('p', { class: 'note center', text: '已收录到首页「用户钱包发起的主网交易」列表。' }) : null,
+      h('div', { class: 'actions' },
+        record.explorerUrl ? h('a', { class: 'btn primary', href: record.explorerUrl, target: '_blank', rel: 'noopener noreferrer' }, icon('external'), '在区块浏览器查看') : null,
+        copy,
+        nextPath ? h('a', { class: 'btn', href: nextPath }, '回到分享') : h('a', { class: 'btn', href: '/market' }, '去 Skill 市场'),
+      ),
+    ));
   };
 
   try {
-    state.chain = (await api('/v1/chain')).body;
+    state.chain = await wallet.siteChain();
   } catch (error) {
     return showError(error.message, () => location.reload());
   }
+  window.addEventListener('obelisk:wallet', (event) => {
+    const { address, onSiteChain } = event.detail;
+    if (!address && state.address) { state.address = null; start(); return; }
+    if (address && address !== state.address && stage <= 2) { afterConnect(); return; }
+    if (stage === 1 && onSiteChain) unlock();
+  });
   start();
 }
 

@@ -1,5 +1,6 @@
 // Shared, local-only UI localization. Never translates or sends user content.
 import { EN } from './translations.js';
+import { startNavigation } from './navigation.js';
 
 const KEY = 'obelisk.site.language';
 const escapeRE = text => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -74,6 +75,7 @@ export function startLanguageSwitch() {
         if (node.hasAttribute(key)) updateValue(node, key, node.getAttribute(key), attributes, next => node.setAttribute(key, next));
       }
     }
+    document.documentElement.removeAttribute('data-lang-pending');
     observer.observe(document.documentElement, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ['title', 'aria-label', 'placeholder'] });
   }
   const observer = new MutationObserver(apply);
@@ -89,11 +91,11 @@ export function startLanguageSwitch() {
     const anchor = event.target.closest?.('a[href]');
     if (!anchor || anchor.getAttribute('href').startsWith('#') || anchor.hasAttribute('download')) return;
     const url = new URL(anchor.href);
-    if ((url.origin === location.origin || url.hostname.endsWith('.kinomotomiovo.workers.dev')) && /^\/(market|preview|runs|docs|operations|reader)(\/|$)/.test(url.pathname) && !/\.[a-z0-9]+$/i.test(url.pathname)) {
+    if ((url.origin === location.origin || url.hostname.endsWith('.kinomotomiovo.workers.dev')) && /^\/(start|activate|s|slides|market|preview|runs|docs|operations|reader)(\/|$)/.test(url.pathname) && !/\.[a-z0-9]+$/i.test(url.pathname)) {
       url.searchParams.set('lang', language); anchor.href = url.href;
     }
   });
   apply();
 }
 
-if (typeof document !== 'undefined') startLanguageSwitch();
+if (typeof document !== 'undefined') { startNavigation(); startLanguageSwitch(); }
